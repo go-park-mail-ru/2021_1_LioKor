@@ -2,138 +2,196 @@ package delivery
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2021_1_LioKor/internal/pkg/user"
+	"lioKor_mail/internal/pkg/user"
+	"github.com/labstack/echo/v4"
 	"net/http"
+	"time"
 )
 
 type UserHandler struct {
 	UserUsecase user.UseCase
 }
 
-func (h *UserHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
-	var creds user.Credentials
-	err :=json.NewDecoder(r.Body).Decode(&creds)
+func (h *UserHandler) Auth(c echo.Context) error{
+	creds := user.Credentials{}
+
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&creds)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	err = h.UserUsecase.Login(creds)
 	if err != nil {
 		switch err.(type) {
 		case user.InvalidUserError:
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+			return c.String(http.StatusUnauthorized, err.Error())
 		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	session, err := h.UserUsecase.CreateSession(creds.Username)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	c.SetCookie(&http.Cookie{
 		Name: "session_token",
 		Value: session.Value,
 		Expires: session.Expiration,
 		HttpOnly: true,
 	})
-	http.Redirect(w, r, "/user", http.StatusFound)
+	return c.Redirect(http.StatusOK, "/user")
 }
 
-func (h *UserHandler) UserPage(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		sessionToken, err := r.Cookie("session_token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		sessionUser, err := h.UserUsecase.GetUserBySessionToken(sessionToken.Value)
-		if err != nil {
-			switch err.(type) {
-			case user.InvalidSessionError, user.InvalidUserError:
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			default:
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		jsonUser, err := json.Marshal(sessionUser)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonUser)
-
-	case http.MethodPost:
-		//sign up
-		var newUser user.UserSignUp
-		err := json.NewDecoder(r.Body).Decode(&newUser)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		err = h.UserUsecase.SignUp(newUser)
-		if err != nil {
-			switch err.(type) {
-			case user.InvalidUserError:
-				w.WriteHeader(http.StatusConflict)
-				return
-			default:
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		w.WriteHeader(http.StatusOK)
-
-	case http.MethodPut:
-		_, err := r.Cookie("session_token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		sessionUser := user.User{}
-		err =json.NewDecoder(r.Body).Decode(&sessionUser)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		sessionUser, err = h.UserUsecase.UpdateUser(sessionUser.Username, sessionUser)
-		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		jsonUser, err := json.Marshal(sessionUser)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonUser)
-	default:
-		//do smth
-
+func (h *UserHandler) Logout(c echo.Context) error{
+	_, err := h.isAuthenticated(c)
+	if err != nil {
+		return err
 	}
+	sessionToken, err := c.Cookie("session_token")
+	err = h.UserUsecase.Logout(sessionToken.Value)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+
+	c.SetCookie(&http.Cookie{
+		Name: "session_token",
+		Value: sessionToken.Value,
+		Expires: time.Now().AddDate(0, 0, -1),
+		HttpOnly: true,
+	})
+	return c.String(http.StatusOK, "Successfuly logged out")
 }
 
+func (h *UserHandler) Profile(c echo.Context) error{
+	sessionUser, err := h.isAuthenticated(c)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, sessionUser)
+}
+
+func (h *UserHandler) ProfileByUsername(c echo.Context) error{
+	_, err := h.isAuthenticated(c)
+	if err != nil {
+		return err
+	}
+
+	username := c.Param("username")
+
+	requestedUser, err := h.UserUsecase.GetUserByUsername(username)
+	if err != nil {
+		switch err.(type) {
+		case user.InvalidUserError:
+			return c.String(http.StatusNotFound, err.Error())
+		default:
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusOK, requestedUser)
+
+}
+func (h *UserHandler) SignUp(c echo.Context) error {
+	newUser := user.UserSignUp {}
+
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&newUser)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.UserUsecase.SignUp(newUser)
+	if err != nil {
+		switch err.(type) {
+		case user.InvalidUserError:
+			return c.String(http.StatusConflict, err.Error())
+		default:
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.String(http.StatusOK,"Signed up successfuly")
+}
+
+func (h *UserHandler) UpdateProfile(c echo.Context) error {
+	sessionUser, err := h.isAuthenticated(c)
+	if err != nil {
+		return err
+	}
+
+	username := c.Param("username")
+	if username != sessionUser.Username {
+		return c.String(http.StatusUnauthorized, "Access denied")
+	}
+
+	newData := user.User{}
+
+	defer c.Request().Body.Close()
+
+	err = json.NewDecoder(c.Request().Body).Decode(&newData)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	sessionUser, err = h.UserUsecase.UpdateUser(sessionUser.Username, newData)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, sessionUser)
+}
+
+func (h *UserHandler) ChangePassword(c echo.Context) error {
+	sessionUser, err := h.isAuthenticated(c)
+	if err != nil {
+		return err
+	}
+
+	username := c.Param("username")
+	if username != sessionUser.Username {
+		return c.String(http.StatusUnauthorized, "Access denied")
+	}
+
+	changePassword := user.ChangePassword{}
+
+	defer c.Request().Body.Close()
+
+	err = json.NewDecoder(c.Request().Body).Decode(&changePassword)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.UserUsecase.ChangePassword(sessionUser, changePassword)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	return c.String(http.StatusOK, "")
+}
+
+func (h *UserHandler) isAuthenticated(c echo.Context) (user.User, error) {
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return user.User{}, c.String(http.StatusUnauthorized, err.Error())
+		}
+		return user.User{}, c.String(http.StatusBadRequest, err.Error())
+	}
+
+	sessionUser, err := h.UserUsecase.GetUserBySessionToken(sessionToken.Value)
+	if err != nil {
+		switch err.(type) {
+		case user.InvalidSessionError, user.InvalidUserError:
+			return user.User{}, c.String(http.StatusUnauthorized, err.Error())
+		default:
+			return user.User{}, c.String(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return sessionUser, nil
+}
