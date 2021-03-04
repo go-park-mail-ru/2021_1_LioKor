@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"github.com/go-park-mail-ru/2021_1_LioKor/internal/pkg/user"
 	"golang.org/x/crypto/bcrypt"
+	"lioKor_mail/internal/pkg/user"
 	"time"
 )
 
@@ -10,7 +10,7 @@ type UserUseCase struct {
 	Repository user.UserRepository
 }
 
-func (uc UserUseCase) Login(credentials user.Credentials) error {
+func (uc *UserUseCase) Login(credentials user.Credentials) error {
 	loginUser, err := uc.Repository.GetUserByUsername(credentials.Username)
 	if err != nil {
 		return err
@@ -25,8 +25,11 @@ func (uc UserUseCase) Login(credentials user.Credentials) error {
 	return nil
 }
 
+func (uc *UserUseCase) Logout(sessionToken string) error {
+	return uc.Repository.RemoveSession(sessionToken)
+}
 
-func (uc UserUseCase) CreateSession(username string) (user.SessionToken, error) {
+func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error) {
 	//TODO: generate sessionToken
 	sessionToken := user.SessionToken {
 		username,
@@ -46,7 +49,7 @@ func (uc UserUseCase) CreateSession(username string) (user.SessionToken, error) 
 	return sessionToken, nil
 }
 
-func (uc UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, error) {
+func (uc *UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, error) {
 	session, err := uc.Repository.GetSessionBySessionToken(sessionToken)
 	if err != nil {
 		return user.User{}, err
@@ -64,7 +67,7 @@ func (uc UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, err
 	return sessionUser, nil
 }
 
-func (uc UserUseCase) SignUp(newUser user.UserSignUp) error {
+func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -86,7 +89,7 @@ func (uc UserUseCase) SignUp(newUser user.UserSignUp) error {
 	return nil
 }
 
-func (uc UserUseCase) UpdateUser(username string, newData user.User) (user.User, error) {
+func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User, error) {
 	sessionUser, err := uc.Repository.GetUserByUsername(username)
 	if err != nil {
 		return user.User{}, err
@@ -106,4 +109,29 @@ func (uc UserUseCase) UpdateUser(username string, newData user.User) (user.User,
 		return user.User{}, err
 	}
 	return sessionUser, nil
+}
+
+func (uc *UserUseCase) GetUserByUsername(username string) (user.User, error) {
+	requestedUser, err := uc.Repository.GetUserByUsername(username)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	return requestedUser, nil
+}
+
+func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.ChangePassword) error{
+	err := bcrypt.CompareHashAndPassword([]byte(sessionUser.HashPassword), []byte(changePSWD.OldPassword))
+
+	if err != nil {
+		return user.InvalidUserError{"Invalid password"}
+	}
+
+	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(changePSWD.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return uc.Repository.ChangePassword(sessionUser.Username, string(hashPSWD))
+
 }
