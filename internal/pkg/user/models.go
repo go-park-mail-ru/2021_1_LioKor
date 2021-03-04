@@ -37,19 +37,24 @@ type Session struct {
 	Expiration time.Time
 }
 
+type ChangePassword struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
 type InvalidSessionError struct {
-	Name string
+	Message string
 }
 
 func (e InvalidSessionError) Error() string{
-	return e.Name
+	return e.Message
 }
 
 type InvalidUserError struct {
-	Name string
+	Message string
 }
 
 func (e InvalidUserError) Error() string{
-	return e.Name
+	return e.Message
 }
 
