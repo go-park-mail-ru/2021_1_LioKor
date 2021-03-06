@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"lioKor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/user"
 )
 
 type UserRepository struct {

@@ -2,7 +2,7 @@ package delivery
 
 import (
 	"encoding/json"
-	"lioKor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/user"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"

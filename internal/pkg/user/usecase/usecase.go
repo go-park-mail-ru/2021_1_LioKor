@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"lioKor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/user"
 	"time"
 )
 
