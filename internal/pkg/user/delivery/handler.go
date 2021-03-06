@@ -12,23 +12,23 @@ type UserHandler struct {
 	UserUsecase user.UseCase
 }
 
-func (h *UserHandler) Auth(c echo.Context) error{
+func (h *UserHandler) Auth(c echo.Context) error {
 	creds := user.Credentials{}
 
 	defer c.Request().Body.Close()
 
 	err := json.NewDecoder(c.Request().Body).Decode(&creds)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	err = h.UserUsecase.Login(creds)
 	if err != nil {
 		switch err.(type) {
-		case user.InvalidUserError:
-			return c.String(http.StatusUnauthorized, err.Error())
-		default:
-			return c.String(http.StatusInternalServerError, err.Error())
+			case user.InvalidUserError:
+				return c.String(http.StatusUnauthorized, err.Error())
+			default:
+				return c.String(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -43,18 +43,23 @@ func (h *UserHandler) Auth(c echo.Context) error{
 		Expires: session.Expiration,
 		HttpOnly: true,
 	})
-	return c.Redirect(http.StatusOK, "/user")
+	return c.String(http.StatusOK, "ok")
 }
 
-func (h *UserHandler) Logout(c echo.Context) error{
+func (h *UserHandler) Logout(c echo.Context) error {
 	_, err := h.isAuthenticated(c)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
+
 	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+
 	err = h.UserUsecase.Logout(sessionToken.Value)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	c.SetCookie(&http.Cookie{
@@ -66,7 +71,7 @@ func (h *UserHandler) Logout(c echo.Context) error{
 	return c.String(http.StatusOK, "Successfuly logged out")
 }
 
-func (h *UserHandler) Profile(c echo.Context) error{
+func (h *UserHandler) Profile(c echo.Context) error {
 	sessionUser, err := h.isAuthenticated(c)
 	if err != nil {
 		return err
@@ -75,7 +80,7 @@ func (h *UserHandler) Profile(c echo.Context) error{
 	return c.JSON(http.StatusOK, sessionUser)
 }
 
-func (h *UserHandler) ProfileByUsername(c echo.Context) error{
+func (h *UserHandler) ProfileByUsername(c echo.Context) error {
 	_, err := h.isAuthenticated(c)
 	if err != nil {
 		return err
@@ -96,6 +101,7 @@ func (h *UserHandler) ProfileByUsername(c echo.Context) error{
 	return c.JSON(http.StatusOK, requestedUser)
 
 }
+
 func (h *UserHandler) SignUp(c echo.Context) error {
 	newUser := user.UserSignUp {}
 
@@ -109,14 +115,14 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 	err = h.UserUsecase.SignUp(newUser)
 	if err != nil {
 		switch err.(type) {
-		case user.InvalidUserError:
-			return c.String(http.StatusConflict, err.Error())
-		default:
-			return c.String(http.StatusInternalServerError, err.Error())
+			case user.InvalidUserError:
+				return c.String(http.StatusConflict, err.Error())
+			default:
+				return c.String(http.StatusInternalServerError, err.Error())
 		}
 	}
 
-	return c.String(http.StatusOK,"Signed up successfuly")
+	return c.String(http.StatusOK, "Signed up successfuly")
 }
 
 func (h *UserHandler) UpdateProfile(c echo.Context) error {
