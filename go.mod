@@ -1,4 +1,4 @@
-module lioKor_mail
+module liokor_mail
 
 go 1.15
 
