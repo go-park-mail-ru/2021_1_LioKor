@@ -1,21 +1,21 @@
 package server
 
 import (
-	"lioKor_mail/internal/pkg/user"
-	"lioKor_mail/internal/pkg/user/delivery"
-	"lioKor_mail/internal/pkg/user/repository"
-	"lioKor_mail/internal/pkg/user/usecase"
+	"liokor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/user/delivery"
+	"liokor_mail/internal/pkg/user/repository"
+	"liokor_mail/internal/pkg/user/usecase"
 	"github.com/labstack/echo/v4"
 )
 
 
 func StartServer() {
-	rep := &repository.UserRepository{
+	userRep := &repository.UserRepository{
 		map[string]user.User{},
 		map[string]user.Session{},
 	}
-	uc := &usecase.UserUseCase{rep}
-	userHandler := delivery.UserHandler{uc}
+	userUc := &usecase.UserUseCase{userRep}
+	userHandler := delivery.UserHandler{userUc}
 	e := echo.New()
 	e.POST("/user/auth", userHandler.Auth)
 	e.POST("/user/logout", userHandler.Logout)
