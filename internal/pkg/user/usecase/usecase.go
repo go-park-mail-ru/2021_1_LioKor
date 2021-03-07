@@ -1,14 +1,14 @@
 package usecase
 
 import (
-	"golang.org/x/crypto/bcrypt"
-	"liokor_mail/internal/pkg/user"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"golang.org/x/crypto/bcrypt"
+	"liokor_mail/internal/pkg/user"
 	"math/rand"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 func generateRandomString() string {
@@ -134,7 +134,7 @@ func (uc *UserUseCase) GetUserByUsername(username string) (user.User, error) {
 	return requestedUser, nil
 }
 
-func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.ChangePassword) error{
+func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.ChangePassword) error {
 	err := bcrypt.CompareHashAndPassword([]byte(sessionUser.HashPassword), []byte(changePSWD.OldPassword))
 
 	if err != nil {

@@ -2,8 +2,8 @@ package delivery
 
 import (
 	"encoding/json"
-	"liokor_mail/internal/pkg/user"
 	"github.com/labstack/echo/v4"
+	"liokor_mail/internal/pkg/user"
 	"net/http"
 	"time"
 )
@@ -25,10 +25,10 @@ func (h *UserHandler) Auth(c echo.Context) error {
 	err = h.UserUsecase.Login(creds)
 	if err != nil {
 		switch err.(type) {
-			case user.InvalidUserError:
-				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-			default:
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		case user.InvalidUserError:
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -38,9 +38,9 @@ func (h *UserHandler) Auth(c echo.Context) error {
 	}
 
 	c.SetCookie(&http.Cookie{
-		Name: "session_token",
-		Value: session.Value,
-		Expires: session.Expiration,
+		Name:     "session_token",
+		Value:    session.Value,
+		Expires:  session.Expiration,
 		HttpOnly: true,
 	})
 	return c.String(http.StatusOK, "ok")
@@ -63,9 +63,9 @@ func (h *UserHandler) Logout(c echo.Context) error {
 	}
 
 	c.SetCookie(&http.Cookie{
-		Name: "session_token",
-		Value: sessionToken.Value,
-		Expires: time.Now().AddDate(0, 0, -1),
+		Name:     "session_token",
+		Value:    sessionToken.Value,
+		Expires:  time.Now().AddDate(0, 0, -1),
 		HttpOnly: true,
 	})
 	return c.String(http.StatusOK, "Successfuly logged out")
@@ -102,7 +102,7 @@ func (h *UserHandler) ProfileByUsername(c echo.Context) error {
 }
 
 func (h *UserHandler) SignUp(c echo.Context) error {
-	newUser := user.UserSignUp {}
+	newUser := user.UserSignUp{}
 
 	defer c.Request().Body.Close()
 
@@ -114,10 +114,10 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 	err = h.UserUsecase.SignUp(newUser)
 	if err != nil {
 		switch err.(type) {
-			case user.InvalidUserError:
-				return echo.NewHTTPError(http.StatusConflict, err.Error())
-			default:
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		case user.InvalidUserError:
+			return echo.NewHTTPError(http.StatusConflict, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -192,11 +192,11 @@ func (h *UserHandler) isAuthenticated(c echo.Context) (user.User, error) {
 	sessionUser, err := h.UserUsecase.GetUserBySessionToken(sessionToken.Value)
 	if err != nil {
 		switch err.(type) {
-			case user.InvalidSessionError, user.InvalidUserError:
-				return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-			default:
-				return user.User{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-			}
+		case user.InvalidSessionError, user.InvalidUserError:
+			return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		default:
+			return user.User{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 	}
 	return sessionUser, nil
 }
