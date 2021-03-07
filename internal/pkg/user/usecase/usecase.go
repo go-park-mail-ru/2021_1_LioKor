@@ -3,8 +3,24 @@ package usecase
 import (
 	"golang.org/x/crypto/bcrypt"
 	"liokor_mail/internal/pkg/user"
+	"crypto/sha256"
+	"encoding/hex"
+	"math/rand"
+	"strconv"
 	"time"
+	"fmt"
 )
+
+func generateRandomString() string {
+	rand.Seed(time.Now().UnixNano())
+	randNumStr := strconv.Itoa(rand.Intn(32000))
+
+	fmt.Println(randNumStr)
+
+	h := sha256.New()
+	h.Write([]byte(randNumStr))
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 type UserUseCase struct {
 	Repository user.UserRepository
@@ -30,10 +46,9 @@ func (uc *UserUseCase) Logout(sessionToken string) error {
 }
 
 func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error) {
-	//TODO: generate sessionToken
-	sessionToken := user.SessionToken {
-		username,
-		time.Now().Add(10 * time.Hour),
+	sessionToken := user.SessionToken{
+		generateRandomString(),
+		time.Now().Add(10 * 24 * time.Hour),
 	}
 
 	err := uc.Repository.CreateSession(user.Session{
@@ -41,7 +56,6 @@ func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error)
 		sessionToken.Value,
 		sessionToken.Expiration,
 	})
-
 	if err != nil {
 		return user.SessionToken{}, err
 	}
