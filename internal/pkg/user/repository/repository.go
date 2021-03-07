@@ -5,10 +5,9 @@ import (
 )
 
 type UserRepository struct {
-	UserDB map[string]user.User
+	UserDB    map[string]user.User
 	SessionDB map[string]user.Session
 }
-
 
 func (ur *UserRepository) CreateSession(session user.Session) error {
 	if _, exists := ur.SessionDB[session.SessionToken]; exists {
