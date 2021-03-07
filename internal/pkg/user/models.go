@@ -16,17 +16,17 @@ type SessionToken struct {
 type UserSignUp struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	AvatarURL string `json:"avatar_url"`
+	AvatarURL string `json:"avatarUrl"`
 	FullName string `json:"fullname"`
-	ReserveEmail string `json:"reserve_email"`
+	ReserveEmail string `json:"reserveEmail"`
 }
 
 type User struct {
 	Username string `json:"username"`
 	HashPassword string `json:"-"`
-	AvatarURL string `json:"avatar_url"`
+	AvatarURL string `json:"avatarUrl"`
 	FullName string `json:"fullname"`
-	ReserveEmail string `json:"reserve_email"`
+	ReserveEmail string `json:"reserveEmail"`
 	RegisterDate string `json:"-"`
 	IsAdmin bool `json:"-"`
 }
@@ -57,4 +57,3 @@ type InvalidUserError struct {
 func (e InvalidUserError) Error() string{
 	return e.Message
 }
-
