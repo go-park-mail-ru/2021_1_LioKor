@@ -7,34 +7,33 @@ type Credentials struct {
 	Password string
 }
 
-
 type SessionToken struct {
-	Value  string
+	Value      string
 	Expiration time.Time
 }
 
 type UserSignUp struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	AvatarURL string `json:"avatarUrl"`
-	FullName string `json:"fullname"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	AvatarURL    string `json:"avatarUrl"`
+	FullName     string `json:"fullname"`
 	ReserveEmail string `json:"reserveEmail"`
 }
 
 type User struct {
-	Username string `json:"username"`
+	Username     string `json:"username"`
 	HashPassword string `json:"-"`
-	AvatarURL string `json:"avatarUrl"`
-	FullName string `json:"fullname"`
+	AvatarURL    string `json:"avatarUrl"`
+	FullName     string `json:"fullname"`
 	ReserveEmail string `json:"reserveEmail"`
 	RegisterDate string `json:"-"`
-	IsAdmin bool `json:"-"`
+	IsAdmin      bool   `json:"-"`
 }
 
 type Session struct {
-	Username string
+	Username     string
 	SessionToken string
-	Expiration time.Time
+	Expiration   time.Time
 }
 
 type ChangePassword struct {
@@ -46,7 +45,7 @@ type InvalidSessionError struct {
 	Message string
 }
 
-func (e InvalidSessionError) Error() string{
+func (e InvalidSessionError) Error() string {
 	return e.Message
 }
 
@@ -54,6 +53,6 @@ type InvalidUserError struct {
 	Message string
 }
 
-func (e InvalidUserError) Error() string{
+func (e InvalidUserError) Error() string {
 	return e.Message
 }
