@@ -8,8 +8,14 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func CORSHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://mail.liokor.ru")
+		return next(c)
+	}
+}
 
-func StartServer() {
+func StartServer(host string, port string) {
 	userRep := &repository.UserRepository{
 		map[string]user.User{},
 		map[string]user.Session{},
@@ -18,6 +24,8 @@ func StartServer() {
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()
+	e.Use(CORSHeader)
+
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout)
 	e.GET("/user", userHandler.Profile)
@@ -26,5 +34,5 @@ func StartServer() {
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
-	e.Logger.Fatal(e.Start("127.0.0.1:8000"))
+	e.Logger.Fatal(e.Start(host + ":" + port))
 }
