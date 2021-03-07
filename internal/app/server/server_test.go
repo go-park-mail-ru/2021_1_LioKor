@@ -26,7 +26,7 @@ var userHandler = delivery.UserHandler{
 
 func TestSignUp(t *testing.T) {
 	e := echo.New()
-	testUser:= user.UserSignUp{
+	testUser := user.UserSignUp{
 		"test",
 		"pswd",
 		"some url",
@@ -55,11 +55,11 @@ func TestSignUp(t *testing.T) {
 		t.Error("Expected error, but it's nil")
 	}
 
-	testUser2:= user.UserSignUp{
-		"test2", // username
-		"pswd", // password
-		"http://wolf.wolf", // avatar url
-		"test Testing", // fullname
+	testUser2 := user.UserSignUp{
+		"test2",             // username
+		"pswd",              // password
+		"http://wolf.wolf",  // avatar url
+		"test Testing",      // fullname
 		"someemail@mail.ru", // email
 	}
 
@@ -74,7 +74,6 @@ func TestSignUp(t *testing.T) {
 		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 }
-
 
 func TestAuthenticate(t *testing.T) {
 	e := echo.New()
@@ -97,7 +96,6 @@ func TestAuthenticate(t *testing.T) {
 
 	cookies := response.Result().Cookies()
 	assert.Equal(t, "test", cookies[0].Value)
-
 
 	creds2 := user.Credentials{
 		"te",
@@ -154,7 +152,7 @@ func TestCookie(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	e := echo.New()
-	updUser:= user.User{
+	updUser := user.User{
 		"test",
 		"",
 		"new url",
@@ -201,7 +199,6 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, expectedUser.ReserveEmail, sessionUser.ReserveEmail)
 }
 
-
 func TestChangePassword(t *testing.T) {
 	e := echo.New()
 	chPSWD := user.ChangePassword{
@@ -237,7 +234,6 @@ func TestLogout(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
-
 
 	creds := user.Credentials{
 		"test",
