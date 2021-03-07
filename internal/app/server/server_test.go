@@ -15,18 +15,18 @@ import (
 	"testing"
 )
 
-var h = delivery.UserHandler{
+var userHandler = delivery.UserHandler{
 	&usecase.UserUseCase{
 		&repository.UserRepository{
-				map[string]user.User{},
-				map[string]user.Session{},
+			map[string]user.User{},
+			map[string]user.Session{},
 		},
 	},
 }
 
 func TestSignUp(t *testing.T) {
 	e := echo.New()
-	 testUser:= user.UserSignUp{
+	testUser:= user.UserSignUp{
 		"test",
 		"pswd",
 		"some url",
@@ -36,41 +36,42 @@ func TestSignUp(t *testing.T) {
 	body, _ := json.Marshal(testUser)
 	url := "/user"
 	req := httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
 
-	h.SignUp(c)
+	userHandler.SignUp(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 
+	// sending same user again
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w = httptest.NewRecorder()
+	response = httptest.NewRecorder()
 
-	c = e.NewContext(req, w)
-	h.SignUp(c)
-	if w.Code != http.StatusConflict {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusConflict)
+	echoContext = e.NewContext(req, response)
+	err := userHandler.SignUp(echoContext)
+	if err == nil {
+		t.Error("Expected error, but it's nil")
 	}
 
 	testUser2:= user.UserSignUp{
-		"test2",
-		"pswd",
-		"some url",
-		"test Testing",
-		"someemail@mail.ru",
+		"test2", // username
+		"pswd", // password
+		"http://wolf.wolf", // avatar url
+		"test Testing", // fullname
+		"someemail@mail.ru", // email
 	}
 
 	body, _ = json.Marshal(testUser2)
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w = httptest.NewRecorder()
+	response = httptest.NewRecorder()
 
-	c = e.NewContext(req, w)
-	h.SignUp(c)
+	echoContext = e.NewContext(req, response)
+	userHandler.SignUp(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 }
 
@@ -85,16 +86,16 @@ func TestAuthenticate(t *testing.T) {
 	body, _ := json.Marshal(creds)
 	url := "/user/auth"
 	req := httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
 
-	h.Auth(c)
+	userHandler.Auth(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 
-	cookies := w.Result().Cookies()
+	cookies := response.Result().Cookies()
 	assert.Equal(t, "test", cookies[0].Value)
 
 
@@ -105,15 +106,13 @@ func TestAuthenticate(t *testing.T) {
 
 	body, _ = json.Marshal(creds2)
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w = httptest.NewRecorder()
-	c = e.NewContext(req, w)
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
 
-	h.Auth(c)
-
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusUnauthorized)
+	err := userHandler.Auth(echoContext)
+	if err == nil {
+		t.Error("Expected error, but it's nil")
 	}
-
 }
 
 func TestCookie(t *testing.T) {
@@ -121,17 +120,17 @@ func TestCookie(t *testing.T) {
 	url := "/user"
 	req := httptest.NewRequest("GET", url, nil)
 	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
 
-	h.Profile(c)
+	userHandler.Profile(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 
 	sessionUser := user.User{}
-	b := w.Result().Body
+	b := response.Result().Body
 	err := json.NewDecoder(b).Decode(&sessionUser)
 	if err != nil {
 		t.Errorf("Json error")
@@ -169,19 +168,19 @@ func TestUpdate(t *testing.T) {
 	url := "/user/test"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
 	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
-	c.SetPath("/:username")
-	c.SetParamNames("username")
-	c.SetParamValues("test")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+	echoContext.SetPath("/:username")
+	echoContext.SetParamNames("username")
+	echoContext.SetParamValues("test")
 
-	h.UpdateProfile(c)
+	userHandler.UpdateProfile(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 	sessionUser := user.User{}
-	b := w.Result().Body
+	b := response.Result().Body
 	err := json.NewDecoder(b).Decode(&sessionUser)
 	if err != nil {
 		t.Errorf("Json error")
@@ -213,15 +212,15 @@ func TestChangePassword(t *testing.T) {
 	url := "/user/test/password"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
 	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
-	c.SetPath("/:username/password")
-	c.SetParamNames("username")
-	c.SetParamValues("test")
-	h.ChangePassword(c)
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+	echoContext.SetPath("/:username/password")
+	echoContext.SetParamNames("username")
+	echoContext.SetParamValues("test")
+	userHandler.ChangePassword(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 
 }
@@ -231,12 +230,12 @@ func TestLogout(t *testing.T) {
 	url := "/user/logout"
 	req := httptest.NewRequest("POST", url, nil)
 	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
-	w := httptest.NewRecorder()
-	c := e.NewContext(req, w)
-	h.Logout(c)
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+	userHandler.Logout(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 
 
@@ -248,12 +247,12 @@ func TestLogout(t *testing.T) {
 	body, _ := json.Marshal(creds)
 	url = "/user/auth"
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
-	w = httptest.NewRecorder()
-	c = e.NewContext(req, w)
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
 
-	h.Auth(c)
+	userHandler.Auth(echoContext)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("Wrong status code: %d, expected: %d", w.Code, http.StatusOK)
+	if response.Code != http.StatusOK {
+		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
 	}
 }
