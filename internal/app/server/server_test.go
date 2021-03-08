@@ -28,7 +28,7 @@ var userHandler = delivery.UserHandler{
 func TestSignUp(t *testing.T) {
 	e := echo.New()
 	testUser := user.UserSignUp{
-		"test",
+		"TEST",
 		"pswd",
 		"some url",
 		"test Testing",
@@ -73,6 +73,24 @@ func TestSignUp(t *testing.T) {
 
 	if response.Code != http.StatusOK {
 		t.Errorf("Wrong status code: %d, expected: %d", response.Code, http.StatusOK)
+	}
+
+	testUser3 := user.UserSignUp{
+		"test",             // username
+		"pswd",              // password
+		"http://wolf.wolf",  // avatar url
+		"test Testing",      // fullname
+		"someemail@mail.ru", // email
+	}
+
+	body, _ = json.Marshal(testUser3)
+	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
+	response = httptest.NewRecorder()
+
+	echoContext = e.NewContext(req, response)
+	err = userHandler.SignUp(echoContext)
+	if err == nil {
+		t.Error("Was able to create two users with the same username, but different letter case!");
 	}
 }
 
@@ -146,7 +164,7 @@ func TestCookie(t *testing.T) {
 	}
 
 	expectedUser := user.User{
-		"test",
+		"TEST",
 		"",
 		"some url",
 		"test Testing",
@@ -164,7 +182,7 @@ func TestCookie(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	e := echo.New()
 	updUser := user.User{
-		"test",
+		"TEST",
 		"",
 		"new url",
 		"test2 test2",
@@ -174,7 +192,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(updUser)
-	url := "/user/test"
+	url := "/user/TEST"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
 
 	session, err := userHandler.UserUsecase.CreateSession("test")
@@ -188,7 +206,7 @@ func TestUpdate(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 	echoContext.SetPath("/:username")
 	echoContext.SetParamNames("username")
-	echoContext.SetParamValues("test")
+	echoContext.SetParamValues("TEST")
 
 	userHandler.UpdateProfile(echoContext)
 
@@ -204,7 +222,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	expectedUser := user.User{
-		"test",
+		"TEST",
 		"",
 		"new url",
 		"test2 test2",
