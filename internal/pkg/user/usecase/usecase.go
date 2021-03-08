@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
-	"errors"
 )
 
 func generateRandomString() string {
@@ -77,11 +76,6 @@ func (uc *UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, er
 }
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
-	_, err := uc.Repository.GetUserByUsername(newUser.Username)
-	if err == nil { // if user already exists
-		return errors.New("username");
-	}
-
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
