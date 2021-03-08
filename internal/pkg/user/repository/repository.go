@@ -9,12 +9,8 @@ type UserRepository struct {
 	SessionDB map[string]user.Session
 }
 
-func (ur *UserRepository) CreateSession(session user.Session) error {
-	if _, exists := ur.SessionDB[session.SessionToken]; exists {
-		return user.InvalidSessionError{"session token exists"}
-	}
+func (ur *UserRepository) CreateSession(session user.Session) {
 	ur.SessionDB[session.SessionToken] = session
-	return nil
 }
 
 func (ur *UserRepository) GetSessionBySessionToken(token string) (user.Session, error) {
