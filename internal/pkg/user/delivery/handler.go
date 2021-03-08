@@ -6,7 +6,21 @@ import (
 	"liokor_mail/internal/pkg/user"
 	"net/http"
 	"time"
+	"strings"
+	"regexp"
 )
+
+func validateUsername(username string) bool {
+	username = strings.ToLower(username);
+
+	checker, _ := regexp.Compile("^[A-Za-z0-9_]{3,}");
+	matchedLen := len(checker.FindString(username))
+
+	if matchedLen == 0 || matchedLen < len(username) {
+		return false;
+	}
+	return !strings.Contains(username, "admin");
+}
 
 type UserHandler struct {
 	UserUsecase user.UseCase
@@ -111,13 +125,17 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if !validateUsername(newUser.Username) {
+		return echo.NewHTTPError(http.StatusBadRequest, "username");
+	}
+
 	err = h.UserUsecase.SignUp(newUser)
 	if err != nil {
 		switch err.(type) {
 		case user.InvalidUserError:
 			return echo.NewHTTPError(http.StatusConflict, err.Error())
 		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 	}
 

@@ -3,14 +3,15 @@ package repository
 import (
 	"liokor_mail/internal/pkg/user"
 	"sync"
+	"strings"
 )
 
-type UserStruct  struct{
+type UserStruct struct {
 	Users map[string]user.User
 	Mutex sync.Mutex
 }
 
-type SessionStruct struct{
+type SessionStruct struct {
 	Sessions map[string]user.Session
 	Mutex sync.Mutex
 }
@@ -36,6 +37,8 @@ func (ur *UserRepository) GetSessionBySessionToken(token string) (user.Session, 
 }
 
 func (ur *UserRepository) GetUserByUsername(username string) (user.User, error) {
+	username = strings.ToLower(username);
+
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
 	if user, exists := ur.UserDB.Users[username]; exists {
@@ -45,16 +48,20 @@ func (ur *UserRepository) GetUserByUsername(username string) (user.User, error) 
 }
 
 func (ur *UserRepository) CreateUser(newUser user.User) error {
+	username := strings.ToLower(newUser.Username);
+
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
-	if _, exists := ur.UserDB.Users[newUser.Username]; exists {
-		return user.InvalidUserError{"username taken"}
+	if _, exists := ur.UserDB.Users[username]; exists {
+		return user.InvalidUserError{"username"}
 	}
-	ur.UserDB.Users[newUser.Username] = newUser
+	ur.UserDB.Users[username] = newUser
 	return nil
 }
 
 func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
+	username = strings.ToLower(username);
+
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
 	if _, exists := ur.UserDB.Users[username]; !exists {
@@ -65,6 +72,8 @@ func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.U
 }
 
 func (ur *UserRepository) ChangePassword(username string, newPSWD string) error {
+	username = strings.ToLower(username);
+
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
 	if _, exists := ur.UserDB.Users[username]; !exists {
