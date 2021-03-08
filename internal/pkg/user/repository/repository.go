@@ -2,61 +2,86 @@ package repository
 
 import (
 	"liokor_mail/internal/pkg/user"
+	"sync"
 )
 
+type UserStruct  struct{
+	Users map[string]user.User
+	Mutex sync.Mutex
+}
+
+type SessionStruct struct{
+	Sessions map[string]user.Session
+	Mutex sync.Mutex
+}
+
 type UserRepository struct {
-	UserDB    map[string]user.User
-	SessionDB map[string]user.Session
+	UserDB UserStruct
+	SessionDB SessionStruct
 }
 
 func (ur *UserRepository) CreateSession(session user.Session) {
-	ur.SessionDB[session.SessionToken] = session
+	ur.SessionDB.Mutex.Lock()
+	defer ur.SessionDB.Mutex.Unlock()
+	ur.SessionDB.Sessions[session.SessionToken] = session
 }
 
 func (ur *UserRepository) GetSessionBySessionToken(token string) (user.Session, error) {
-	if session, exists := ur.SessionDB[token]; exists {
+	ur.SessionDB.Mutex.Lock()
+	defer ur.SessionDB.Mutex.Unlock()
+	if session, exists := ur.SessionDB.Sessions[token]; exists {
 		return session, nil
 	}
 	return user.Session{}, user.InvalidSessionError{"session doesn't exist"}
 }
 
 func (ur *UserRepository) GetUserByUsername(username string) (user.User, error) {
-	if user, exists := ur.UserDB[username]; exists {
+	ur.UserDB.Mutex.Lock()
+	defer ur.UserDB.Mutex.Unlock()
+	if user, exists := ur.UserDB.Users[username]; exists {
 		return user, nil
 	}
 	return user.User{}, user.InvalidUserError{"user doesn't exist"}
 }
 
 func (ur *UserRepository) CreateUser(newUser user.User) error {
-	if _, exists := ur.UserDB[newUser.Username]; exists {
+	ur.UserDB.Mutex.Lock()
+	defer ur.UserDB.Mutex.Unlock()
+	if _, exists := ur.UserDB.Users[newUser.Username]; exists {
 		return user.InvalidUserError{"username taken"}
 	}
-	ur.UserDB[newUser.Username] = newUser
+	ur.UserDB.Users[newUser.Username] = newUser
 	return nil
 }
 
 func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
-	if _, exists := ur.UserDB[username]; !exists {
+	ur.UserDB.Mutex.Lock()
+	defer ur.UserDB.Mutex.Unlock()
+	if _, exists := ur.UserDB.Users[username]; !exists {
 		return user.User{}, user.InvalidUserError{"user doesn't exist"}
 	}
-	ur.UserDB[username] = newData
+	ur.UserDB.Users[username] = newData
 	return newData, nil
 }
 
 func (ur *UserRepository) ChangePassword(username string, newPSWD string) error {
-	if _, exists := ur.UserDB[username]; !exists {
+	ur.UserDB.Mutex.Lock()
+	defer ur.UserDB.Mutex.Unlock()
+	if _, exists := ur.UserDB.Users[username]; !exists {
 		return user.InvalidUserError{"user doesn't exist"}
 	}
-	data := ur.UserDB[username]
+	data := ur.UserDB.Users[username]
 	data.HashPassword = newPSWD
-	ur.UserDB[username] = data
+	ur.UserDB.Users[username] = data
 	return nil
 }
 
 func (ur *UserRepository) RemoveSession(token string) error {
-	if _, exists := ur.SessionDB[token]; !exists {
+	ur.SessionDB.Mutex.Lock()
+	defer ur.SessionDB.Mutex.Unlock()
+	if _, exists := ur.SessionDB.Sessions[token]; !exists {
 		return user.InvalidSessionError{"session doesn't exist"}
 	}
-	delete(ur.SessionDB, token)
+	delete(ur.SessionDB.Sessions, token)
 	return nil
 }

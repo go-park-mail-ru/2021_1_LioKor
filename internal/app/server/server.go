@@ -6,6 +6,7 @@ import (
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
+	"sync"
 )
 
 func CORSHeader(next echo.HandlerFunc) echo.HandlerFunc {
@@ -17,8 +18,8 @@ func CORSHeader(next echo.HandlerFunc) echo.HandlerFunc {
 
 func StartServer(host string, port string) {
 	userRep := &repository.UserRepository{
-		map[string]user.User{},
-		map[string]user.Session{},
+		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
+		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 	}
 	userUc := &usecase.UserUseCase{userRep}
 	userHandler := delivery.UserHandler{userUc}
