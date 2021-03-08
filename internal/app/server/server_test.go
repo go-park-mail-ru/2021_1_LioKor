@@ -9,6 +9,7 @@ import (
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
+	"sync"
 
 	"net/http"
 	"net/http/httptest"
@@ -18,8 +19,8 @@ import (
 var userHandler = delivery.UserHandler{
 	&usecase.UserUseCase{
 		&repository.UserRepository{
-			map[string]user.User{},
-			map[string]user.Session{},
+			repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
+			repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 		},
 	},
 }
