@@ -95,7 +95,9 @@ func TestAuthenticate(t *testing.T) {
 	}
 
 	cookies := response.Result().Cookies()
-	assert.Equal(t, "test", cookies[0].Value)
+	if len(cookies) == 0 {
+		t.Error("No cookie found after authentication!");
+	}
 
 	creds2 := user.Credentials{
 		"te",
@@ -117,7 +119,14 @@ func TestCookie(t *testing.T) {
 	e := echo.New()
 	url := "/user"
 	req := httptest.NewRequest("GET", url, nil)
-	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+
+	session, err := userHandler.UserUsecase.CreateSession("test")
+	if err != nil {
+		t.Errorf("Unable to create session!")
+		return
+	}
+	req.Header.Add("Cookie", "session_token=" + session.Value + "; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
@@ -129,9 +138,10 @@ func TestCookie(t *testing.T) {
 
 	sessionUser := user.User{}
 	b := response.Result().Body
-	err := json.NewDecoder(b).Decode(&sessionUser)
+	err = json.NewDecoder(b).Decode(&sessionUser)
 	if err != nil {
 		t.Errorf("Json error")
+		return
 	}
 
 	expectedUser := user.User{
@@ -165,7 +175,14 @@ func TestUpdate(t *testing.T) {
 	body, _ := json.Marshal(updUser)
 	url := "/user/test"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
-	req.Header.Add("Cookie", "session_token=test; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+
+	session, err := userHandler.UserUsecase.CreateSession("test")
+	if err != nil {
+		t.Errorf("Unable to create session!")
+		return
+	}
+	req.Header.Add("Cookie", "session_token=" + session.Value + "; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 	echoContext.SetPath("/:username")
@@ -179,9 +196,10 @@ func TestUpdate(t *testing.T) {
 	}
 	sessionUser := user.User{}
 	b := response.Result().Body
-	err := json.NewDecoder(b).Decode(&sessionUser)
+	err = json.NewDecoder(b).Decode(&sessionUser)
 	if err != nil {
 		t.Errorf("Json error")
+		return
 	}
 
 	expectedUser := user.User{

@@ -1,7 +1,7 @@
 package user
 
 type UserRepository interface {
-	CreateSession(session Session) error
+	CreateSession(session Session)
 	GetSessionBySessionToken(token string) (Session, error)
 	GetUserByUsername(username string) (User, error)
 	CreateUser(user User) error
