@@ -3,7 +3,6 @@ package usecase
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"liokor_mail/internal/pkg/user"
 	"math/rand"
@@ -14,8 +13,6 @@ import (
 func generateRandomString() string {
 	rand.Seed(time.Now().UnixNano())
 	randNumStr := strconv.Itoa(rand.Intn(32000))
-
-	fmt.Println(randNumStr)
 
 	h := sha256.New()
 	h.Write([]byte(randNumStr))
@@ -51,14 +48,11 @@ func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error)
 		time.Now().Add(10 * 24 * time.Hour),
 	}
 
-	err := uc.Repository.CreateSession(user.Session{
+	uc.Repository.CreateSession(user.Session{
 		username,
 		sessionToken.Value,
 		sessionToken.Expiration,
 	})
-	if err != nil {
-		return user.SessionToken{}, err
-	}
 
 	return sessionToken, nil
 }
