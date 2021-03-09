@@ -115,7 +115,7 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 	}
 
 	if !validators.ValidateUsername(newUser.Username) {
-		return echo.NewHTTPError(http.StatusBadRequest, "username");
+		return echo.NewHTTPError(http.StatusBadRequest, "username")
 	}
 
 	err = h.UserUsecase.SignUp(newUser)

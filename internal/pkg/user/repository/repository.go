@@ -2,8 +2,8 @@ package repository
 
 import (
 	"liokor_mail/internal/pkg/user"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type UserStruct struct {
@@ -13,11 +13,11 @@ type UserStruct struct {
 
 type SessionStruct struct {
 	Sessions map[string]user.Session
-	Mutex sync.Mutex
+	Mutex    sync.Mutex
 }
 
 type UserRepository struct {
-	UserDB UserStruct
+	UserDB    UserStruct
 	SessionDB SessionStruct
 }
 
@@ -37,7 +37,7 @@ func (ur *UserRepository) GetSessionBySessionToken(token string) (user.Session, 
 }
 
 func (ur *UserRepository) GetUserByUsername(username string) (user.User, error) {
-	username = strings.ToLower(username);
+	username = strings.ToLower(username)
 
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
@@ -48,7 +48,7 @@ func (ur *UserRepository) GetUserByUsername(username string) (user.User, error) 
 }
 
 func (ur *UserRepository) CreateUser(newUser user.User) error {
-	username := strings.ToLower(newUser.Username);
+	username := strings.ToLower(newUser.Username)
 
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
@@ -60,7 +60,7 @@ func (ur *UserRepository) CreateUser(newUser user.User) error {
 }
 
 func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
-	username = strings.ToLower(username);
+	username = strings.ToLower(username)
 
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
@@ -72,7 +72,7 @@ func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.U
 }
 
 func (ur *UserRepository) ChangePassword(username string, newPSWD string) error {
-	username = strings.ToLower(username);
+	username = strings.ToLower(username)
 
 	ur.UserDB.Mutex.Lock()
 	defer ur.UserDB.Mutex.Unlock()
