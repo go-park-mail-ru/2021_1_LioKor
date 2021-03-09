@@ -7,10 +7,11 @@ import (
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
+	"strconv"
 	"sync"
 )
 
-func StartServer(host string, port string, allowedOrigins []string) {
+func StartServer(host string, port int, allowedOrigins []string) {
 	userRep := &repository.UserRepository{
 		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
@@ -21,6 +22,7 @@ func StartServer(host string, port string, allowedOrigins []string) {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowedOrigins,
+		AllowCredentials: true,
 	}))
 
 	e.POST("/user/auth", userHandler.Auth)
@@ -31,5 +33,5 @@ func StartServer(host string, port string, allowedOrigins []string) {
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
-	e.Logger.Fatal(e.Start(host + ":" + port))
+	e.Logger.Fatal(e.Start(host + ":" + strconv.Itoa(port)))
 }
