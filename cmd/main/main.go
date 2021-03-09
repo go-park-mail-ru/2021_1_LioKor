@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	Host           string
-	Port           string
+	Port           int
 	AllowedOrigins []string
 }
 
