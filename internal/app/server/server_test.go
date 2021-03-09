@@ -76,7 +76,7 @@ func TestSignUp(t *testing.T) {
 	}
 
 	testUser3 := user.UserSignUp{
-		"test",             // username
+		"test",              // username
 		"pswd",              // password
 		"http://wolf.wolf",  // avatar url
 		"test Testing",      // fullname
@@ -90,7 +90,7 @@ func TestSignUp(t *testing.T) {
 	echoContext = e.NewContext(req, response)
 	err = userHandler.SignUp(echoContext)
 	if err == nil {
-		t.Error("Was able to create two users with the same username, but different letter case!");
+		t.Error("Was able to create two users with the same username, but different letter case!")
 	}
 }
 
@@ -115,7 +115,7 @@ func TestAuthenticate(t *testing.T) {
 
 	cookies := response.Result().Cookies()
 	if len(cookies) == 0 {
-		t.Error("No cookie found after authentication!");
+		t.Error("No cookie found after authentication!")
 	}
 
 	creds2 := user.Credentials{
@@ -144,7 +144,7 @@ func TestCookie(t *testing.T) {
 		t.Errorf("Unable to create session!")
 		return
 	}
-	req.Header.Add("Cookie", "session_token=" + session.Value + "; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token="+session.Value+"; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
 
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
@@ -200,7 +200,7 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("Unable to create session!")
 		return
 	}
-	req.Header.Add("Cookie", "session_token=" + session.Value + "; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token="+session.Value+"; Expires=Wed, 03 Mar 2021 03:30:48 GMT; HttpOnly")
 
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
