@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
@@ -9,14 +10,7 @@ import (
 	"sync"
 )
 
-func CORSHeader(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set("Access-Control-Allow-Origin", "https://mail.liokor.ru")
-		return next(c)
-	}
-}
-
-func StartServer(host string, port string) {
+func StartServer(host string, port string, allowedOrigins []string) {
 	userRep := &repository.UserRepository{
 		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
@@ -25,7 +19,9 @@ func StartServer(host string, port string) {
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()
-	e.Use(CORSHeader)
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: allowedOrigins,
+	}))
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout)
