@@ -1,15 +1,15 @@
 package main
 
 import (
-	"liokor_mail/internal/app/server"
 	"encoding/json"
-	"os"
+	"liokor_mail/internal/app/server"
 	"log"
+	"os"
 )
 
 type Config struct {
-	Host string
-	Port string
+	Host           string
+	Port           string
 	AllowedOrigins []string
 }
 
