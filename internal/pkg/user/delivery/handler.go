@@ -4,23 +4,10 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/user/validators"
 	"net/http"
 	"time"
-	"strings"
-	"regexp"
 )
-
-func validateUsername(username string) bool {
-	username = strings.ToLower(username);
-
-	checker, _ := regexp.Compile("^[A-Za-z0-9_]{3,}");
-	matchedLen := len(checker.FindString(username))
-
-	if matchedLen == 0 || matchedLen < len(username) {
-		return false;
-	}
-	return !strings.Contains(username, "admin");
-}
 
 type UserHandler struct {
 	UserUsecase user.UseCase
@@ -55,6 +42,8 @@ func (h *UserHandler) Auth(c echo.Context) error {
 		Name:     "session_token",
 		Value:    session.Value,
 		Expires:  session.Expiration,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
 		HttpOnly: true,
 	})
 	return c.String(http.StatusOK, "ok")
@@ -78,7 +67,7 @@ func (h *UserHandler) Logout(c echo.Context) error {
 
 	c.SetCookie(&http.Cookie{
 		Name:     "session_token",
-		Value:    sessionToken.Value,
+		Value:    "",
 		Expires:  time.Now().AddDate(0, 0, -1),
 		HttpOnly: true,
 	})
@@ -125,7 +114,7 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if !validateUsername(newUser.Username) {
+	if !validators.ValidateUsername(newUser.Username) {
 		return echo.NewHTTPError(http.StatusBadRequest, "username");
 	}
 
