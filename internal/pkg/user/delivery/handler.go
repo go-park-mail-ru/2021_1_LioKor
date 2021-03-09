@@ -65,10 +65,13 @@ func (h *UserHandler) Logout(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// SameSite to prevent warnings in js console
 	c.SetCookie(&http.Cookie{
 		Name:     "session_token",
 		Value:    "",
 		Expires:  time.Now().AddDate(0, 0, -1),
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
 		HttpOnly: true,
 	})
 	return c.String(http.StatusOK, "Successfuly logged out")
