@@ -20,6 +20,7 @@ func (h *UserHandler) setSessionCookie(c *echo.Context, username string) error {
 	(*c).SetCookie(&http.Cookie{
 		Name:     "session_token",
 		Value:    session.Value,
+		Path:     "/",
 		Expires:  session.Expiration,
 		SameSite: http.SameSiteStrictMode,
 		Secure:   true,
@@ -76,6 +77,7 @@ func (h *UserHandler) Logout(c echo.Context) error {
 	c.SetCookie(&http.Cookie{
 		Name:     "session_token",
 		Value:    "",
+		Path:     "/",
 		Expires:  time.Now().AddDate(0, 0, -1),
 		SameSite: http.SameSiteStrictMode,
 		Secure:   true,
