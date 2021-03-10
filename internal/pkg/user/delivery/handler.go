@@ -12,6 +12,23 @@ import (
 type UserHandler struct {
 	UserUsecase user.UseCase
 }
+func (h *UserHandler) setSessionCookie(c *echo.Context, username string) error {
+	session, err := h.UserUsecase.CreateSession(username)
+	if err != nil {
+		return err
+	}
+
+	(*c).SetCookie(&http.Cookie{
+		Name:     "session_token",
+		Value:    session.Value,
+		Expires:  session.Expiration,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		HttpOnly: true,
+	})
+
+	return nil
+}
 
 func (h *UserHandler) Auth(c echo.Context) error {
 	creds := user.Credentials{}
@@ -32,20 +49,11 @@ func (h *UserHandler) Auth(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
-
-	session, err := h.UserUsecase.CreateSession(creds.Username)
+	err = h.setSessionCookie(&c, creds.Username)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	c.SetCookie(&http.Cookie{
-		Name:     "session_token",
-		Value:    session.Value,
-		Expires:  session.Expiration,
-		SameSite: http.SameSiteStrictMode,
-		Secure:   true,
-		HttpOnly: true,
-	})
 	return c.String(http.StatusOK, "ok")
 }
 
@@ -129,6 +137,11 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 		default:
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
+	}
+
+	err = h.setSessionCookie(&c, newUser.Username)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusOK, "Signed up successfuly")
