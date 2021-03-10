@@ -2,8 +2,6 @@
     "host": "127.0.0.1",
     "port": 8000,
     "allowedOrigins": [
-        "https://mail.liokor.ru",
-        "https://mail.liokor.com",
-        "http://localhost:8080"
+        "https://mail.liokor.ru"
     ]
 }
