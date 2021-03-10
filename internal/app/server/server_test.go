@@ -29,7 +29,7 @@ func TestSignUp(t *testing.T) {
 	e := echo.New()
 	testUser := user.UserSignUp{
 		"TEST",
-		"pswd",
+		"pswdPSWD12",
 		"some url",
 		"test Testing",
 		"someemail@mail.ru",
@@ -58,7 +58,7 @@ func TestSignUp(t *testing.T) {
 
 	testUser2 := user.UserSignUp{
 		"test2",             // username
-		"pswd",              // password
+		"pswdPSWD12",              // password
 		"http://wolf.wolf",  // avatar url
 		"test Testing",      // fullname
 		"someemail@mail.ru", // email
@@ -77,7 +77,7 @@ func TestSignUp(t *testing.T) {
 
 	testUser3 := user.UserSignUp{
 		"test",              // username
-		"pswd",              // password
+		"pswdPSWD12",              // password
 		"http://wolf.wolf",  // avatar url
 		"test Testing",      // fullname
 		"someemail@mail.ru", // email
@@ -98,7 +98,7 @@ func TestAuthenticate(t *testing.T) {
 	e := echo.New()
 	creds := user.Credentials{
 		"test",
-		"pswd",
+		"pswdPSWD12",
 	}
 
 	body, _ := json.Marshal(creds)
@@ -120,7 +120,7 @@ func TestAuthenticate(t *testing.T) {
 
 	creds2 := user.Credentials{
 		"te",
-		"pswd",
+		"pswdPSWD12",
 	}
 
 	body, _ = json.Marshal(creds2)
@@ -239,8 +239,8 @@ func TestUpdate(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	e := echo.New()
 	chPSWD := user.ChangePassword{
-		"pswd",
-		"newPSWD",
+		"pswdPSWD12",
+		"newPSWD12",
 	}
 	body, _ := json.Marshal(chPSWD)
 	url := "/user/test/password"
@@ -274,7 +274,7 @@ func TestLogout(t *testing.T) {
 
 	creds := user.Credentials{
 		"test",
-		"newPSWD",
+		"newPSWD12",
 	}
 
 	body, _ := json.Marshal(creds)

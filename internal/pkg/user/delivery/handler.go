@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/user"
-	"liokor_mail/internal/pkg/user/validators"
 	"net/http"
 	"time"
 )
@@ -125,10 +124,6 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 	err := json.NewDecoder(c.Request().Body).Decode(&newUser)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if !validators.ValidateUsername(newUser.Username) {
-		return echo.NewHTTPError(http.StatusBadRequest, "username")
 	}
 
 	err = h.UserUsecase.SignUp(newUser)

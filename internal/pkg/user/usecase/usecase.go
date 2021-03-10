@@ -1,23 +1,12 @@
 package usecase
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"golang.org/x/crypto/bcrypt"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
-	"math/rand"
-	"strconv"
+	"liokor_mail/internal/pkg/user/validators"
 	"time"
 )
-
-func generateRandomString() string {
-	rand.Seed(time.Now().UnixNano())
-	randNumStr := strconv.Itoa(rand.Intn(32000))
-
-	h := sha256.New()
-	h.Write([]byte(randNumStr))
-	return hex.EncodeToString(h.Sum(nil))
-}
 
 type UserUseCase struct {
 	Repository user.UserRepository
@@ -44,7 +33,7 @@ func (uc *UserUseCase) Logout(sessionToken string) error {
 
 func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error) {
 	sessionToken := user.SessionToken{
-		generateRandomString(),
+		common.GenerateRandomString(),
 		time.Now().Add(10 * 24 * time.Hour),
 	}
 
@@ -76,6 +65,10 @@ func (uc *UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, er
 }
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
+	if !validators.ValidateUsername(newUser.Username) || !validators.ValidatePassword(newUser.Password) {
+		return user.InvalidUserError{"invalid username or password"}
+	}
+
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
