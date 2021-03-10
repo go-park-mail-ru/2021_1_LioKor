@@ -11,6 +11,7 @@ import (
 type UserHandler struct {
 	UserUsecase user.UseCase
 }
+
 func (h *UserHandler) setSessionCookie(c *echo.Context, username string) error {
 	session, err := h.UserUsecase.CreateSession(username)
 	if err != nil {
@@ -28,6 +29,20 @@ func (h *UserHandler) setSessionCookie(c *echo.Context, username string) error {
 	})
 
 	return nil
+}
+
+func (h *UserHandler) deleteSessionCookie(c *echo.Context) {
+
+	// SameSite to prevent warnings in js console
+	(*c).SetCookie(&http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Now().AddDate(0, 0, -1),
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		HttpOnly: true,
+	})
 }
 
 func (h *UserHandler) Auth(c echo.Context) error {
@@ -58,7 +73,7 @@ func (h *UserHandler) Auth(c echo.Context) error {
 }
 
 func (h *UserHandler) Logout(c echo.Context) error {
-	_, httpErr := h.isAuthenticated(c)
+	_, httpErr := h.isAuthenticated(&c)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -73,21 +88,12 @@ func (h *UserHandler) Logout(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// SameSite to prevent warnings in js console
-	c.SetCookie(&http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Now().AddDate(0, 0, -1),
-		SameSite: http.SameSiteStrictMode,
-		Secure:   true,
-		HttpOnly: true,
-	})
+	h.deleteSessionCookie(&c)
 	return c.String(http.StatusOK, "Successfuly logged out")
 }
 
 func (h *UserHandler) Profile(c echo.Context) error {
-	sessionUser, httpErr := h.isAuthenticated(c)
+	sessionUser, httpErr := h.isAuthenticated(&c)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -96,7 +102,7 @@ func (h *UserHandler) Profile(c echo.Context) error {
 }
 
 func (h *UserHandler) ProfileByUsername(c echo.Context) error {
-	_, httpErr := h.isAuthenticated(c)
+	_, httpErr := h.isAuthenticated(&c)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -145,7 +151,7 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateProfile(c echo.Context) error {
-	sessionUser, httpErr := h.isAuthenticated(c)
+	sessionUser, httpErr := h.isAuthenticated(&c)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -173,7 +179,7 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 }
 
 func (h *UserHandler) ChangePassword(c echo.Context) error {
-	sessionUser, httpErr := h.isAuthenticated(c)
+	sessionUser, httpErr := h.isAuthenticated(&c)
 	if httpErr != nil {
 		return httpErr
 	}
@@ -200,8 +206,8 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
-func (h *UserHandler) isAuthenticated(c echo.Context) (user.User, error) {
-	sessionToken, err := c.Cookie("session_token")
+func (h *UserHandler) isAuthenticated(c *echo.Context) (user.User, error) {
+	sessionToken, err := (*c).Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
@@ -213,6 +219,7 @@ func (h *UserHandler) isAuthenticated(c echo.Context) (user.User, error) {
 	if err != nil {
 		switch err.(type) {
 		case user.InvalidSessionError, user.InvalidUserError:
+			h.deleteSessionCookie(c)
 			return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		default:
 			return user.User{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
