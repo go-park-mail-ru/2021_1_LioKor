@@ -3,6 +3,7 @@ package validators
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 func ValidateUsername(username string) bool {
@@ -15,4 +16,22 @@ func ValidateUsername(username string) bool {
 		return false
 	}
 	return !strings.Contains(username, "admin")
+}
+
+func ValidatePassword(password string) bool {
+	if len(password) < 8 {
+		return false
+	}
+	var digit, upper, lower bool
+	for _, s := range password {
+		switch {
+		case unicode.IsDigit(s):
+			digit = true
+		case unicode.IsUpper(s):
+			upper = true
+		case unicode.IsLower(s):
+			lower = true
+		}
+	}
+	return digit && upper && lower
 }

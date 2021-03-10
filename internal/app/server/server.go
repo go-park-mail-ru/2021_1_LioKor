@@ -7,8 +7,12 @@ import (
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
+	"os"
+	"os/signal"
 	"strconv"
 	"sync"
+	"time"
+	"context"
 )
 
 func StartServer(host string, port int, allowedOrigins []string) {
@@ -33,5 +37,17 @@ func StartServer(host string, port int, allowedOrigins []string) {
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
-	e.Logger.Fatal(e.Start(host + ":" + strconv.Itoa(port)))
+	go func() {
+		if err := e.Start(host + ":" + strconv.Itoa(port)); err != nil {
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
