@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/user"
@@ -8,14 +9,12 @@ import (
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
 	"os"
-	"os/signal"
 	"strconv"
 	"sync"
 	"time"
-	"context"
 )
 
-func StartServer(host string, port int, allowedOrigins []string) {
+func StartServer(host string, port int, allowedOrigins []string, quit chan os.Signal) {
 	userRep := &repository.UserRepository{
 		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
@@ -42,8 +41,6 @@ func StartServer(host string, port int, allowedOrigins []string) {
 			e.Logger.Info("shutting down the server")
 		}
 	}()
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
 	<-quit
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

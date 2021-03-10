@@ -5,6 +5,7 @@ import (
 	"liokor_mail/internal/app/server"
 	"log"
 	"os"
+	"os/signal"
 )
 
 type Config struct {
@@ -27,5 +28,7 @@ func main() {
 		log.Fatal("Unable to read config file: " + err.Error())
 		return
 	}
-	server.StartServer(config.Host, config.Port, config.AllowedOrigins)
+	quit := make(chan os.Signal)
+	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit)
+	signal.Notify(quit, os.Interrupt)
 }
