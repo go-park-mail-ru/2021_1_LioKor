@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/app/server"
+	"liokor_mail/internal/pkg/common"
 	"log"
 	"os"
 	"os/signal"

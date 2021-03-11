@@ -9,11 +9,11 @@ import (
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
+	"log"
 	"os"
 	"strconv"
 	"sync"
 	"time"
-	"log"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -26,7 +26,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: config.AllowedOrigins,
+		AllowOrigins:     config.AllowedOrigins,
 		AllowCredentials: true,
 	}))
 	e.Static("/media", "media")
@@ -50,7 +50,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	<-quit
 
 	log.Println("Interrupt signal received. Shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal("Server shut down timeout with an error: " + err.Error())
