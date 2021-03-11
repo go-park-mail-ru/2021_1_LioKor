@@ -1,3 +1,4 @@
 .idea/
 
 cmd/main/media
+internal/app/server/media
