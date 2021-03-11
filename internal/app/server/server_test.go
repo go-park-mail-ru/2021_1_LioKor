@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
@@ -22,6 +23,7 @@ var userHandler = delivery.UserHandler{
 			repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 			repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 		},
+		common.Config{AvatarStoragePath: "../../../media/avatars/",},
 	},
 }
 
@@ -224,7 +226,7 @@ func TestUpdate(t *testing.T) {
 	expectedUser := user.User{
 		"TEST",
 		"",
-		"media/avatars/TEST.png",
+		"../../../media/avatars/TEST.png",
 		"test2 test2",
 		"someemail@mail.ru",
 		"",
