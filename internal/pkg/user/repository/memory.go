@@ -69,12 +69,13 @@ func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.U
 		return user.User{}, user.InvalidUserError{"user doesn't exist"}
 	}
 
-	pathToAvatar, err := common.DataURLToFile("../../../cmd/main/media/avatars/" + username, newData.AvatarURL, 500)
-	if err != nil {
-		return ur.UserDB.Users[username], user.InvalidImageError{"invalid image"}
-	}
-	if pathToAvatar != "" {
-		newData.AvatarURL = "api.mail.liokor.ru" + pathToAvatar[8:]
+	if strings.HasPrefix(newData.AvatarURL, "data:") {
+		const avatarStoragePath = "media/avatars/"
+		pathToAvatar, err := common.DataURLToFile(avatarStoragePath + username, newData.AvatarURL, 500)
+		if err != nil {
+			return ur.UserDB.Users[username], user.InvalidImageError{"invalid image"}
+		}
+		newData.AvatarURL = pathToAvatar
 	}
 
 	ur.UserDB.Users[username] = newData
