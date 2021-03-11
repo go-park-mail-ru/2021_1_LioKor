@@ -18,13 +18,15 @@ import (
 	"os"
 )
 
+const avatarStoragePath = "../../../media/avatars/"
+
 var userHandler = delivery.UserHandler{
 	&usecase.UserUseCase{
 		&repository.UserRepository{
 			repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 			repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 		},
-		common.Config{AvatarStoragePath: "../../../media/avatars/",},
+		common.Config{AvatarStoragePath: avatarStoragePath,},
 	},
 }
 
@@ -183,6 +185,8 @@ func TestCookie(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	os.MkdirAll(avatarStoragePath, 0755)
+
 	e := echo.New()
 	updUser := user.User{
 		"TEST",
@@ -224,7 +228,7 @@ func TestUpdate(t *testing.T) {
 		return
 	}
 
-	const correctAvatarPath = "../../../media/avatars/TEST.png"
+	const correctAvatarPath = avatarStoragePath + "TEST.png"
 	expectedUser := user.User{
 		"TEST",
 		"",
