@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"os"
 )
 
 var userHandler = delivery.UserHandler{
@@ -223,10 +224,11 @@ func TestUpdate(t *testing.T) {
 		return
 	}
 
+	const correctAvatarPath = "../../../media/avatars/TEST.png"
 	expectedUser := user.User{
 		"TEST",
 		"",
-		"../../../media/avatars/TEST.png",
+		correctAvatarPath,
 		"test2 test2",
 		"someemail@mail.ru",
 		"",
@@ -236,6 +238,11 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, expectedUser.AvatarURL, sessionUser.AvatarURL)
 	assert.Equal(t, expectedUser.FullName, sessionUser.FullName)
 	assert.Equal(t, expectedUser.ReserveEmail, sessionUser.ReserveEmail)
+
+	err = os.Remove(correctAvatarPath)
+	if err != nil {
+		t.Error("Avatar not found in FS!")
+	}
 }
 
 func TestChangePassword(t *testing.T) {
