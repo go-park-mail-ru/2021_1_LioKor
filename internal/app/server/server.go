@@ -27,6 +27,7 @@ func StartServer(host string, port int, allowedOrigins []string, quit chan os.Si
 		AllowOrigins: allowedOrigins,
 		AllowCredentials: true,
 	}))
+	e.Static("/media", "media")
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout)
