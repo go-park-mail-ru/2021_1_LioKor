@@ -5,6 +5,7 @@ import (
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/validators"
+	"strings"
 	"time"
 )
 
@@ -96,7 +97,16 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 		return user.User{}, err
 	}
 	if newData.AvatarURL != sessionUser.AvatarURL {
-		sessionUser.AvatarURL = newData.AvatarURL
+		if strings.HasPrefix(newData.AvatarURL, "data:") {
+			const avatarStoragePath = "media/avatars/"
+			pathToAvatar, err := common.DataURLToFile(avatarStoragePath+username, newData.AvatarURL, 500)
+			if err != nil {
+				return sessionUser, user.InvalidImageError{"invalid image"}
+			}
+			sessionUser.AvatarURL = pathToAvatar
+		} else {
+			return sessionUser, user.InvalidImageError{"invalid image"}
+		}
 	}
 	if newData.FullName != sessionUser.FullName {
 		sessionUser.FullName = newData.FullName
