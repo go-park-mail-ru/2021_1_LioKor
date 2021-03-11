@@ -2,18 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/app/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
-
-type Config struct {
-	Host           string
-	Port           int
-	AllowedOrigins []string
-}
 
 func main() {
 	configFile, err := os.Open("config.json")
@@ -23,7 +18,7 @@ func main() {
 	}
 	defer configFile.Close()
 
-	config := Config{}
+	config := common.Config{}
 	err = json.NewDecoder(configFile).Decode(&config)
 	if err != nil {
 		log.Fatal("Unable to read config file: " + err.Error())
@@ -33,5 +28,5 @@ func main() {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
-	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit)
+	server.StartServer(config, quit)
 }
