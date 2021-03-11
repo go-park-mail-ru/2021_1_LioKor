@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"strings"
 	"sync"
@@ -68,16 +67,6 @@ func (ur *UserRepository) UpdateUser(username string, newData user.User) (user.U
 	if _, exists := ur.UserDB.Users[username]; !exists {
 		return user.User{}, user.InvalidUserError{"user doesn't exist"}
 	}
-
-	if strings.HasPrefix(newData.AvatarURL, "data:") {
-		const avatarStoragePath = "media/avatars/"
-		pathToAvatar, err := common.DataURLToFile(avatarStoragePath + username, newData.AvatarURL, 500)
-		if err != nil {
-			return ur.UserDB.Users[username], user.InvalidImageError{"invalid image"}
-		}
-		newData.AvatarURL = pathToAvatar
-	}
-
 	ur.UserDB.Users[username] = newData
 	return newData, nil
 }
