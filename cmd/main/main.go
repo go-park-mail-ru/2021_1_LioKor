@@ -29,6 +29,8 @@ func main() {
 		return
 	}
 	quit := make(chan os.Signal)
+
 	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit)
+
 	signal.Notify(quit, os.Interrupt)
 }

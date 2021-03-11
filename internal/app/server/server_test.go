@@ -184,7 +184,7 @@ func TestUpdate(t *testing.T) {
 	updUser := user.User{
 		"TEST",
 		"",
-		"new url",
+		"data:image/png;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNLTItMmgyNHYyNEgtMnoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTAgMjBDNC40OCAyMCAwIDE1LjUyIDAgMTBTNC40OCAwIDEwIDBzMTAgNC40OCAxMCAxMC00LjQ4IDEwLTEwIDEwem0xLTE1SDl2MmgyVjV6bTAgNEg5djZoMlY5eiIgZmlsbD0iIzE2ODJGOCIvPjwvc3ZnPgo=",
 		"test2 test2",
 		"someemail@mail.ru",
 		"",
@@ -224,7 +224,7 @@ func TestUpdate(t *testing.T) {
 	expectedUser := user.User{
 		"TEST",
 		"",
-		"new url",
+		"api.mail.liokor.ru/cmd/main/media/avatars/test.png",
 		"test2 test2",
 		"someemail@mail.ru",
 		"",

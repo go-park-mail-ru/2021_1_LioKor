@@ -56,3 +56,12 @@ type InvalidUserError struct {
 func (e InvalidUserError) Error() string {
 	return e.Message
 }
+
+type InvalidImageError struct {
+	Message string
+}
+
+func (e InvalidImageError) Error() string {
+	return e.Message
+}
+
