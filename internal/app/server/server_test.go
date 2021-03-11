@@ -14,8 +14,8 @@ import (
 
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"os"
+	"testing"
 )
 
 const avatarStoragePath = "../../../media/avatars/"
@@ -26,7 +26,7 @@ var userHandler = delivery.UserHandler{
 			repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 			repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 		},
-		common.Config{AvatarStoragePath: avatarStoragePath,},
+		common.Config{AvatarStoragePath: avatarStoragePath},
 	},
 }
 
@@ -63,7 +63,7 @@ func TestSignUp(t *testing.T) {
 
 	testUser2 := user.UserSignUp{
 		"test2",             // username
-		"pswdPSWD12",              // password
+		"pswdPSWD12",        // password
 		"http://wolf.wolf",  // avatar url
 		"test Testing",      // fullname
 		"someemail@mail.ru", // email
@@ -82,7 +82,7 @@ func TestSignUp(t *testing.T) {
 
 	testUser3 := user.UserSignUp{
 		"test",              // username
-		"pswdPSWD12",              // password
+		"pswdPSWD12",        // password
 		"http://wolf.wolf",  // avatar url
 		"test Testing",      // fullname
 		"someemail@mail.ru", // email
