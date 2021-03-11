@@ -11,6 +11,7 @@ import (
 
 type UserUseCase struct {
 	Repository user.UserRepository
+	Config     common.Config
 }
 
 func (uc *UserUseCase) Login(credentials user.Credentials) error {
@@ -98,8 +99,7 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 	}
 	if newData.AvatarURL != sessionUser.AvatarURL {
 		if strings.HasPrefix(newData.AvatarURL, "data:") {
-			const avatarStoragePath = "media/avatars/"
-			pathToAvatar, err := common.DataURLToFile(avatarStoragePath+username, newData.AvatarURL, 500)
+			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath + username, newData.AvatarURL, 500)
 			if err != nil {
 				return sessionUser, user.InvalidImageError{"invalid image"}
 			}

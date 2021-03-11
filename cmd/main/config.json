@@ -3,5 +3,6 @@
     "port": 8000,
     "allowedOrigins": [
         "https://mail.liokor.ru"
-    ]
+    ],
+    "avatarStoragePath": "media/avatars/"
 }
