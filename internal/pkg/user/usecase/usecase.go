@@ -7,6 +7,7 @@ import (
 	"liokor_mail/internal/pkg/user/validators"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type UserUseCase struct {
@@ -101,6 +102,7 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 		if strings.HasPrefix(newData.AvatarURL, "data:") {
 			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath + username, newData.AvatarURL, 500)
 			if err != nil {
+				fmt.Println(err.Error())
 				return sessionUser, user.InvalidImageError{"invalid image"}
 			}
 			sessionUser.AvatarURL = pathToAvatar
