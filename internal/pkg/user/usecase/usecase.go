@@ -1,13 +1,13 @@
 package usecase
 
 import (
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/validators"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type UserUseCase struct {
@@ -100,7 +100,7 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 	}
 	if newData.AvatarURL != sessionUser.AvatarURL {
 		if strings.HasPrefix(newData.AvatarURL, "data:") {
-			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath + username, newData.AvatarURL, 500)
+			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath+username, newData.AvatarURL, 500)
 			if err != nil {
 				fmt.Println(err.Error())
 				return sessionUser, user.InvalidImageError{"invalid image"}

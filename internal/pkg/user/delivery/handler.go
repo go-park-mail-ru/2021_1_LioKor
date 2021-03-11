@@ -66,7 +66,7 @@ func (h *UserHandler) Auth(c echo.Context) error {
 	}
 	err = h.setSessionCookie(&c, creds.Username)
 	if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.String(http.StatusOK, "ok")

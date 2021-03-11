@@ -64,4 +64,3 @@ type InvalidImageError struct {
 func (e InvalidImageError) Error() string {
 	return e.Message
 }
-
