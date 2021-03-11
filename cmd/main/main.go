@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 type Config struct {
@@ -28,9 +29,9 @@ func main() {
 		log.Fatal("Unable to read config file: " + err.Error())
 		return
 	}
+
 	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit)
-
-	signal.Notify(quit, os.Interrupt)
 }
