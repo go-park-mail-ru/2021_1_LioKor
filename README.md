@@ -16,7 +16,8 @@
 * go run liokor_mail/cmd/main
 
 ### Другие команды:
-* Тесты: go test -v ./...
+* Тесты: go test liokor_mail... -cover -coverpkg ./... -coverprofile test_cover
+* Подробное покрытие (запускать после команды выше): go cover -html=test_cover
 * Автоформатирование: go fmt liokor_mail/...
 * Сборка: go build liokor_mail/cmd/main
 
