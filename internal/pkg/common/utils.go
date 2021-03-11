@@ -22,7 +22,12 @@ if err != nil {
 	fmt.Println(path) // wolchara.jpg
 }
 */
-func dataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
+// TODO: check file signature
+func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
+	if dataURL == "" {
+		return "", nil
+	}
+
 	splittedURL := strings.Split(dataURL, ",")
 	if len(splittedURL) != 2 {
 		return "", errors.New("incorrect data url")
@@ -50,11 +55,11 @@ func dataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 
 	path += "." + ext
 	f, err := os.Create(path)
+	defer f.Close()
 	if err != nil {
 		return "", errors.New("unable to save file")
 	}
 	f.Write(decoded)
-	f.Close()
 
 	return path, nil
 }
