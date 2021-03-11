@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"log"
 )
 
 func StartServer(host string, port int, allowedOrigins []string, quit chan os.Signal) {
@@ -38,14 +39,19 @@ func StartServer(host string, port int, allowedOrigins []string, quit chan os.Si
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	go func() {
-		if err := e.Start(host + ":" + strconv.Itoa(port)); err != nil {
-			e.Logger.Info("shutting down the server")
+		err := e.Start(host + ":" + strconv.Itoa(port))
+		if err != nil {
+			log.Println("Server was shut down with no errors!")
+		} else {
+			log.Fatal("Error occured while trying to shut down server: " + err.Error())
 		}
 	}()
 	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	log.Println("Interrupt signal received. Shutting down server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal("Server shut down timeout with an error: " + err.Error())
 	}
 }
