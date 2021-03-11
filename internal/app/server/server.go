@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
@@ -15,17 +16,17 @@ import (
 	"log"
 )
 
-func StartServer(host string, port int, allowedOrigins []string, quit chan os.Signal) {
+func StartServer(config common.Config, quit chan os.Signal) {
 	userRep := &repository.UserRepository{
 		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
 		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
 	}
-	userUc := &usecase.UserUseCase{userRep}
+	userUc := &usecase.UserUseCase{userRep, config}
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: allowedOrigins,
+		AllowOrigins: config.AllowedOrigins,
 		AllowCredentials: true,
 	}))
 	e.Static("/media", "media")
@@ -39,7 +40,7 @@ func StartServer(host string, port int, allowedOrigins []string, quit chan os.Si
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	go func() {
-		err := e.Start(host + ":" + strconv.Itoa(port))
+		err := e.Start(config.Host + ":" + strconv.Itoa(config.Port))
 		if err != nil {
 			log.Println("Server was shut down with no errors!")
 		} else {
