@@ -224,7 +224,7 @@ func TestUpdate(t *testing.T) {
 	expectedUser := user.User{
 		"TEST",
 		"",
-		"api.mail.liokor.ru/cmd/main/media/avatars/test.png",
+		"media/avatars/test.png",
 		"test2 test2",
 		"someemail@mail.ru",
 		"",
