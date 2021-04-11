@@ -144,7 +144,7 @@ func (ur *PostgresUserRepository) CreateUser(u user.User) error {
 	if err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "users_username_key" {
-				return user.InvalidUserError{"username"}
+				return user.InvalidUserError{"username exists"}
 			}
 		}
 		return err

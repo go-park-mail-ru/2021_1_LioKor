@@ -3,6 +3,7 @@ module liokor_mail
 go 1.15
 
 require (
+	github.com/golang/mock v1.5.0
 	github.com/jackc/pgconn v1.8.1
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.11.0
