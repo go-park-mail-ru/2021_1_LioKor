@@ -28,7 +28,8 @@ func main() {
 		log.Fatal("Unable to read config file: " + err.Error())
 		return
 	}
+	dbConfig := "host=localhost user=postgres password=12 dbname=liokor_mail_test sslmode=disable"
 	quit := make(chan os.Signal)
-	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit)
+	server.StartServer(config.Host, config.Port, config.AllowedOrigins, quit, dbConfig)
 	signal.Notify(quit, os.Interrupt)
 }

@@ -37,11 +37,15 @@ func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error)
 		time.Now().Add(10 * 24 * time.Hour),
 	}
 
-	uc.Repository.CreateSession(user.Session{
+	err := uc.Repository.CreateSession(user.Session{
 		username,
 		sessionToken.Value,
 		sessionToken.Expiration,
 	})
+
+	if err != nil {
+		return user.SessionToken{}, nil
+	}
 
 	return sessionToken, nil
 }

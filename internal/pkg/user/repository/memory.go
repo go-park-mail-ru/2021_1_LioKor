@@ -21,10 +21,11 @@ type UserRepository struct {
 	SessionDB SessionStruct
 }
 
-func (ur *UserRepository) CreateSession(session user.Session) {
+func (ur *UserRepository) CreateSession(session user.Session) error{
 	ur.SessionDB.Mutex.Lock()
 	defer ur.SessionDB.Mutex.Unlock()
 	ur.SessionDB.Sessions[session.SessionToken] = session
+	return nil
 }
 
 func (ur *UserRepository) GetSessionBySessionToken(token string) (user.Session, error) {
@@ -93,4 +94,8 @@ func (ur *UserRepository) RemoveSession(token string) error {
 	}
 	delete(ur.SessionDB.Sessions, token)
 	return nil
+}
+
+func (ur *UserRepository) Close() {
+	return
 }
