@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -10,6 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"image"
+	"image/jpeg"
+	_ "image/png" // to allow png uploading and converting to jpg
 )
 
 type Config struct {
@@ -29,7 +34,6 @@ if err != nil {
 	fmt.Println(path) // wolchara.jpg
 }
 */
-// TODO: check file signature
 func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 	if dataURL == "" {
 		return "", nil
@@ -60,13 +64,24 @@ func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 		return "", errors.New("image is too big")
 	}
 
+	img, format, err := image.Decode(bytes.NewReader(decoded))
+	if err != nil {
+		return "", err
+	}
+
+	if (format == "jpeg") || (format == "png") {
+		ext = "jpg" // because we convert both jpg and png to jpg
+	} else {
+		return "", errors.New("forbidden data format")
+	}
+
 	path += "." + ext
 	f, err := os.Create(path)
-	defer f.Close()
 	if err != nil {
 		return "", errors.New("unable to save file")
 	}
-	f.Write(decoded)
+	defer f.Close()
+	jpeg.Encode(f, img, nil)
 
 	return path, nil
 }
