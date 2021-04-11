@@ -96,6 +96,4 @@ func (ur *UserRepository) RemoveSession(token string) error {
 	return nil
 }
 
-func (ur *UserRepository) Close() {
-	return
-}
+func (ur *UserRepository) Close() {}

@@ -170,7 +170,7 @@ func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User)
 		&newData.FullName,
 		&newData.ReserveEmail,
 	)
-	//err now rows
+
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return user.User{}, user.InvalidUserError{"user doesn't exist"}
