@@ -132,6 +132,20 @@ func (mr *MockUserRepositoryMockRecorder) RemoveSession(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSession", reflect.TypeOf((*MockUserRepository)(nil).RemoveSession), arg0)
 }
 
+// RemoveUser mocks base method.
+func (m *MockUserRepository) RemoveUser(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUser indicates an expected call of RemoveUser.
+func (mr *MockUserRepositoryMockRecorder) RemoveUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUser", reflect.TypeOf((*MockUserRepository)(nil).RemoveUser), arg0)
+}
+
 // UpdateUser mocks base method.
 func (m *MockUserRepository) UpdateUser(arg0 string, arg1 user.User) (user.User, error) {
 	m.ctrl.T.Helper()

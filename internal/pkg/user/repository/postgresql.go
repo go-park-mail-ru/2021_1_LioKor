@@ -209,13 +209,32 @@ func (ur *PostgresUserRepository) RemoveSession(token string) error {
 		token,
 	)
 
+	if err != nil {
+		return err
+	}
 	if commandTag.RowsAffected() != 1 {
 		return user.InvalidSessionError{"session doesn't exist"}
 	}
 
+	return nil
+}
+
+func (ur *PostgresUserRepository) RemoveUser(username string) error {
+	//deletes referenced sessions if exists
+	commandTag, err := ur.DBConn.Exec(
+		context.Background(),
+		"DELETE FROM users WHERE username=$1;",
+		username,
+	)
+
 	if err != nil {
 		return err
 	}
+
+	if commandTag.RowsAffected() != 1 {
+		return user.InvalidUserError{"user doesn't exist"}
+	}
+
 	return nil
 }
 

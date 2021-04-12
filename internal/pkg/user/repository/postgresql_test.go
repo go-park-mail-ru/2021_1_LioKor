@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-//TODO: mock tests
 
 var dbConfig = "host=localhost user=postgres password=12 dbname=liokor_mail_test sslmode=disable"
 
@@ -21,7 +20,7 @@ func TestCreateUserSuccess(t *testing.T) {
 	newUser := user.User{
 		Username: "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
+		AvatarURL: "/media/test",
 		FullName: "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -70,7 +69,7 @@ func TestGetUserByUsername(t *testing.T) {
 	retUser := user.User{
 		Username: "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
+		AvatarURL: "/media/test",
 		FullName: "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -235,5 +234,18 @@ func TestRemoveSessionFail(t *testing.T) {
 		break
 	default:
 		t.Errorf("Deleted session for non existing token: %v\n", err)
+	}
+}
+
+func TestRemoveUserSuccess(t *testing.T) {
+	userRep, err := NewPostgresUserRepository(dbConfig)
+	if err != nil {
+		t.Errorf("Database error: %v\n", err)
+	}
+	defer userRep.Close()
+
+	err = userRep.RemoveUser("newTestUser")
+	if err != nil {
+		t.Errorf("Couldn't remove user: %v\n", err)
 	}
 }

@@ -8,5 +8,6 @@ type UserRepository interface {
 	UpdateUser(username string, newData User) (User, error)
 	ChangePassword(username string, newPSWD string) error
 	RemoveSession(token string) error
+	RemoveUser(username string) error
 	Close()
 }
