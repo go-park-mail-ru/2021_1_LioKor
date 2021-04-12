@@ -159,5 +159,4 @@ func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.Cha
 	}
 
 	return uc.Repository.ChangePassword(sessionUser.Username, string(hashPSWD))
-
 }

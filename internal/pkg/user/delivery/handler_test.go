@@ -19,7 +19,7 @@ func TestAuth(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
@@ -35,7 +35,7 @@ func TestAuth(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	retSession := user.SessionToken{
-		Value: "session token",
+		Value:      "session token",
 		Expiration: time.Now().Add(10 * 24 * time.Hour),
 	}
 	gomock.InOrder(
@@ -79,7 +79,7 @@ func TestLogout(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
@@ -89,14 +89,14 @@ func TestLogout(t *testing.T) {
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 	gomock.InOrder(
 		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1),
@@ -141,7 +141,7 @@ func TestProfile(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
@@ -151,14 +151,14 @@ func TestProfile(t *testing.T) {
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 	mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1)
 	err := userHandler.Profile(echoContext)
@@ -173,7 +173,7 @@ func TestProfileByUsername(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
@@ -186,25 +186,24 @@ func TestProfileByUsername(t *testing.T) {
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
 
-	sessionUser := user.User {
-		Username : "sessionTest",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	sessionUser := user.User{
+		Username:     "sessionTest",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
-
 
 	gomock.InOrder(
 		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
@@ -243,16 +242,16 @@ func TestSignUp(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
 	newUser := user.UserSignUp{
-		Username : "test",
-		Password :"StrongPassword1",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
+		Username:     "test",
+		Password:     "StrongPassword1",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
 	}
 	body, _ := json.Marshal(newUser)
 	url := "/user"
@@ -261,7 +260,7 @@ func TestSignUp(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	retSessionToken := user.SessionToken{
-		Value: "sessionToken",
+		Value:      "sessionToken",
 		Expiration: time.Now().Add(10 * 24 * time.Hour),
 	}
 
@@ -294,18 +293,18 @@ func TestUpdateProfile(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
-	newData := struct{
+	newData := struct {
 		AvatarURL    string `json:"avatarUrl"`
 		FullName     string `json:"fullname"`
 		ReserveEmail string `json:"reserveEmail"`
 	}{
-		AvatarURL : "",
-		FullName : "New Full Name",
-		ReserveEmail : "newtest@test.test",
+		AvatarURL:    "",
+		FullName:     "New Full Name",
+		ReserveEmail: "newtest@test.test",
 	}
 	body, _ := json.Marshal(newData)
 	url := "/user/test"
@@ -317,23 +316,23 @@ func TestUpdateProfile(t *testing.T) {
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
 
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
-	updUser := user.User {
-		Username : "",
-		HashPassword :"",
-		AvatarURL : "",
-		FullName : "New Full Name",
-		ReserveEmail : "newtest@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	updUser := user.User{
+		Username:     "",
+		HashPassword: "",
+		AvatarURL:    "",
+		FullName:     "New Full Name",
+		ReserveEmail: "newtest@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 	gomock.InOrder(
 		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1),
@@ -370,7 +369,7 @@ func TestChangePassword(t *testing.T) {
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	userHandler := UserHandler{
-		UserUsecase : mockUC,
+		UserUsecase: mockUC,
 	}
 
 	e := echo.New()
@@ -388,14 +387,14 @@ func TestChangePassword(t *testing.T) {
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
 
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 
 	gomock.InOrder(

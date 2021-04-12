@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 func TestLogin(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -21,21 +20,21 @@ func TestLogin(t *testing.T) {
 
 	//Testing valid credentials
 	creds := user.Credentials{
-		Username : "test",
-		Password : "StrongPassword1",
+		Username: "test",
+		Password: "StrongPassword1",
 	}
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
 	if err != nil {
 		t.Errorf("bcrypt error: %v\n", err)
 	}
-	retUser := user.User {
-		Username : "test",
-		HashPassword : string(hashPSWD),
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: string(hashPSWD),
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 	mockRep.EXPECT().GetUserByUsername("test").Return(retUser, nil).Times(1)
 	err = userUc.Login(creds)
@@ -45,8 +44,8 @@ func TestLogin(t *testing.T) {
 
 	//Testing invalid password
 	wrongPswdCreds := user.Credentials{
-		Username : "test",
-		Password : "password",
+		Username: "test",
+		Password: "password",
 	}
 	mockRep.EXPECT().GetUserByUsername("test").Return(retUser, nil).Times(1)
 	err = userUc.Login(wrongPswdCreds)
@@ -59,8 +58,8 @@ func TestLogin(t *testing.T) {
 
 	//Testing invalid username
 	wrongUsernameCreds := user.Credentials{
-		Username : "test",
-		Password : "password",
+		Username: "test",
+		Password: "password",
 	}
 	mockRep.EXPECT().GetUserByUsername("test").Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
 	err = userUc.Login(wrongUsernameCreds)
@@ -116,7 +115,6 @@ func TestCreateSession(t *testing.T) {
 		t.Errorf("Didn't create session: %v\n", err)
 	}
 
-
 	mockRep.EXPECT().CreateSession(gomock.Any()).Return(user.InvalidUserError{"user doesn't exist"}).Times(1)
 	_, err = userUc.CreateSession(username)
 	switch err.(type) {
@@ -138,18 +136,18 @@ func TestGetUserBySessionToken(t *testing.T) {
 
 	sessionToken := "sessionToken"
 	retSession := user.Session{
-		Username: "test",
+		Username:     "test",
 		SessionToken: sessionToken,
-		Expiration: time.Now().Add(10 * 24 * time.Hour),
+		Expiration:   time.Now().Add(10 * 24 * time.Hour),
 	}
-	retUser := user.User {
-		Username : "test",
-		HashPassword :"hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 
 	gomock.InOrder(
@@ -172,9 +170,9 @@ func TestGetUserBySessionToken(t *testing.T) {
 	}
 
 	expiredSession := user.Session{
-		Username: "test",
+		Username:     "test",
 		SessionToken: sessionToken,
-		Expiration: time.Now().AddDate(0, 0, -1),
+		Expiration:   time.Now().AddDate(0, 0, -1),
 	}
 	mockRep.EXPECT().GetSessionBySessionToken(sessionToken).Return(expiredSession, nil).Times(1)
 	_, err = userUc.GetUserBySessionToken(sessionToken)
@@ -207,13 +205,12 @@ func TestSignUp(t *testing.T) {
 		Repository: mockRep,
 	}
 
-
-	u := user.UserSignUp {
-		Username : "test",
-		Password : "StrongPassword1",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
+	u := user.UserSignUp{
+		Username:     "test",
+		Password:     "StrongPassword1",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
 	}
 
 	mockRep.EXPECT().CreateUser(gomock.Any()).Return(nil).Times(1)
@@ -222,12 +219,12 @@ func TestSignUp(t *testing.T) {
 		t.Errorf("Didn't pass valid sign up: %v\n", err)
 	}
 
-	incorrectUsername := user.UserSignUp {
-		Username : "тест",
-		Password : "StrongPassword1",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
+	incorrectUsername := user.UserSignUp{
+		Username:     "тест",
+		Password:     "StrongPassword1",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
 	}
 	err = userUc.SignUp(incorrectUsername)
 	switch err.(type) {
@@ -237,12 +234,12 @@ func TestSignUp(t *testing.T) {
 		t.Errorf("Didn't pass incorrect username: %v\n", err)
 	}
 
-	incorrectPassword := user.UserSignUp {
-		Username : "test",
-		Password : "password",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
+	incorrectPassword := user.UserSignUp{
+		Username:     "test",
+		Password:     "password",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
 	}
 	err = userUc.SignUp(incorrectPassword)
 	switch err.(type) {
@@ -272,32 +269,32 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	username := "test"
-	newData := user.User {
-		Username : "",
-		HashPassword : "",
-		AvatarURL : "/media/test",
-		FullName : "New Fullname",
-		ReserveEmail : "newtest@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	newData := user.User{
+		Username:     "",
+		HashPassword: "",
+		AvatarURL:    "/media/test",
+		FullName:     "New Fullname",
+		ReserveEmail: "newtest@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
-	retUser := user.User {
-		Username : "test",
-		HashPassword : "hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
-	updUser := user.User {
-		Username : "test",
-		HashPassword : "hash",
-		AvatarURL : "/media/test",
-		FullName : "New Fullname",
-		ReserveEmail : "newtest@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	updUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "New Fullname",
+		ReserveEmail: "newtest@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 
 	gomock.InOrder(
@@ -341,14 +338,14 @@ func TestGetUserByUsername(t *testing.T) {
 	}
 
 	username := "test"
-	retUser := user.User {
-		Username : "test",
-		HashPassword : "hash",
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 
 	mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1)
@@ -380,14 +377,14 @@ func TestChangePassword(t *testing.T) {
 	if err != nil {
 		t.Errorf("bcrypt error: %v\n", err)
 	}
-	sessionUser := user.User {
-		Username : "test",
-		HashPassword : string(hashPSWD),
-		AvatarURL : "/media/test",
-		FullName : "Test test",
-		ReserveEmail : "test@test.test",
-		RegisterDate : "",
-		IsAdmin : false,
+	sessionUser := user.User{
+		Username:     "test",
+		HashPassword: string(hashPSWD),
+		AvatarURL:    "/media/test",
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
 	}
 	newPSWD := user.ChangePassword{
 		OldPassword: "StrongPassword1",

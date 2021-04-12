@@ -31,7 +31,7 @@ type User struct {
 }
 
 type UserDB struct {
-	Id int
+	Id           int
 	Username     string
 	HashPassword string
 	AvatarURL    string
@@ -63,5 +63,13 @@ type InvalidUserError struct {
 }
 
 func (e InvalidUserError) Error() string {
+	return e.Message
+}
+
+type InvalidImageError struct {
+	Message string
+}
+
+func (e InvalidImageError) Error() string {
 	return e.Message
 }

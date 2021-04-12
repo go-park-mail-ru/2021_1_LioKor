@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
@@ -15,14 +14,14 @@ import (
 	"time"
 )
 
-func StartServer(host string, port int, allowedOrigins []string, quit chan os.Signal, dbConfig string) {
-	userRep, err := repository.NewPostgresUserRepository(dbConfig)
+func StartServer(config common.Config, quit chan os.Signal) {
+	userRep, err := repository.NewPostgresUserRepository(config.DbString)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer userRep.Close()
 
-	userUc := &usecase.UserUseCase{userRep}
+	userUc := &usecase.UserUseCase{userRep, config}
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()

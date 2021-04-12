@@ -21,7 +21,7 @@ type UserRepository struct {
 	SessionDB SessionStruct
 }
 
-func (ur *UserRepository) CreateSession(session user.Session) error{
+func (ur *UserRepository) CreateSession(session user.Session) error {
 	ur.SessionDB.Mutex.Lock()
 	defer ur.SessionDB.Mutex.Unlock()
 	ur.SessionDB.Sessions[session.SessionToken] = session

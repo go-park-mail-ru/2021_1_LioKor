@@ -19,13 +19,13 @@ func TestCreateUserSuccess(t *testing.T) {
 	defer userRep.Close()
 
 	newUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
-		FullName: "New Test User",
+		AvatarURL:    "/media/",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	err = userRep.CreateUser(newUser)
@@ -42,13 +42,13 @@ func TestCreateUserFail(t *testing.T) {
 	defer userRep.Close()
 
 	newUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
-		FullName: "New Test User",
+		AvatarURL:    "/media/",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	err = userRep.CreateUser(newUser)
@@ -68,13 +68,13 @@ func TestGetUserByUsername(t *testing.T) {
 	defer userRep.Close()
 
 	retUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
-		FullName: "New Test User",
+		AvatarURL:    "/media/",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	u, err := userRep.GetUserByUsername("newTestUser")
@@ -100,13 +100,13 @@ func TestUpdateUser(t *testing.T) {
 	defer userRep.Close()
 
 	updUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/test",
-		FullName: "New Name",
+		AvatarURL:    "/media/test",
+		FullName:     "New Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	u, err := userRep.UpdateUser(updUser.Username, updUser)
@@ -155,9 +155,9 @@ func TestCreateSessionSuccess(t *testing.T) {
 	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-04-11T15:04:05Z")
 
 	session := user.Session{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		SessionToken: "sessionToken",
-		Expiration: expire,
+		Expiration:   expire,
 	}
 
 	err = userRep.CreateSession(session)
@@ -174,9 +174,9 @@ func TestCreateSessionFail(t *testing.T) {
 	defer userRep.Close()
 
 	invalidSession := user.Session{
-		Username: "invalidUser",
+		Username:     "invalidUser",
 		SessionToken: "sessionToken",
-		Expiration: time.Now(),
+		Expiration:   time.Now(),
 	}
 	err = userRep.CreateSession(invalidSession)
 	switch err.(type) {

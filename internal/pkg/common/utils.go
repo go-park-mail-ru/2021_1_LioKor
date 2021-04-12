@@ -22,6 +22,7 @@ type Config struct {
 	Port              int
 	AllowedOrigins    []string
 	AvatarStoragePath string
+	DbString          string
 }
 
 /* Converts dataURL to file and saves it. Returns file path. Only jpg and png supported
