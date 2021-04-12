@@ -16,6 +16,8 @@ import (
 	"strconv"
 	"time"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -46,13 +48,31 @@ func StartServer(config common.Config, quit chan os.Signal) {
 		log.Println("WARN: Unable to create log file!")
 	}
 
-	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		CookieSameSite: http.SameSiteStrictMode,
-		CookiePath: "/",
-	}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     config.AllowedOrigins,
 		AllowCredentials: true,
+	}))
+
+	var csrfCookieDomain string
+	if len(config.AllowedOrigins) > 0 {
+		url, err := url.Parse(config.AllowedOrigins[0])
+		if err != nil {
+			log.Println(err)
+		} else {
+			csrfCookieDomain = url.Hostname()
+		}
+	}
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		Skipper: func(c echo.Context) bool {
+			host := c.Request().Host
+			if strings.HasPrefix(host, "localhost:") || host == "localhost" {
+				return true
+			}
+			return false;
+		},
+		CookieSameSite: http.SameSiteStrictMode,
+		CookieDomain: csrfCookieDomain,
+		CookiePath: "/",
 	}))
 	e.Static("/media", "media")
 

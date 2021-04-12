@@ -30,8 +30,6 @@ func IsAuthenticated(c *echo.Context, userUsecase user.UseCase) (user.User, erro
 }
 
 func DeleteSessionCookie(c *echo.Context) {
-
-	// SameSite to prevent warnings in js console
 	(*c).SetCookie(&http.Cookie{
 		Name:     "session_token",
 		Value:    "",
