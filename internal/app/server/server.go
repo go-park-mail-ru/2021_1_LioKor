@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"net/http"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -34,8 +35,21 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 
 	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.CSRF())
+
+	logFile, err := os.Create("go_backend.log")
+	if err == nil {
+		defer logFile.Close()
+		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Output: logFile,
+		}))
+	} else {
+		log.Println("WARN: Unable to create log file!")
+	}
+
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		CookieSameSite: http.SameSiteStrictMode,
+		CookiePath: "/",
+	}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     config.AllowedOrigins,
 		AllowCredentials: true,
