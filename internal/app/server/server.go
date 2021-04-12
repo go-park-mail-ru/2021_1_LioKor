@@ -12,16 +12,17 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
-func StartServer(config common.Config, quit chan os.Signal) {
-	userRep := &repository.UserRepository{
-		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
-		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
+func StartServer(host string, port int, allowedOrigins []string, quit chan os.Signal, dbConfig string) {
+	userRep, err := repository.NewPostgresUserRepository(dbConfig)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	userUc := &usecase.UserUseCase{userRep, config}
+	defer userRep.Close()
+
+	userUc := &usecase.UserUseCase{userRep}
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()

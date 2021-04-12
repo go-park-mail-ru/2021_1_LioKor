@@ -186,7 +186,7 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 
 	username := c.Param("username")
 	if username != sessionUser.Username {
-		return c.String(http.StatusUnauthorized, "Access denied")
+		return echo.NewHTTPError(http.StatusUnauthorized, "Access denied")
 	}
 
 	changePassword := user.ChangePassword{}

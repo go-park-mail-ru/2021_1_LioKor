@@ -30,6 +30,15 @@ type User struct {
 	IsAdmin      bool   `json:"-"`
 }
 
+type UserDB struct {
+	Id int
+	Username     string
+	HashPassword string
+	AvatarURL    string
+	FullName     string
+	ReserveEmail string
+}
+
 type Session struct {
 	Username     string
 	SessionToken string
@@ -54,13 +63,5 @@ type InvalidUserError struct {
 }
 
 func (e InvalidUserError) Error() string {
-	return e.Message
-}
-
-type InvalidImageError struct {
-	Message string
-}
-
-func (e InvalidImageError) Error() string {
 	return e.Message
 }
