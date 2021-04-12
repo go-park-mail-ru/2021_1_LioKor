@@ -5,26 +5,28 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/delivery"
 	"liokor_mail/internal/pkg/user/repository"
 	"liokor_mail/internal/pkg/user/usecase"
 	"log"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	userRep := &repository.UserRepository{
-		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
-		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
+	userRep, err := repository.NewPostgresUserRepository(config.DbString)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
+	defer userRep.Close()
+
 	userUc := &usecase.UserUseCase{userRep, config}
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.CSRF())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     config.AllowedOrigins,
 		AllowCredentials: true,

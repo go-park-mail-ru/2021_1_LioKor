@@ -4,5 +4,6 @@
     "allowedOrigins": [
         "https://mail.liokor.ru"
     ],
-    "avatarStoragePath": "media/avatars/"
+    "avatarStoragePath": "media/avatars/",
+    "dbString": "host=localhost user=liokor password=Qwerty123 dbname=liokor_mail sslmode=disable"
 }
