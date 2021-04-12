@@ -24,6 +24,8 @@ func StartServer(host string, port int, allowedOrigins []string, quit chan os.Si
 	userHandler := delivery.UserHandler{userUc}
 
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.CSRF())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowedOrigins,
 		AllowCredentials: true,
