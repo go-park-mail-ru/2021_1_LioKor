@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 var dbConfig = "host=localhost user=postgres password=12 dbname=liokor_mail_test sslmode=disable"
 
 func TestCreateUserSuccess(t *testing.T) {
@@ -23,13 +22,13 @@ func TestCreateUserSuccess(t *testing.T) {
 	}
 
 	newUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/test",
-		FullName: "New Test User",
+		AvatarURL:    "/media/test",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	err = userRep.CreateUser(newUser)
@@ -50,13 +49,13 @@ func TestCreateUserFail(t *testing.T) {
 	}
 
 	newUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/",
-		FullName: "New Test User",
+		AvatarURL:    "/media/",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	err = userRep.CreateUser(newUser)
@@ -80,13 +79,13 @@ func TestGetUserByUsername(t *testing.T) {
 	}
 
 	retUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/test",
-		FullName: "New Test User",
+		AvatarURL:    "/media/test",
+		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	u, err := userRep.GetUserByUsername("newTestUser")
@@ -116,13 +115,13 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	updUser := user.User{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL: "/media/test",
-		FullName: "New Name",
+		AvatarURL:    "/media/test",
+		FullName:     "New Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
-		IsAdmin: false,
+		IsAdmin:      false,
 	}
 
 	u, err := userRep.UpdateUser(updUser.Username, updUser)
@@ -179,9 +178,9 @@ func TestCreateSessionSuccess(t *testing.T) {
 	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-04-11T15:04:05Z")
 
 	session := user.Session{
-		Username: "newTestUser",
+		Username:     "newTestUser",
 		SessionToken: "sessionToken",
-		Expiration: expire,
+		Expiration:   expire,
 	}
 
 	err = userRep.CreateSession(session)
@@ -202,9 +201,9 @@ func TestCreateSessionFail(t *testing.T) {
 	}
 
 	invalidSession := user.Session{
-		Username: "invalidUser",
+		Username:     "invalidUser",
 		SessionToken: "sessionToken",
-		Expiration: time.Now(),
+		Expiration:   time.Now(),
 	}
 	err = userRep.CreateSession(invalidSession)
 	switch err.(type) {

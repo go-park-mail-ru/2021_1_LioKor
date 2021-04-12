@@ -18,7 +18,7 @@ type MailHandler struct {
 
 //TODO: check if user is authenticated
 
-func (h *MailHandler) GetDialogues(c echo.Context) error{
+func (h *MailHandler) GetDialogues(c echo.Context) error {
 	user, err := common.IsAuthenticated(&c, h.UserUsecase)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (h *MailHandler) GetDialogues(c echo.Context) error{
 		last = 0
 	}
 	amount, err := strconv.Atoi(c.QueryParam("amount"))
-	if err != nil  || amount > 50{
+	if err != nil || amount > 50 {
 		amount = 50
 	}
 
@@ -41,7 +41,7 @@ func (h *MailHandler) GetDialogues(c echo.Context) error{
 	return c.JSON(http.StatusOK, dialogues)
 }
 
-func (h *MailHandler) GetEmails(c echo.Context) error{
+func (h *MailHandler) GetEmails(c echo.Context) error {
 	user, err := common.IsAuthenticated(&c, h.UserUsecase)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (h *MailHandler) GetEmails(c echo.Context) error{
 		last = 0
 	}
 	amount, err := strconv.Atoi(c.QueryParam("amount"))
-	if err != nil  || amount > 50{
+	if err != nil || amount > 50 {
 		amount = 50
 	}
 	emails, err := h.MailUsecase.GetEmails(user.Username, email, last, amount)
@@ -73,7 +73,7 @@ func (h *MailHandler) GetEmails(c echo.Context) error{
 	return c.JSON(http.StatusOK, emails)
 }
 
-func (h *MailHandler) SendEmail(c echo.Context) error{
+func (h *MailHandler) SendEmail(c echo.Context) error {
 	user, err := common.IsAuthenticated(&c, h.UserUsecase)
 	if err != nil {
 		return err
@@ -100,4 +100,3 @@ func (h *MailHandler) SendEmail(c echo.Context) error{
 	}
 	return c.String(http.StatusOK, "Email sent")
 }
-

@@ -6,7 +6,7 @@ type MailUseCase struct {
 	Repository mail.MailRepository
 }
 
-func (uc *MailUseCase)GetDialogues(username string, last int, amount int) ([]mail.Dialogue, error) {
+func (uc *MailUseCase) GetDialogues(username string, last int, amount int) ([]mail.Dialogue, error) {
 	username += "@liokor.ru"
 	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last)
 	if err != nil {

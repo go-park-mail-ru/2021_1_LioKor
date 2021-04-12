@@ -5,19 +5,19 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
+	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
+	mailRepository "liokor_mail/internal/pkg/mail/repository"
+	mailUsecase "liokor_mail/internal/pkg/mail/usecase"
 	userDelivery "liokor_mail/internal/pkg/user/delivery"
 	userRepository "liokor_mail/internal/pkg/user/repository"
 	userUsecase "liokor_mail/internal/pkg/user/usecase"
-	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
-	mailUsecase "liokor_mail/internal/pkg/mail/usecase"
-	mailRepository "liokor_mail/internal/pkg/mail/repository"
 	"log"
-	"os"
-	"strconv"
-	"time"
 	"net/http"
 	"net/url"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -34,7 +34,6 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
 	mailUC := &mailUsecase.MailUseCase{mailRep}
 	mailHander := mailDelivery.MailHandler{mailUC, userUc}
-
 
 	e := echo.New()
 
@@ -68,11 +67,11 @@ func StartServer(config common.Config, quit chan os.Signal) {
 			if strings.HasPrefix(host, "localhost:") || host == "localhost" {
 				return true
 			}
-			return false;
+			return false
 		},
 		CookieSameSite: http.SameSiteStrictMode,
-		CookieDomain: csrfCookieDomain,
-		CookiePath: "/",
+		CookieDomain:   csrfCookieDomain,
+		CookiePath:     "/",
 	}))
 	e.Static("/media", "media")
 

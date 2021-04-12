@@ -31,7 +31,6 @@ func (h *UserHandler) setSessionCookie(c *echo.Context, username string) error {
 	return nil
 }
 
-
 func (h *UserHandler) Auth(c echo.Context) error {
 	creds := user.Credentials{}
 

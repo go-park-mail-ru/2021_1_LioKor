@@ -1,17 +1,16 @@
 package common
 
 import (
-	"github.com/jackc/pgx/v4/pgxpool"
 	"context"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
-
 
 type PostgresDataBase struct {
 	DBConn *pgxpool.Conn
 	DBpool *pgxpool.Pool
 }
 
-func NewPostgresDataBase(dbConfig string) (PostgresDataBase, error){
+func NewPostgresDataBase(dbConfig string) (PostgresDataBase, error) {
 	dbpool, err := pgxpool.Connect(context.Background(), dbConfig)
 	if err != nil {
 		return PostgresDataBase{}, err

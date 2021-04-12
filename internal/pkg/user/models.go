@@ -31,7 +31,6 @@ type User struct {
 	IsAdmin      bool   `json:"-"`
 }
 
-
 type Session struct {
 	Username     string
 	SessionToken string
