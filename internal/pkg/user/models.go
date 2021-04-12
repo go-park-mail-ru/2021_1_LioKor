@@ -21,6 +21,7 @@ type UserSignUp struct {
 }
 
 type User struct {
+	Id           int    `json:"-"`
 	Username     string `json:"username"`
 	HashPassword string `json:"-"`
 	AvatarURL    string `json:"avatarUrl"`
@@ -30,14 +31,6 @@ type User struct {
 	IsAdmin      bool   `json:"-"`
 }
 
-type UserDB struct {
-	Id int
-	Username     string
-	HashPassword string
-	AvatarURL    string
-	FullName     string
-	ReserveEmail string
-}
 
 type Session struct {
 	Username     string

@@ -83,6 +83,7 @@ func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 	}
 
 	err = uc.Repository.CreateUser(user.User{
+		0,
 		newUser.Username,
 		string(hashPSWD),
 		newUser.AvatarURL,

@@ -4,66 +4,21 @@ import (
 	"context"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 )
 
 type PostgresUserRepository struct {
-	DBConn *pgxpool.Conn
-	DBpool *pgxpool.Pool
-}
-
-func NewPostgresUserRepository(dbConfig string) (user.UserRepository, error){
-	dbpool, err := pgxpool.Connect(context.Background(), dbConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := dbpool.Acquire(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	return &PostgresUserRepository{conn, dbpool}, nil
-}
-
-func (ur *PostgresUserRepository) Close() {
-	ur.DBConn.Release()
-	ur.DBpool.Close()
-}
-
-func (ur *PostgresUserRepository) GetUserDB(username string) (user.UserDB, error) {
-	var u user.UserDB
-	err := ur.DBConn.QueryRow(
-		context.Background(),
-		"SELECT * FROM users WHERE LOWER(username)=LOWER($1) LIMIT 1;",
-		username,
-	).Scan(
-		&u.Id,
-		&u.Username,
-		&u.HashPassword,
-		&u.AvatarURL,
-		&u.FullName,
-		&u.ReserveEmail,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return user.UserDB{}, user.InvalidUserError{"user doesn't exist"}
-		} else {
-			return user.UserDB{}, err
-		}
-	}
-	return u, nil
+	DBInstance common.PostgresDataBase
 }
 
 func (ur *PostgresUserRepository) CreateSession(session user.Session) error {
-	u, err := ur.GetUserDB(session.Username)
+	u, err := ur.GetUserByUsername(session.Username)
 	if err != nil {
 		return err
 	}
 
-	_, err = ur.DBConn.Exec(
+	_, err = ur.DBInstance.DBConn.Exec(
 		context.Background(),
 	"INSERT INTO sessions(user_id, token, expiration) VALUES ($1, $2, $3);",
 		u.Id,
@@ -83,7 +38,7 @@ func (ur *PostgresUserRepository) CreateSession(session user.Session) error {
 
 func (ur *PostgresUserRepository) GetSessionBySessionToken(token string) (user.Session, error) {
 	var session user.Session
-	err := ur.DBConn.QueryRow(
+	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
 		"SELECT u.username, s.token, s.expiration FROM users AS u " +
 			"JOIN sessions AS s ON u.id=s.user_id " +
@@ -108,11 +63,12 @@ func (ur *PostgresUserRepository) GetSessionBySessionToken(token string) (user.S
 
 func (ur *PostgresUserRepository) GetUserByUsername(username string) (user.User, error) {
 	var u user.User
-	err := ur.DBConn.QueryRow(
+	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
-		"SELECT username, password_hash, avatar_url, fullname, reserve_email FROM users WHERE LOWER(username)=LOWER($1) LIMIT 1;",
+		"SELECT * FROM users WHERE LOWER(username)=LOWER($1) LIMIT 1;",
 		username,
 	).Scan(
+		&u.Id,
 		&u.Username,
 		&u.HashPassword,
 		&u.AvatarURL,
@@ -131,7 +87,7 @@ func (ur *PostgresUserRepository) GetUserByUsername(username string) (user.User,
 }
 
 func (ur *PostgresUserRepository) CreateUser(u user.User) error {
-	_, err := ur.DBConn.Exec(
+	_, err := ur.DBInstance.DBConn.Exec(
 		context.Background(),
 		"INSERT INTO users(username, password_hash, avatar_url, fullname, reserve_email) VALUES ($1, $2, $3, $4, $5);",
 		u.Username,
@@ -154,16 +110,17 @@ func (ur *PostgresUserRepository) CreateUser(u user.User) error {
 }
 
 func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
-	err := ur.DBConn.QueryRow(
+	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
 		"UPDATE users SET avatar_url=$1, fullname=$2, reserve_email=$3 " +
 			"WHERE LOWER(username)=LOWER($4) " +
-			"RETURNING username, password_hash, avatar_url, fullname, reserve_email;",
+			"RETURNING *;",
 		newData.AvatarURL,
 		newData.FullName,
 		newData.ReserveEmail,
 		username,
 	).Scan(
+		&newData.Id,
 		&newData.Username,
 		&newData.HashPassword,
 		&newData.AvatarURL,
@@ -186,7 +143,7 @@ func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User)
 }
 
 func (ur *PostgresUserRepository) ChangePassword(username string, newPSWD string) error {
-	commandTag, err := ur.DBConn.Exec(
+	commandTag, err := ur.DBInstance.DBConn.Exec(
 		context.Background(),
 		"UPDATE users SET password_hash=$1 WHERE LOWER(username)=LOWER($2);",
 		newPSWD,
@@ -203,7 +160,7 @@ func (ur *PostgresUserRepository) ChangePassword(username string, newPSWD string
 }
 
 func (ur *PostgresUserRepository) RemoveSession(token string) error {
-	commandTag, err := ur.DBConn.Exec(
+	commandTag, err := ur.DBInstance.DBConn.Exec(
 		context.Background(),
 		"DELETE FROM sessions WHERE token=$1;",
 		token,
@@ -221,7 +178,7 @@ func (ur *PostgresUserRepository) RemoveSession(token string) error {
 
 func (ur *PostgresUserRepository) RemoveUser(username string) error {
 	//deletes referenced sessions if exists
-	commandTag, err := ur.DBConn.Exec(
+	commandTag, err := ur.DBInstance.DBConn.Exec(
 		context.Background(),
 		"DELETE FROM users WHERE username=$1;",
 		username,

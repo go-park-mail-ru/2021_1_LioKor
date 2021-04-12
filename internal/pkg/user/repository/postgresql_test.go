@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/stretchr/testify/assert"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"testing"
 	"time"
@@ -11,11 +12,15 @@ import (
 var dbConfig = "host=localhost user=postgres password=12 dbname=liokor_mail_test sslmode=disable"
 
 func TestCreateUserSuccess(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	newUser := user.User{
 		Username: "newTestUser",
@@ -34,11 +39,15 @@ func TestCreateUserSuccess(t *testing.T) {
 }
 
 func TestCreateUserFail(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	newUser := user.User{
 		Username: "newTestUser",
@@ -60,11 +69,15 @@ func TestCreateUserFail(t *testing.T) {
 }
 
 func TestGetUserByUsername(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	retUser := user.User{
 		Username: "newTestUser",
@@ -80,7 +93,7 @@ func TestGetUserByUsername(t *testing.T) {
 	if err != nil {
 		t.Errorf("Didn't find user: %v\n", err)
 	}
-	assert.Equal(t, retUser, u)
+	assert.Equal(t, retUser.Username, u.Username)
 
 	_, err = userRep.GetUserByUsername("invalidUser")
 	switch err.(type) {
@@ -92,11 +105,15 @@ func TestGetUserByUsername(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	updUser := user.User{
 		Username: "newTestUser",
@@ -112,7 +129,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("Couldn't update user: %v\n", err)
 	}
-	assert.Equal(t, updUser, u)
+	assert.Equal(t, updUser.Username, u.Username)
 
 	_, err = userRep.UpdateUser("invalidUser", updUser)
 	switch err.(type) {
@@ -124,11 +141,15 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestChangePassword(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	err = userRep.ChangePassword("newTestUser", "newHashPassword")
 	if err != nil {
@@ -145,11 +166,15 @@ func TestChangePassword(t *testing.T) {
 }
 
 func TestCreateSessionSuccess(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-04-11T15:04:05Z")
 
@@ -166,11 +191,15 @@ func TestCreateSessionSuccess(t *testing.T) {
 }
 
 func TestCreateSessionFail(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	invalidSession := user.Session{
 		Username: "invalidUser",
@@ -187,11 +216,15 @@ func TestCreateSessionFail(t *testing.T) {
 }
 
 func TestGetSessionBySessionToken(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	s, err := userRep.GetSessionBySessionToken("sessionToken")
 	if err != nil {
@@ -209,11 +242,15 @@ func TestGetSessionBySessionToken(t *testing.T) {
 }
 
 func TestRemoveSessionSuccess(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	err = userRep.RemoveSession("sessionToken")
 	if err != nil {
@@ -222,11 +259,15 @@ func TestRemoveSessionSuccess(t *testing.T) {
 }
 
 func TestRemoveSessionFail(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	err = userRep.RemoveSession("invalidSessionToken")
 	switch err.(type) {
@@ -238,11 +279,15 @@ func TestRemoveSessionFail(t *testing.T) {
 }
 
 func TestRemoveUserSuccess(t *testing.T) {
-	userRep, err := NewPostgresUserRepository(dbConfig)
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
 
 	err = userRep.RemoveUser("newTestUser")
 	if err != nil {

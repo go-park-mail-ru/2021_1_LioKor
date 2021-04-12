@@ -5,9 +5,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/user/delivery"
-	"liokor_mail/internal/pkg/user/repository"
-	"liokor_mail/internal/pkg/user/usecase"
+	userDelivery "liokor_mail/internal/pkg/user/delivery"
+	userRepository "liokor_mail/internal/pkg/user/repository"
+	userUsecase "liokor_mail/internal/pkg/user/usecase"
+	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
+	mailUsecase "liokor_mail/internal/pkg/mail/usecase"
+	mailRepository "liokor_mail/internal/pkg/mail/repository"
 	"log"
 	"os"
 	"strconv"
@@ -15,14 +18,20 @@ import (
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	userRep, err := repository.NewPostgresUserRepository(config.DbString)
+	dbInstance, err := common.NewPostgresDataBase(config.DbString)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer userRep.Close()
+	defer dbInstance.Close()
 
-	userUc := &usecase.UserUseCase{userRep, config}
-	userHandler := delivery.UserHandler{userUc}
+	userRep := &userRepository.PostgresUserRepository{dbInstance}
+	userUc := &userUsecase.UserUseCase{userRep, config}
+	userHandler := userDelivery.UserHandler{userUc}
+
+	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
+	mailUC := &mailUsecase.MailUseCase{mailRep}
+	mailHander := mailDelivery.MailHandler{mailUC, userUc}
+
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -40,6 +49,10 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.PUT("/user/:username", userHandler.UpdateProfile)
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
 	e.GET("/user/:username", userHandler.ProfileByUsername)
+
+	e.GET("/api/dialogues", mailHander.GetDialogues)
+	e.GET("/api/emails", mailHander.GetEmails)
+	e.POST("/api/emails", mailHander.SendEmail)
 
 	go func() {
 		err := e.Start(config.Host + ":" + strconv.Itoa(config.Port))
