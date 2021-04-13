@@ -30,7 +30,14 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 func (uc *MailUseCase) SendEmail(mail mail.Mail) error {
 	mail.Sender += "@liokor.ru"
 
-	err := common.SendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
+	err := uc.Repository.AddMail(mail)
+	if err != nil {
+		return err
+	}
+
+	//TODO: отправлять письмо до тех пор, пока не выйдет, или уже выдавать пользователю ошибку
+	//например, в mail письмо сохраняется, а на ошибку отправляет письмо
+	err = common.SendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
 	if err != nil {
 		return err
 	}

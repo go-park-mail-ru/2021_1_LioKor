@@ -86,3 +86,18 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 	}
 	return mails, nil
 }
+
+func (mr *PostgresMailRepository) AddMail(mail mail.Mail) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
+		mail.Sender,
+		mail.Recipient,
+		mail.Subject,
+		mail.Body,
+		)
+	if err != nil {
+		return err
+	}
+	return nil
+}
