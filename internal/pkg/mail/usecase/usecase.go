@@ -1,6 +1,9 @@
 package usecase
 
-import "liokor_mail/internal/pkg/mail"
+import (
+	"liokor_mail/internal/pkg/mail"
+	"liokor_mail/internal/pkg/common"
+)
 
 type MailUseCase struct {
 	Repository mail.MailRepository
@@ -26,7 +29,11 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 
 func (uc *MailUseCase) SendEmail(mail mail.Mail) error {
 	mail.Sender += "@liokor.ru"
-	//TODO: call function to send email
+
+	err := common.SendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
