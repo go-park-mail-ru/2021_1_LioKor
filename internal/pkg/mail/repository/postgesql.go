@@ -10,18 +10,19 @@ type PostgresMailRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
-func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, offset int) ([]mail.Dialogue, error) {
+func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, last int) ([]mail.Dialogue, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
-		"SELECT CASE WHEN d.user_1=$1 THEN d.user_2 WHEN d.user_2=$1 THEN d.user_1 END AS email, "+
-			"u.avatar_url, m.body, m.received_date FROM dialogues d JOIN mails m ON d.mail_id=m.id "+
-			"LEFT  JOIN users u ON "+
-			"CASE WHEN d.user_1=$1 THEN SPLIT_PART(d.user_2,'@liokor.ru', 1)=u.username  WHEN d.user_2=$1 THEN SPLIT_PART(d.user_1,'@liokor.ru', 1)=u.username END "+
-			"WHERE d.user_1=$1 OR d.user_2=$1 "+
-			"ORDER BY d.received_date DESC LIMIT $2 OFFSET $3;",
+		"SELECT d.id, "+
+		    "CASE WHEN d.user_1=$1 THEN d.user_2 WHEN d.user_2=$1 THEN d.user_1 END AS email, "+
+			"u.avatar_url, m.body, m.received_date FROM dialogues d JOIN mails m ON d.last_mail_id=m.id "+
+			"LEFT JOIN users u ON "+
+			"CASE WHEN d.user_1=$1 THEN SPLIT_PART(d.user_2,'@liokor.ru', 1)=u.username WHEN d.user_2=$1 THEN SPLIT_PART(d.user_1,'@liokor.ru', 1)=u.username END "+
+			"WHERE (d.user_1=$1 OR d.user_2=$1) AND d.id > $3 "+
+			"ORDER BY d.received_date DESC LIMIT $2;",
 		username,
 		limit,
-		offset,
+		last,
 	)
 	if err != nil {
 		return nil, err
@@ -33,6 +34,7 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	for rows.Next() {
 		dialogue := mail.Dialogue{}
 		err = rows.Scan(
+			&dialogue.Id,
 			&dialogue.Email,
 			&dialogue.AvatarURLDB,
 			&dialogue.Body,
@@ -52,17 +54,18 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	return dialogues, nil
 }
-func (mr *PostgresMailRepository) GetMailsForUser(username string, email string, limit int, offset int) ([]mail.DialogueEmail, error) {
+func (mr *PostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
-		"SELECT sender, subject, received_date, body FROM mails "+
-			"WHERE (sender=$1 AND recipient=$2) OR "+
-			"(sender=$2 AND recipient=$1) "+
-			"ORDER BY received_date DESC LIMIT $3 OFFSET $4;",
+		"SELECT id, sender, subject, received_date, body FROM mails "+
+			"WHERE "+
+			"((sender=$1 AND recipient=$2) OR (sender=$2 AND recipient=$1)) "+
+			"AND id > $4 "+
+			"ORDER BY id DESC LIMIT $3;",
 		username,
 		email,
 		limit,
-		offset,
+	 	last,
 	)
 	if err != nil {
 		return nil, err
@@ -74,6 +77,7 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 	for rows.Next() {
 		mail := mail.DialogueEmail{}
 		err = rows.Scan(
+			&mail.Id,
 			&mail.Sender,
 			&mail.Subject,
 			&mail.Received_date,

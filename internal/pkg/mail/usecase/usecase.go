@@ -2,11 +2,32 @@ package usecase
 
 import (
 	"liokor_mail/internal/pkg/mail"
-	"liokor_mail/internal/pkg/common"
+	"net/smtp"
+	"net"
+	"strings"
+	"fmt"
 )
 
 type MailUseCase struct {
 	Repository mail.MailRepository
+}
+
+func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data string) error {
+    addr := strings.Split(to, "@")[1]
+    mxrecords, err := net.LookupMX(addr)
+    if err != nil {
+        return err
+    }
+
+    host := mxrecords[0].Host
+    host = host[:len(host) - 1]
+
+	mail := fmt.Sprintf("From: %s\r\n)To: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data);
+    err = smtp.SendMail(host + ":25", nil, from, []string{to}, []byte(mail))
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 func (uc *MailUseCase) GetDialogues(username string, last int, amount int) ([]mail.Dialogue, error) {
@@ -37,7 +58,7 @@ func (uc *MailUseCase) SendEmail(mail mail.Mail) error {
 
 	//TODO: отправлять письмо до тех пор, пока не выйдет, или уже выдавать пользователю ошибку
 	//например, в mail письмо сохраняется, а на ошибку отправляет письмо
-	err = common.SendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
+	err = uc.SMTPSendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
 	if err != nil {
 		return err
 	}

@@ -5,13 +5,10 @@ info:
   title: "LioKor Mail"
   contact:
     email: "korolion31@yandex.ru"
-host: "api.mail.liokor.ru"
 basePath: "/"
 tags:
 - name: "user"
   description: "User operations"
-schemes:
-- "https"
 paths:
   /user/auth:
     post:
@@ -203,7 +200,7 @@ paths:
           in: "query"
           description: "2nd user"
           required: true
-          type: "integer"
+          type: "string"
         - name: "amount"
           in: "query"
           description: "amount of emails to receive"

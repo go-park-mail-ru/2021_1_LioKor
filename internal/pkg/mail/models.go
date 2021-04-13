@@ -14,6 +14,7 @@ type Mail struct {
 }
 
 type DialogueEmail struct {
+	Id            int       `json:"id"`
 	Sender        string    `json:"username"`
 	Subject       string    `json:"title"`
 	Received_date time.Time `json:"time"`
@@ -21,6 +22,7 @@ type DialogueEmail struct {
 }
 
 type Dialogue struct {
+	Id            int            `json:"id"`
 	Email         string         `json:"username"`
 	AvatarURLDB   sql.NullString `json:"-"`
 	AvatarURL     string         `json:"avatarUrl"`

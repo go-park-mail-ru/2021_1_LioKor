@@ -25,9 +25,10 @@ CREATE TABLE IF NOT EXISTS mails (
 );
 
 CREATE TABLE IF NOT EXISTS dialogues (
+    id BIGSERIAL PRIMARY KEY,
     user_1 CITEXT NOT NULL,
     user_2 CITEXT NOT NULL,
-    mail_id INTEGER REFERENCES mails (id) ON DELETE SET NULL,
+    last_mail_id INTEGER REFERENCES mails (id) ON DELETE SET NULL,
     received_date  TIMESTAMP,
     UNIQUE (user_1, user_2)
 );
@@ -49,9 +50,9 @@ BEGIN
     IF EXISTS (
         SELECT * FROM dialogues WHERE user_1=bigger AND user_2=smaller LIMIT 1
     ) THEN
-        UPDATE dialogues SET mail_id=NEW.id, received_date=NEW.received_date WHERE user_1=bigger AND user_2=smaller;
+        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date WHERE user_1=bigger AND user_2=smaller;
     ELSE
-        INSERT INTO dialogues(user_1, user_2, mail_id, received_date) values (bigger, smaller, NEW.id, NEW.received_date);
+        INSERT INTO dialogues(user_1, user_2, last_mail_id, received_date) values (bigger, smaller, NEW.id, NEW.received_date);
     END IF;
 RETURN NEW;
 END;
