@@ -178,7 +178,7 @@ paths:
           type: "integer"
         - name: "last"
           in: "query"
-          description: "return dialogues beginning from that desc"
+          description: "end list with that id, not including it"
           required: false
           type: "integer"
         responses:
@@ -208,7 +208,7 @@ paths:
           type: "integer"
         - name: "last"
           in: "query"
-          description: "return emails beginning from that desc"
+          description: "end list with that id, not including it"
           required: false
           type: "integer"
         responses:
