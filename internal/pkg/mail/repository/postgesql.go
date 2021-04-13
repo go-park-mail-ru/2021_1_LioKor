@@ -4,6 +4,7 @@ import (
 	"context"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
+	"time"
 )
 
 type PostgresMailRepository struct {
@@ -104,4 +105,21 @@ func (mr *PostgresMailRepository) AddMail(mail mail.Mail) error {
 		return err
 	}
 	return nil
+}
+
+func (mr *PostgresMailRepository) CountMailsFromUser(username string, time time.Time) (int, error) {
+	var num int
+	err := mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		"SELECT COUNT(*) FROM mails WHERE sender=$1 AND received_date>$2;",
+		username,
+		time,
+		).Scan(
+			&num,
+			)
+
+	if err != nil {
+		return 0, err
+	}
+	return num, nil
 }

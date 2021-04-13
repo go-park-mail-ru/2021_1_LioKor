@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"fmt"
+	"time"
 )
 
 type MailUseCase struct {
@@ -48,17 +49,24 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 	return emails, nil
 }
 
-func (uc *MailUseCase) SendEmail(mail mail.Mail) error {
-	mail.Sender += "@liokor.ru"
+func (uc *MailUseCase) SendEmail(email mail.Mail) error {
+	email.Sender += "@liokor.ru"
 
-	err := uc.Repository.AddMail(mail)
+	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, time.Now().Add(time.Minute * (-5)))
+	if err != nil {
+		return err
+	}
+	if lastMailsCount > 10 {
+		return mail.InvalidEmailError{"too many mails in last 5 minutes"}
+	}
+
+	err = uc.Repository.AddMail(email)
 	if err != nil {
 		return err
 	}
 
 	//TODO: отправлять письмо до тех пор, пока не выйдет, или уже выдавать пользователю ошибку
-	//например, в mail письмо сохраняется, а на ошибку отправляет письмо
-	err = uc.SMTPSendMail(mail.Sender, mail.Recipient, mail.Subject, mail.Body)
+	err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 	if err != nil {
 		return err
 	}
