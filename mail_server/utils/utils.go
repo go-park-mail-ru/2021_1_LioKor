@@ -1,20 +1,23 @@
 package utils
 
-
 import (
-    "encoding/base64"
-    "io/ioutil"
-    "mime"
-    "mime/multipart"
-    "strings"
-    "net/mail"
-    "io"
+	"encoding/base64"
+	"io"
+	"io/ioutil"
+	"mime"
+	"mime/multipart"
+	"net/mail"
+	"strings"
 )
 
+func ValidateEmail(email string) {
+}
+
 func ParseBodyText(message *mail.Message) (string, error) {
-    contentType, params, err := mime.ParseMediaType(message.Header.Get("Content-Type"))
+	contentType, params, err := mime.ParseMediaType(message.Header.Get("Content-Type"))
 	if err != nil {
-        return "", err
+		contentType = "text/plain"
+		params = nil
 	}
 
 	var body string
@@ -26,18 +29,18 @@ func ParseBodyText(message *mail.Message) (string, error) {
 				break
 			}
 			if err != nil {
-                return "", err
+				return "", err
 			}
 			contentByte, err := io.ReadAll(p)
 			if err != nil {
-                return "", err
+				return "", err
 			}
 
 			content := string(contentByte)
 			if strings.HasPrefix(p.Header.Get("Content-Transfer-Encoding"), "base64") {
 				contentByte, err = base64.StdEncoding.DecodeString(content)
 				if err != nil {
-                    return "", err
+					return "", err
 				}
 				content = string(contentByte)
 			}
@@ -51,10 +54,10 @@ func ParseBodyText(message *mail.Message) (string, error) {
 	} else {
 		bodyByte, err := ioutil.ReadAll(message.Body)
 		if err != nil {
-            return "", err
+			return "", err
 		}
 		body = string(bodyByte)
 	}
 
-    return body, nil
+	return body, nil
 }

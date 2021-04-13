@@ -2,16 +2,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log"
 	"net/mail"
 	"os"
 	"time"
-    "context"
 
-    "liokor_mail/mail_server/utils"
-    "liokor_mail/internal/pkg/common"
 	"github.com/emersion/go-smtp"
+	"liokor_mail/internal/pkg/common"
+	"liokor_mail/mail_server/utils"
 )
 
 var db common.PostgresDataBase
@@ -51,41 +51,51 @@ func (s *Session) Data(r io.Reader) error {
 
 	message, err := mail.ReadMessage(&buf)
 	if err != nil {
-        log.Println(err)
+		log.Println(err)
 		return err
 	}
 
-    body, err := utils.ParseBodyText(message)
-    if err != nil {
-        log.Println(err)
-        return err
-    }
+	body, err := utils.ParseBodyText(message)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	s.Header = message.Header
 	s.Body = body
 
+	s.HandleMail()
+
 	return nil
 }
 
+func (s *Session) HandleMail() {
+	if len(s.From) > 0 && len(s.Recipients) > 0 && len(s.Body) > 0 {
+		log.Printf("Received mail from %s to %v\n", s.From, s.Recipients)
+
+		subject := s.Header.Get("Subject")
+		body := s.Body
+
+		for _, recipient := range s.Recipients {
+			_, err := db.DBConn.Exec(
+				context.Background(),
+				"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
+				s.From,
+				recipient,
+				subject,
+				body,
+			)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+}
+
 func (s *Session) Reset() {
-    log.Printf("Received mail from %s to %v\n", s.From, s.Recipients)
-
-	subject := s.Header.Get("Subject")
-	body := s.Body
-
-    for _, recipient := range s.Recipients {
-        _, err := db.DBConn.Exec(
-            context.Background(),
-    		"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
-    		s.From,
-    		recipient,
-    		subject,
-    		body,
-    	)
-        if err != nil {
-            log.Println(err)
-        }
-    }
+	s.From = ""
+	s.Recipients = nil
+	s.Body = ""
 }
 
 func (s *Session) Logout() error {
@@ -93,13 +103,13 @@ func (s *Session) Logout() error {
 }
 
 func main() {
-    config := common.Config{}
-    err := config.ReadFromFile("config.json")
-    if err != nil {
-        log.Fatal(err)
-    }
+	config := common.Config{}
+	err := config.ReadFromFile("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    db, err = common.NewPostgresDataBase(config.DbString)
+	db, err = common.NewPostgresDataBase(config.DbString)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}

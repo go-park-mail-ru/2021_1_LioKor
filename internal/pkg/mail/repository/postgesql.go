@@ -15,7 +15,7 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
 		"SELECT d.id, "+
-		    "CASE WHEN d.user_1=$1 THEN d.user_2 WHEN d.user_2=$1 THEN d.user_1 END AS email, "+
+			"CASE WHEN d.user_1=$1 THEN d.user_2 WHEN d.user_2=$1 THEN d.user_1 END AS email, "+
 			"u.avatar_url, m.body, m.received_date FROM dialogues d JOIN mails m ON d.last_mail_id=m.id "+
 			"LEFT JOIN users u ON "+
 			"CASE WHEN d.user_1=$1 THEN SPLIT_PART(d.user_2,'@liokor.ru', 1)=u.username WHEN d.user_2=$1 THEN SPLIT_PART(d.user_1,'@liokor.ru', 1)=u.username END "+
@@ -66,7 +66,7 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 		username,
 		email,
 		limit,
-	 	last,
+		last,
 	)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (mr *PostgresMailRepository) AddMail(mail mail.Mail) error {
 		mail.Recipient,
 		mail.Subject,
 		mail.Body,
-		)
+	)
 	if err != nil {
 		return err
 	}
@@ -115,9 +115,9 @@ func (mr *PostgresMailRepository) CountMailsFromUser(username string, interval t
 		"SELECT COUNT(*) FROM mails WHERE sender=$1 AND received_date>$2;",
 		username,
 		time,
-		).Scan(
-			&num,
-			)
+	).Scan(
+		&num,
+	)
 
 	if err != nil {
 		return 0, err

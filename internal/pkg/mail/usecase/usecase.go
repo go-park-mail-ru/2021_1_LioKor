@@ -1,14 +1,14 @@
 package usecase
 
 import (
-	"liokor_mail/internal/pkg/mail"
-	"net/smtp"
-	"net"
-	"strings"
-	"fmt"
-	"time"
 	"errors"
+	"fmt"
+	"liokor_mail/internal/pkg/mail"
 	"log"
+	"net"
+	"net/smtp"
+	"strings"
+	"time"
 )
 
 type MailUseCase struct {
@@ -20,23 +20,23 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 	if len(recipientSplitted) != 2 {
 		return errors.New("invalid recipient address!")
 	}
-    hostAddr := recipientSplitted[1]
-    mxrecords, err := net.LookupMX(hostAddr)
-    if err != nil {
+	hostAddr := recipientSplitted[1]
+	mxrecords, err := net.LookupMX(hostAddr)
+	if err != nil {
 		log.Println(err)
-        return err
-    }
+		return err
+	}
 
-    host := mxrecords[0].Host
-    host = host[:len(host) - 1]
+	host := mxrecords[0].Host
+	host = host[:len(host)-1]
 
-	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data);
-    err = smtp.SendMail(host + ":25", nil, from, []string{to}, []byte(mail))
-    if err != nil {
+	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data)
+	err = smtp.SendMail(host+":25", nil, from, []string{to}, []byte(mail))
+	if err != nil {
 		log.Println(err)
-        return err
-    }
-    return nil
+		return err
+	}
+	return nil
 }
 
 func (uc *MailUseCase) GetDialogues(username string, last int, amount int) ([]mail.Dialogue, error) {
@@ -60,7 +60,7 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 	email.Sender += "@liokor.ru"
 
-	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3 * time.Minute)
+	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3*time.Minute)
 	if err != nil {
 		return err
 	}

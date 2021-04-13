@@ -21,10 +21,10 @@ func TestAddMail(t *testing.T) {
 	}
 
 	newMail := mail.Mail{
-		Sender: "alt@liokor.ru",
+		Sender:    "alt@liokor.ru",
 		Recipient: "lio@liokor.ru",
-		Subject: "Test mail",
-		Body: "Test adding mails",
+		Subject:   "Test mail",
+		Body:      "Test adding mails",
 	}
 
 	err = mailRep.AddMail(newMail)
@@ -32,7 +32,6 @@ func TestAddMail(t *testing.T) {
 		t.Errorf("Didn't pass adding mail: %v\n", err)
 	}
 }
-
 
 func TestGetMailsForUser(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
@@ -52,7 +51,6 @@ func TestGetMailsForUser(t *testing.T) {
 	for _, mail := range mails {
 		t.Log(mail)
 	}
-
 
 }
 
@@ -86,7 +84,7 @@ func TestCountMailsFromUser(t *testing.T) {
 		dbInstance,
 	}
 
-	count, err := mailRep.CountMailsFromUser("alt@liokor.ru", time.Now().Add(time.Minute * (-10)))
+	count, err := mailRep.CountMailsFromUser("alt@liokor.ru", time.Now().Add(time.Minute*(-10)))
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}
