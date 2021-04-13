@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 	"errors"
+	"log"
 )
 
 type MailUseCase struct {
@@ -22,6 +23,7 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
     hostAddr := recipientSplitted[1]
     mxrecords, err := net.LookupMX(hostAddr)
     if err != nil {
+		log.Println(err)
         return err
     }
 
@@ -31,6 +33,7 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data);
     err = smtp.SendMail(host + ":25", nil, from, []string{to}, []byte(mail))
     if err != nil {
+		log.Println(err)
         return err
     }
     return nil

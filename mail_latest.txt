@@ -1,0 +1,68 @@
+Received: by mail-lj1-f180.google.com with SMTP id u13so3500776lje.0
+        for <korolion@liokor.ru>; Thu, 08 Apr 2021 12:01:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=MS44+5h2vsuljARoqbErc7DQ+jJcEPV9JhUsD3h/iY4=;
+        b=BeXibBwVkQDpCykkshyNePYzBzxiAocYYqAxHHqtNefwee+PPBb5MfIrsbSZO9eCGX
+         4Rk4fgJz6be/LQPWoX+RDBoDayqZuUGbxfIM+YkszWcp22FDCwXNLpk3Bgml+SF9KPQ5
+         3uzdwwGjBo+OoJI0nN/LH1zc/LMAcTY8Cf6Pp3rCc/bDETObgrKqdtHurTjXDQsq47Rh
+         zTS/u/f2t+ELAwv348jwJypjoNM8ZKNFgXhKDcoEqBos3C7LV0e6RqTF9i1Uh7csJuV0
+         tK7aEpfKPrZKUhFTKDATqJ4zZZ12pC3caZs5mcLpw338hXeLQV1ygBmRGKWe+5Tkylic
+         wa9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=MS44+5h2vsuljARoqbErc7DQ+jJcEPV9JhUsD3h/iY4=;
+        b=AouXQUgrL1ah/2gm3LY0euOpf8hYXfczlMMTjJSsiRF/+ceqBD+FPjvHp+d/PI76b0
+         FH/UQOQcau9r06lBwI5h/7tPWcdrcI/IN+uXlQVbA8R+IsA8L9vDcKQV/ZIa8WJlRT4f
+         dxIFnA++eADr1LY2uObSHTH7MuFoSB2Iq2yanfyVj1VzE2JsDAltRFSdXhKTqoQpOMUc
+         uItAL7+/+mtjNWbkhqbGL9keTTy4CYCWutU1xyKWvuipJczuuZZTZUOw4oBvT1GN75iR
+         UE6LJ3AklPHFqzCuIq1BhtssSJKVAXCzZDiD7F3KgEyOlFOnBuSZAwTurOQ5O0hcQ9u8
+         c+aw==
+X-Gm-Message-State: AOAM533LlPuH7GiQ5bqr8EMZwFtdnUCyKWWi1pS0fcLq0S/H1yqdN7HM
+	CAs3AEjWQUHhlZ211CwjTwhZ892BS1NX8eAApli8PwuA
+X-Google-Smtp-Source: ABdhPJxRT/zY+30Ri+V2z6dPL/fIs6CYIJ7hPUQLcPRmY14HBDB1A4319AZ9lRCwevTC5ZN/Sg967EeZdUTuq36kb0U=
+X-Received: by 2002:a2e:9002:: with SMTP id h2mr7225622ljg.145.1617908517774;
+ Thu, 08 Apr 2021 12:01:57 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAH3p_etwiCv+TfiYRtxvEnPrWdBy6c8_bRVcukbtG+duLJj6Ag@mail.gmail.com>
+ <CAH3p_euWcuxocmSJeQOC0t-VfBZ3G-_5z=Yf3X19oxi7B8NmyA@mail.gmail.com>
+In-Reply-To: <CAH3p_euWcuxocmSJeQOC0t-VfBZ3G-_5z=Yf3X19oxi7B8NmyA@mail.gmail.com>
+From: KoroLion <korolion31@gmail.com>
+Date: Thu, 8 Apr 2021 22:01:46 +0300
+Message-ID: <CAH3p_eth1zHvfDY3MPQsQRPnDdW-0Jd2sWsFrqVKqVd8JHF3VA@mail.gmail.com>
+Subject: Re: gmail
+To: korolion@liokor.ru
+Content-Type: multipart/alternative; boundary="0000000000007b272c05bf7aaed9"
+
+--0000000000007b272c05bf7aaed9
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+Y29udGVudA0Kd29sZg0KbGlvbg0KdGVzdA0KDQoNCtGH0YIsIDgg0LDQv9GALiAyMDIxINCzLiDQ
+siAyMjowMCwgS29yb0xpb24gPGtvcm9saW9uMzFAZ21haWwuY29tPjoNCg0KPiDRhNCw0LLQstGL
+0YTQsA0KPg0KPiDRh9GCLCA4INCw0L/RgC4gMjAyMSDQsy4g0LIgMjE6NTksIEtvcm9MaW9uIDxr
+b3JvbGlvbjMxQGdtYWlsLmNvbT46DQo+DQo+PiB3b2xmICYgbGlvbg0KPj4NCj4NCg==
+--0000000000007b272c05bf7aaed9
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>content</div><div>wolf</div><div>lion</div><div>test<=
+br></div><div><br></div></div><br><div class=3D"gmail_quote"><div dir=3D"lt=
+r" class=3D"gmail_attr">=D1=87=D1=82, 8 =D0=B0=D0=BF=D1=80. 2021 =D0=B3. =
+=D0=B2 22:00, KoroLion &lt;<a href=3D"mailto:korolion31@gmail.com">korolion=
+31@gmail.com</a>&gt;:<br></div><blockquote class=3D"gmail_quote" style=3D"m=
+argin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left=
+:1ex"><div dir=3D"ltr">=D1=84=D0=B0=D0=B2=D0=B2=D1=8B=D1=84=D0=B0<br></div>=
+<br><div class=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail_attr">=D1=87=
+=D1=82, 8 =D0=B0=D0=BF=D1=80. 2021 =D0=B3. =D0=B2 21:59, KoroLion &lt;<a hr=
+ef=3D"mailto:korolion31@gmail.com" target=3D"_blank">korolion31@gmail.com</=
+a>&gt;:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px =
+0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"><div dir=
+=3D"ltr">wolf &amp; lion<br></div>
+</blockquote></div>
+</blockquote></div>
+
+--0000000000007b272c05bf7aaed9--
