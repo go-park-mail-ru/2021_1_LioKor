@@ -16,8 +16,6 @@ type MailHandler struct {
 	UserUsecase user.UseCase
 }
 
-//TODO: check if user is authenticated
-
 func (h *MailHandler) GetDialogues(c echo.Context) error {
 	user, err := common.IsAuthenticated(&c, h.UserUsecase)
 	if err != nil {

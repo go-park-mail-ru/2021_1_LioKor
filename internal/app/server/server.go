@@ -74,6 +74,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 		CookiePath:     "/",
 	}))
 	e.Static("/media", "media")
+	e.Static("/swagger", "swagger")
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout)
@@ -83,9 +84,9 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
 	e.GET("/user/:username", userHandler.ProfileByUsername)
 
-	e.GET("/api/dialogues", mailHander.GetDialogues)
-	e.GET("/api/emails", mailHander.GetEmails)
-	e.POST("/api/emails", mailHander.SendEmail)
+	e.GET("/email/dialogues", mailHander.GetDialogues)
+	e.GET("/email/emails", mailHander.GetEmails)
+	e.POST("/email", mailHander.SendEmail)
 
 	go func() {
 		err := e.Start(config.Host + ":" + strconv.Itoa(config.Port))

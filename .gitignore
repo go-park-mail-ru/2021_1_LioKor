@@ -1,5 +1,9 @@
 .idea/
 media/
 
+swagger/*
+!swagger/swagger.yaml
+!swagger/index.html
+
 go_backend.log
 test_cover

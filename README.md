@@ -21,6 +21,10 @@
 * Автоформатирование: go fmt liokor_mail/...
 * Сборка: go build liokor_mail/cmd/main
 
+### Установка swagger
+1. Скачайте последний релиз с https://github.com/swagger-api/swagger-ui/releases
+2. Скопируйте все файлы, кроме index.html, из папки dist архива в папку swagger проекта
+
 ### Деплой
 * [https://mail.liokor.ru](https://mail.liokor.ru)
 
