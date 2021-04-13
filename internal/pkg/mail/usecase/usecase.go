@@ -22,7 +22,7 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
     host := mxrecords[0].Host
     host = host[:len(host) - 1]
 
-	mail := fmt.Sprintf("From: %s\r\n)To: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data);
+	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data);
     err = smtp.SendMail(host + ":25", nil, from, []string{to}, []byte(mail))
     if err != nil {
         return err

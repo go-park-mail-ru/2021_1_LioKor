@@ -15,7 +15,7 @@ type Mail struct {
 
 type DialogueEmail struct {
 	Id            int       `json:"id"`
-	Sender        string    `json:"username"`
+	Sender        string    `json:"sender"`
 	Subject       string    `json:"title"`
 	Received_date time.Time `json:"time"`
 	Body          string    `json:"body"`

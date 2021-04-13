@@ -61,7 +61,7 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 			"WHERE "+
 			"((sender=$1 AND recipient=$2) OR (sender=$2 AND recipient=$1)) "+
 			"AND id > $4 "+
-			"ORDER BY id DESC LIMIT $3;",
+			"ORDER BY id ASC LIMIT $3;",
 		username,
 		email,
 		limit,
