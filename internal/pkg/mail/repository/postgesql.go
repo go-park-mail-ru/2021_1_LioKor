@@ -107,7 +107,8 @@ func (mr *PostgresMailRepository) AddMail(mail mail.Mail) error {
 	return nil
 }
 
-func (mr *PostgresMailRepository) CountMailsFromUser(username string, time time.Time) (int, error) {
+func (mr *PostgresMailRepository) CountMailsFromUser(username string, interval time.Duration) (int, error) {
+	time := time.Now().Add(-interval)
 	var num int
 	err := mr.DBInstance.DBConn.QueryRow(
 		context.Background(),

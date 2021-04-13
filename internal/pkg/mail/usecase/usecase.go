@@ -7,6 +7,7 @@ import (
 	"strings"
 	"fmt"
 	"time"
+	"errors"
 )
 
 type MailUseCase struct {
@@ -14,8 +15,12 @@ type MailUseCase struct {
 }
 
 func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data string) error {
-    addr := strings.Split(to, "@")[1]
-    mxrecords, err := net.LookupMX(addr)
+	recipientSplitted := strings.Split(to, "@")
+	if len(recipientSplitted) != 2 {
+		return errors.New("invalid recipient address!")
+	}
+    hostAddr := recipientSplitted[1]
+    mxrecords, err := net.LookupMX(hostAddr)
     if err != nil {
         return err
     }
@@ -52,21 +57,20 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 	email.Sender += "@liokor.ru"
 
-	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, time.Now().Add(time.Minute * (-5)))
+	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3 * time.Minute)
 	if err != nil {
 		return err
 	}
-	if lastMailsCount > 10 {
-		return mail.InvalidEmailError{"too many mails in last 5 minutes"}
+	if lastMailsCount > 5 {
+		return mail.InvalidEmailError{"too many mails, wait some time"}
+	}
+
+	err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
+	if err != nil {
+		return err
 	}
 
 	err = uc.Repository.AddMail(email)
-	if err != nil {
-		return err
-	}
-
-	//TODO: отправлять письмо до тех пор, пока не выйдет, или уже выдавать пользователю ошибку
-	err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 	if err != nil {
 		return err
 	}
