@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/mail"
 	"time"
+	"errors"
 
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
@@ -56,32 +57,34 @@ func (s *Session) Data(r io.Reader) error {
 	s.Header = message.Header
 	s.Body = body
 
-	s.HandleMail()
-
-	return nil
+	return s.HandleMail()
 }
 
-func (s *Session) HandleMail() {
-	if len(s.From) > 0 && len(s.Recipients) > 0 && len(s.Body) > 0 {
-		log.Printf("Received mail from %s to %v\n", s.From, s.Recipients)
+func (s *Session) HandleMail() error {
+	if len(s.From) == 0 || len(s.Recipients) == 0 || len(s.Body) == 0 {
+		log.Println("Invalid mail received!")
+		return errors.New("Invalid mail received!")
+	}
 
-		subject := s.Header.Get("Subject")
-		body := s.Body
+	log.Printf("Received mail from %s to %v\n", s.From, s.Recipients)
 
-		for _, recipient := range s.Recipients {
-			_, err := db.DBConn.Exec(
-				context.Background(),
-				"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
-				s.From,
-				recipient,
-				subject,
-				body,
-			)
-			if err != nil {
-				log.Println(err)
-			}
+	subject := utils.ParseSubject(s.Header.Get("Subject"))
+	body := s.Body
+
+	for _, recipient := range s.Recipients {
+		_, err := db.DBConn.Exec(
+			context.Background(),
+			"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
+			s.From,
+			recipient,
+			subject,
+			body,
+		)
+		if err != nil {
+			log.Println(err)
 		}
 	}
+	return nil
 }
 
 func (s *Session) Reset() {

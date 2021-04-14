@@ -10,7 +10,18 @@ import (
 	"strings"
 )
 
-func ValidateEmail(email string) {
+func ParseSubject(subject string) string {
+	if strings.HasPrefix(subject, "=?UTF-8?B?") {
+		subject = subject[10:]
+		subject = strings.Split(subject, "?")[0]
+		subjectByte, err := base64.StdEncoding.DecodeString(subject)
+		if err != nil {
+			return ""
+		}
+		return string(subjectByte)
+	} else {
+		return subject
+	}
 }
 
 func ParseBodyText(message *mail.Message) (string, error) {
