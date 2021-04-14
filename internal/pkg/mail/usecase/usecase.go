@@ -68,9 +68,11 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 		return mail.InvalidEmailError{"too many mails, wait some time"}
 	}
 
-	err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
-	if err != nil {
-		return err
+	if !strings.HasSuffix(email.Recipient, "@liokor.ru") {
+		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = uc.Repository.AddMail(email)
