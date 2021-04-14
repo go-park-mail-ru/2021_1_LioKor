@@ -6,4 +6,7 @@ swagger/*
 !swagger/index.html
 
 go_backend.log
+lk_mail_api.log
+config.json
+
 test_cover

@@ -37,7 +37,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
-	logFile, err := os.Create("go_backend.log")
+	logFile, err := os.Create(config.ApiLogPath)
 	if err == nil {
 		defer logFile.Close()
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{

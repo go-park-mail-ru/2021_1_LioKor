@@ -11,6 +11,8 @@ type Config struct {
 	AllowedOrigins    []string `json:"allowedOrigins"`
 	AvatarStoragePath string   `json:"avatarStoragePath"`
 	DbString          string   `json:"dbString"`
+	MailDomain        string   `json:"mailDomain"`
+	ApiLogPath        string   `json:"apiLogPath"`
 }
 
 func (config *Config) ReadFromFile(path string) error {

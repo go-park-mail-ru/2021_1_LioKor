@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"log"
 	"net/mail"
-	"os"
 	"time"
 
 	"github.com/emersion/go-smtp"
@@ -43,13 +41,7 @@ func (s *Session) Rcpt(recipient string) error {
 }
 
 func (s *Session) Data(r io.Reader) error {
-	var buf bytes.Buffer
-	tee := io.TeeReader(r, &buf)
-
-	data, _ := io.ReadAll(tee)
-	_ = os.WriteFile("mail_latest.txt", data, 0744)
-
-	message, err := mail.ReadMessage(&buf)
+	message, err := mail.ReadMessage(r)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -119,14 +111,14 @@ func main() {
 	s := smtp.NewServer(b)
 
 	s.Addr = ":25"
-	s.Domain = "liokor.ru"
+	s.Domain = config.MailDomain
 	s.ReadTimeout = 30 * time.Second
 	s.WriteTimeout = 30 * time.Second
 	s.MaxMessageBytes = 1024 * 1024
 	s.MaxRecipients = 50
 	s.AuthDisabled = true
 
-	log.Println("Starting server at", s.Addr)
+	log.Printf("Starting SMTP server at %s for @%s", s.Addr, config.MailDomain)
 	if err := s.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
