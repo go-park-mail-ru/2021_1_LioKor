@@ -65,7 +65,7 @@ func TestGetDialoguesForUser(t *testing.T) {
 		dbInstance,
 	}
 
-	dialogues, err := mailRep.GetDialoguesForUser("Alt@liokor.ru", 10, 0, "")
+	dialogues, err := mailRep.GetDialoguesForUser("Alt@liokor.ru", 10, 0, "", "@liokor.ru")
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}

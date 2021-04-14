@@ -34,7 +34,7 @@ func DeleteSessionCookie(c *echo.Context) {
 		Name:     "session_token",
 		Value:    "",
 		Path:     "/",
-		Expires:  time.Now().AddDate(0, 0, -1),
+		Expires:  time.Time{},
 		SameSite: http.SameSiteStrictMode,
 		Secure:   true,
 		HttpOnly: true,

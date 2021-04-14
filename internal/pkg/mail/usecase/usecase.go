@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
 	"log"
 	"net"
@@ -13,6 +14,7 @@ import (
 
 type MailUseCase struct {
 	Repository mail.MailRepository
+	Config     common.Config
 }
 
 func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data string) error {
@@ -40,8 +42,8 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 }
 
 func (uc *MailUseCase) GetDialogues(username string, last int, amount int, find string) ([]mail.Dialogue, error) {
-	username += "@liokor.ru"
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last, find)
+	username += "@" + uc.Config.MailDomain
+	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last, find, ("@" + uc.Config.MailDomain))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +51,7 @@ func (uc *MailUseCase) GetDialogues(username string, last int, amount int, find 
 }
 
 func (uc *MailUseCase) GetEmails(username string, email string, last int, amount int) ([]mail.DialogueEmail, error) {
-	username += "@liokor.ru"
+	username += "@" + uc.Config.MailDomain
 	emails, err := uc.Repository.GetMailsForUser(username, email, amount, last)
 	if err != nil {
 		return nil, err
@@ -58,7 +60,7 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 }
 
 func (uc *MailUseCase) SendEmail(email mail.Mail) error {
-	email.Sender += "@liokor.ru"
+	email.Sender += "@" + uc.Config.MailDomain
 
 	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3*time.Minute)
 	if err != nil {
@@ -68,7 +70,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 		return mail.InvalidEmailError{"too many mails, wait some time"}
 	}
 
-	if !strings.HasSuffix(email.Recipient, "@liokor.ru") {
+	if !strings.HasSuffix(email.Recipient, uc.Config.MailDomain) {
 		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 		if err != nil {
 			return err

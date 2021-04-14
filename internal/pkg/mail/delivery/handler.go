@@ -90,12 +90,7 @@ func (h *MailHandler) SendEmail(c echo.Context) error {
 
 	err = h.MailUsecase.SendEmail(newMail)
 	if err != nil {
-		switch err.(type) {
-		case mail.InvalidEmailError:
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.String(http.StatusOK, "Email sent")
 }
