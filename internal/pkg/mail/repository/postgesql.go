@@ -11,7 +11,9 @@ type PostgresMailRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
-func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, last int) ([]mail.Dialogue, error) {
+func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, last int, find string) ([]mail.Dialogue, error) {
+	find = "%" + find + "%"
+
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
 		"SELECT d.id, "+
@@ -19,16 +21,16 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 			"u.avatar_url, m.body, m.received_date FROM dialogues d JOIN mails m ON d.last_mail_id=m.id "+
 			"LEFT JOIN users u ON "+
 			"CASE WHEN d.user_1=$1 THEN SPLIT_PART(d.user_2,'@liokor.ru', 1)=u.username WHEN d.user_2=$1 THEN SPLIT_PART(d.user_1,'@liokor.ru', 1)=u.username END "+
-			"WHERE (d.user_1=$1 OR d.user_2=$1) AND d.id > $3 "+
+			"WHERE ((d.user_1=$1 OR d.user_2=$1) AND d.id > $3) AND (d.user_1 LIKE $4 OR d.user_2 LIKE $4) "+
 			"ORDER BY d.received_date DESC LIMIT $2;",
 		username,
 		limit,
 		last,
+		find,
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	dialogues := make([]mail.Dialogue, 0, 0)

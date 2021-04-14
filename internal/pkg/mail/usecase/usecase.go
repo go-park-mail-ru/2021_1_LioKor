@@ -39,9 +39,9 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 	return nil
 }
 
-func (uc *MailUseCase) GetDialogues(username string, last int, amount int) ([]mail.Dialogue, error) {
+func (uc *MailUseCase) GetDialogues(username string, last int, amount int, find string) ([]mail.Dialogue, error) {
 	username += "@liokor.ru"
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last)
+	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last, find)
 	if err != nil {
 		return nil, err
 	}

@@ -30,8 +30,9 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	if err != nil || amount > 50 {
 		amount = 50
 	}
+	find := c.QueryParam("find")
 
-	dialogues, err := h.MailUsecase.GetDialogues(user.Username, last, amount)
+	dialogues, err := h.MailUsecase.GetDialogues(user.Username, last, amount, find)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

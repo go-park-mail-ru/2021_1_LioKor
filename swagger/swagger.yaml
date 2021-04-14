@@ -181,6 +181,10 @@ paths:
           description: "end list with that id, not including it"
           required: false
           type: "integer"
+        - name: "find"
+          in: "query"
+          description: "filter for email addresses to return"
+          required: false
         responses:
           "200":
             description: "Returns list of dialogues"
