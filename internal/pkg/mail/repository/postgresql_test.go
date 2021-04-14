@@ -21,7 +21,7 @@ func TestAddMail(t *testing.T) {
 	}
 
 	newMail := mail.Mail{
-		Sender:    "alt@liokor.ru",
+		Sender:    "Alt@liokor.ru",
 		Recipient: "lio@liokor.ru",
 		Subject:   "Test mail",
 		Body:      "Test adding mails",
@@ -44,7 +44,7 @@ func TestGetMailsForUser(t *testing.T) {
 		dbInstance,
 	}
 
-	mails, err := mailRep.GetMailsForUser("alt@liokor.ru", "lio@liokor.ru", 10, 0)
+	mails, err := mailRep.GetMailsForUser("Alt@liokor.ru", "lio@liokor.ru", 10, 0)
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}
@@ -65,7 +65,7 @@ func TestGetDialoguesForUser(t *testing.T) {
 		dbInstance,
 	}
 
-	dialogues, err := mailRep.GetDialoguesForUser("alt@liokor.ru", 10, 0)
+	dialogues, err := mailRep.GetDialoguesForUser("Alt@liokor.ru", 10, 0, "")
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}
@@ -84,7 +84,7 @@ func TestCountMailsFromUser(t *testing.T) {
 		dbInstance,
 	}
 
-	count, err := mailRep.CountMailsFromUser("alt@liokor.ru", time.Now().Add(time.Minute*(-10)))
+	count, err := mailRep.CountMailsFromUser("Alt@liokor.ru", time.Minute*(-10))
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}
