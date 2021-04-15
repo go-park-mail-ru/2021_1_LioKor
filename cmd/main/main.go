@@ -9,9 +9,11 @@ import (
 	"syscall"
 )
 
+const CONFIG_PATH = "config.json"
+
 func main() {
 	config := common.Config{}
-	err := config.ReadFromFile("config.json")
+	err := config.ReadFromFile(CONFIG_PATH)
 	if err != nil {
 		log.Fatal("Unable to read config: " + err.Error())
 	}

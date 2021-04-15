@@ -1,10 +1,10 @@
 package middlewareHelpers
 
 import (
-    "log"
-    "github.com/labstack/echo/v4"
-    "github.com/labstack/echo/v4/middleware"
-    "os"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"log"
+	"os"
 )
 
 func SetupLogger(e *echo.Echo, logPath string) {

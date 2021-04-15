@@ -1,12 +1,12 @@
 package middlewareHelpers
 
 import (
-    "log"
-    "github.com/labstack/echo/v4"
-    "github.com/labstack/echo/v4/middleware"
-    "strings"
-    "net/http"
-    "net/url"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {

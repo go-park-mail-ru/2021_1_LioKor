@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/mail"
 	"time"
-	"errors"
 
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/utils"
 )
+
+const CONFIG_PATH = "config.json"
 
 var db common.PostgresDataBase
 
@@ -99,7 +101,7 @@ func (s *Session) Logout() error {
 
 func main() {
 	config := common.Config{}
-	err := config.ReadFromFile("config.json")
+	err := config.ReadFromFile(CONFIG_PATH)
 	if err != nil {
 		log.Fatal(err)
 	}

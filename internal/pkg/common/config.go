@@ -6,13 +6,13 @@ import (
 )
 
 type Config struct {
-	Host              string   `json:"host"`
-	Port              int      `json:"port"`
-	AllowedOrigin     string   `json:"allowedOrigin"`
-	AvatarStoragePath string   `json:"avatarStoragePath"`
-	DbString          string   `json:"dbString"`
-	MailDomain        string   `json:"mailDomain"`
-	ApiLogPath        string   `json:"apiLogPath"`
+	Host              string `json:"host"`
+	Port              int    `json:"port"`
+	AllowedOrigin     string `json:"allowedOrigin"`
+	AvatarStoragePath string `json:"avatarStoragePath"`
+	DbString          string `json:"dbString"`
+	MailDomain        string `json:"mailDomain"`
+	ApiLogPath        string `json:"apiLogPath"`
 }
 
 func (config *Config) ReadFromFile(path string) error {
