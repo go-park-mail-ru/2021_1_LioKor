@@ -6,8 +6,7 @@ import (
 )
 
 type PostgresDataBase struct {
-	DBConn *pgxpool.Conn
-	DBpool *pgxpool.Pool
+	DBConn *pgxpool.Pool
 }
 
 func NewPostgresDataBase(dbConfig string) (PostgresDataBase, error) {
@@ -16,15 +15,9 @@ func NewPostgresDataBase(dbConfig string) (PostgresDataBase, error) {
 		return PostgresDataBase{}, err
 	}
 
-	conn, err := dbpool.Acquire(context.Background())
-	if err != nil {
-		return PostgresDataBase{}, err
-	}
-
-	return PostgresDataBase{conn, dbpool}, nil
+	return PostgresDataBase{dbpool}, nil
 }
 
 func (db *PostgresDataBase) Close() {
-	db.DBConn.Release()
-	db.DBpool.Close()
+	db.DBConn.Close()
 }
