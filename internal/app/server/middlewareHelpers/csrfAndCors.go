@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
@@ -26,13 +25,6 @@ func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
 		}))
 
 		e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-			Skipper: func(c echo.Context) bool {
-				host := c.Request().Host
-				if strings.HasPrefix(host, "localhost:") || host == "localhost" {
-					return true
-				}
-				return false
-			},
 			CookieSameSite: http.SameSiteStrictMode,
 			CookieDomain:   csrfCookieDomain,
 			CookiePath:     "/",
