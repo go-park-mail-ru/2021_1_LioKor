@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Host              string   `json:"host"`
 	Port              int      `json:"port"`
-	AllowedOrigins    []string `json:"allowedOrigins"`
+	AllowedOrigin     string   `json:"allowedOrigin"`
 	AvatarStoragePath string   `json:"avatarStoragePath"`
 	DbString          string   `json:"dbString"`
 	MailDomain        string   `json:"mailDomain"`

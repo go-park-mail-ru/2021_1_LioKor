@@ -10,7 +10,7 @@ import (
 
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/mail_server/utils"
+	"liokor_mail/internal/utils"
 )
 
 var db common.PostgresDataBase

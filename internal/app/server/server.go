@@ -37,42 +37,55 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
-	logFile, err := os.Create(config.ApiLogPath)
-	if err == nil {
-		defer logFile.Close()
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Output: logFile,
-		}))
-	} else {
-		log.Println("WARN: Unable to create log file!")
-	}
-
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     config.AllowedOrigins,
-		AllowCredentials: true,
-	}))
-
-	var csrfCookieDomain string
-	if len(config.AllowedOrigins) > 0 {
-		url, err := url.Parse(config.AllowedOrigins[0])
-		if err != nil {
-			log.Println(err)
+	if len(config.ApiLogPath) > 0 {
+		logFile, err := os.Create(config.ApiLogPath)
+		if err == nil {
+			defer logFile.Close()
+			e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+				Output: logFile,
+			}))
+			log.Printf("INFO: Logging API calls to %s\n", config.ApiLogPath)
 		} else {
-			csrfCookieDomain = url.Hostname()
+			log.Println("WARN: Unable to create log file!")
 		}
+	} else {
+		log.Println("WARN: Logging disabled")
 	}
-	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		Skipper: func(c echo.Context) bool {
-			host := c.Request().Host
-			if strings.HasPrefix(host, "localhost:") || host == "localhost" {
-				return true
-			}
-			return false
-		},
-		CookieSameSite: http.SameSiteStrictMode,
-		CookieDomain:   csrfCookieDomain,
-		CookiePath:     "/",
-	}))
+
+	if len(config.AllowedOrigin) > 0 {
+		url, err := url.Parse(config.AllowedOrigin)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		csrfCookieDomain := url.Hostname()
+		if len(csrfCookieDomain) == 0 {
+			log.Fatal("Invalid domain specified in allowedOrigin")
+			return
+		}
+
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins:     []string{config.AllowedOrigin},
+			AllowCredentials: true,
+		}))
+
+		e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+			Skipper: func(c echo.Context) bool {
+				host := c.Request().Host
+				if strings.HasPrefix(host, "localhost:") || host == "localhost" {
+					return true
+				}
+				return false
+			},
+			CookieSameSite: http.SameSiteStrictMode,
+			CookieDomain:   csrfCookieDomain,
+			CookiePath:     "/",
+		}))
+		log.Printf("INFO: %s added to CORS and CSRF protection enabled for %s\n", config.AllowedOrigin, csrfCookieDomain)
+	} else {
+		log.Println("WARN: allowedOrigin not set in config => CORS and CSRF middlewares are not enabled!")
+	}
+
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")
 

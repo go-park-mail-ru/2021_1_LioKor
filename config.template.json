@@ -1,9 +1,7 @@
 {
     "host": "127.0.0.1",
     "port": 8000,
-    "allowedOrigins": [
-        "https://mail.liokor.ru"
-    ],
+    "allowedOrigin": "https://mail.liokor.ru",
     "avatarStoragePath": "media/avatars/",
     "dbString": "host=localhost user=liokor password=Qwerty123 dbname=liokor_mail sslmode=disable",
     "mailDomain": "liokor.ru",
