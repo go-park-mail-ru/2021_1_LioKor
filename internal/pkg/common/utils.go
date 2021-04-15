@@ -17,13 +17,6 @@ import (
 	_ "image/png" // to allow png uploading and converting to jpg
 )
 
-type Config struct {
-	Host              string
-	Port              int
-	AllowedOrigins    []string
-	AvatarStoragePath string
-}
-
 /* Converts dataURL to file and saves it. Returns file path. Only jpg and png supported
 Usage example:
 

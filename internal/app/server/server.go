@@ -2,34 +2,44 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/user"
-	"liokor_mail/internal/pkg/user/delivery"
-	"liokor_mail/internal/pkg/user/repository"
-	"liokor_mail/internal/pkg/user/usecase"
+	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
+	mailRepository "liokor_mail/internal/pkg/mail/repository"
+	mailUsecase "liokor_mail/internal/pkg/mail/usecase"
+	userDelivery "liokor_mail/internal/pkg/user/delivery"
+	userRepository "liokor_mail/internal/pkg/user/repository"
+	userUsecase "liokor_mail/internal/pkg/user/usecase"
 	"log"
 	"os"
-	"strconv"
-	"sync"
 	"time"
+
+	"liokor_mail/internal/app/server/middlewareHelpers"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	userRep := &repository.UserRepository{
-		repository.UserStruct{map[string]user.User{}, sync.Mutex{}},
-		repository.SessionStruct{map[string]user.Session{}, sync.Mutex{}},
+	dbInstance, err := common.NewPostgresDataBase(config.DbString)
+	if err != nil {
+		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	userUc := &usecase.UserUseCase{userRep, config}
-	userHandler := delivery.UserHandler{userUc}
+	defer dbInstance.Close()
+
+	userRep := &userRepository.PostgresUserRepository{dbInstance}
+	userUc := &userUsecase.UserUseCase{userRep, config}
+	userHandler := userDelivery.UserHandler{userUc}
+
+	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
+	mailUC := &mailUsecase.MailUseCase{mailRep, config}
+	mailHander := mailDelivery.MailHandler{mailUC, userUc}
 
 	e := echo.New()
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     config.AllowedOrigins,
-		AllowCredentials: true,
-	}))
+
+	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
+	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin)
+
 	e.Static("/media", "media")
+	e.Static("/swagger", "swagger")
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout)
@@ -37,10 +47,15 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.POST("/user", userHandler.SignUp)
 	e.PUT("/user/:username", userHandler.UpdateProfile)
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
-	e.GET("/user/:username", userHandler.ProfileByUsername)
+	// e.GET("/user/:username", userHandler.ProfileByUsername)
+
+	e.GET("/email/dialogues", mailHander.GetDialogues)
+	e.GET("/email/emails", mailHander.GetEmails)
+	e.POST("/email", mailHander.SendEmail)
 
 	go func() {
-		err := e.Start(config.Host + ":" + strconv.Itoa(config.Port))
+		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+		err := e.Start(addr)
 		if err != nil {
 			log.Println("Server was shut down with no errors!")
 		} else {

@@ -21,6 +21,7 @@ type UserSignUp struct {
 }
 
 type User struct {
+	Id           int    `json:"-"`
 	Username     string `json:"username"`
 	HashPassword string `json:"-"`
 	AvatarURL    string `json:"avatarUrl"`
