@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
@@ -12,7 +13,6 @@ import (
 	userUsecase "liokor_mail/internal/pkg/user/usecase"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"liokor_mail/internal/app/server/middlewareHelpers"
@@ -47,14 +47,15 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.POST("/user", userHandler.SignUp)
 	e.PUT("/user/:username", userHandler.UpdateProfile)
 	e.PUT("/user/:username/password", userHandler.ChangePassword)
-	e.GET("/user/:username", userHandler.ProfileByUsername)
+	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues)
 	e.GET("/email/emails", mailHander.GetEmails)
 	e.POST("/email", mailHander.SendEmail)
 
 	go func() {
-		err := e.Start(config.Host + ":" + strconv.Itoa(config.Port))
+		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+		err := e.Start(addr)
 		if err != nil {
 			log.Println("Server was shut down with no errors!")
 		} else {

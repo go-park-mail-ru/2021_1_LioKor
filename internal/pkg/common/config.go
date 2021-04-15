@@ -13,6 +13,8 @@ type Config struct {
 	DbString          string `json:"dbString"`
 	MailDomain        string `json:"mailDomain"`
 	ApiLogPath        string `json:"apiLogPath"`
+	SmtpHost          string `json:"smtpHost"`
+	SmtpPort          int    `json:"smtpPort"`
 }
 
 func (config *Config) ReadFromFile(path string) error {

@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/mail"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/emersion/go-smtp"
@@ -115,7 +119,7 @@ func main() {
 	b := &Backend{}
 	s := smtp.NewServer(b)
 
-	s.Addr = ":25"
+	s.Addr = fmt.Sprintf("%s:%d", config.SmtpHost, config.SmtpPort)
 	s.Domain = config.MailDomain
 	s.ReadTimeout = 30 * time.Second
 	s.WriteTimeout = 30 * time.Second
@@ -123,8 +127,20 @@ func main() {
 	s.MaxRecipients = 50
 	s.AuthDisabled = true
 
-	log.Printf("Starting SMTP server at %s for @%s", s.Addr, config.MailDomain)
-	if err := s.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		log.Printf("Starting SMTP server at %s for @%s", s.Addr, config.MailDomain)
+		err := s.ListenAndServe()
+		if err != nil {
+			log.Fatal("Error occured while trying to start server: " + err.Error())
+		}
+		log.Println("Server was shut down with no errors!")
+	}()
+	<-quit
+
+	log.Println("Interrupt signal received. Shutting down server...")
+	if err := s.Close(); err != nil {
+		log.Fatal("Server closed with and error: " + err.Error())
 	}
 }
