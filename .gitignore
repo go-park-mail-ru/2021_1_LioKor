@@ -1,4 +1,12 @@
 .idea/
 media/
 
+swagger/*
+!swagger/swagger.yaml
+!swagger/index.html
+
+go_backend.log
+lk_mail_api.log
+config.json
+
 test_cover

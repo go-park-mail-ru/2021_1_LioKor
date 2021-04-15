@@ -41,11 +41,15 @@ func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error)
 		time.Now().Add(10 * 24 * time.Hour),
 	}
 
-	uc.Repository.CreateSession(user.Session{
+	err := uc.Repository.CreateSession(user.Session{
 		username,
 		sessionToken.Value,
 		sessionToken.Expiration,
 	})
+
+	if err != nil {
+		return user.SessionToken{}, err
+	}
 
 	return sessionToken, nil
 }
@@ -79,6 +83,7 @@ func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 	}
 
 	err = uc.Repository.CreateUser(user.User{
+		0,
 		newUser.Username,
 		string(hashPSWD),
 		newUser.AvatarURL,
@@ -139,6 +144,10 @@ func (uc *UserUseCase) GetUserByUsername(username string) (user.User, error) {
 }
 
 func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.ChangePassword) error {
+	if !validators.ValidatePassword(changePSWD.NewPassword) {
+		return user.InvalidUserError{"invalid password"}
+	}
+
 	err := bcrypt.CompareHashAndPassword([]byte(sessionUser.HashPassword), []byte(changePSWD.OldPassword))
 
 	if err != nil {

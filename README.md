@@ -16,10 +16,14 @@
 * go run liokor_mail/cmd/main
 
 ### Другие команды:
-* Тесты: go test liokor_mail... -cover -coverpkg ./... -coverprofile test_cover
-* Подробное покрытие (запускать после команды выше): go cover -html=test_cover
+* Тесты: go test liokor_mail... -cover -coverprofile test_cover
+* Подробное покрытие (запускать после команды выше): go tool cover -html=test_cover
 * Автоформатирование: go fmt liokor_mail/...
 * Сборка: go build liokor_mail/cmd/main
+
+### Установка swagger
+1. Скачайте последний релиз с https://github.com/swagger-api/swagger-ui/releases
+2. Скопируйте все файлы, кроме index.html, из папки dist архива в папку swagger проекта
 
 ### Деплой
 * [https://mail.liokor.ru](https://mail.liokor.ru)

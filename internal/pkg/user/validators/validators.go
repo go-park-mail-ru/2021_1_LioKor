@@ -19,19 +19,17 @@ func ValidateUsername(username string) bool {
 }
 
 func ValidatePassword(password string) bool {
-	if len(password) < 8 {
+	if len(password) < 6 {
 		return false
 	}
-	var digit, upper, lower bool
+	var digit, letter bool
 	for _, s := range password {
 		switch {
 		case unicode.IsDigit(s):
 			digit = true
-		case unicode.IsUpper(s):
-			upper = true
-		case unicode.IsLower(s):
-			lower = true
+		case unicode.IsLetter(s):
+			letter = true
 		}
 	}
-	return digit && upper && lower
+	return digit && letter
 }
