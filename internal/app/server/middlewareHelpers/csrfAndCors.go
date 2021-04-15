@@ -14,12 +14,10 @@ func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
 		url, err := url.Parse(allowedOrigin)
 		if err != nil {
 			log.Fatal(err)
-			return
 		}
 		csrfCookieDomain := url.Hostname()
 		if len(csrfCookieDomain) == 0 {
 			log.Fatal("Invalid domain specified in allowedOrigin")
-			return
 		}
 
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
