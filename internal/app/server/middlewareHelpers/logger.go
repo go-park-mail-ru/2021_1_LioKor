@@ -11,7 +11,6 @@ func SetupLogger(e *echo.Echo, logPath string) {
 	if len(logPath) > 0 {
 		logFile, err := os.Create(logPath)
 		if err == nil {
-			defer logFile.Close()
 			e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 				Output: logFile,
 			}))
