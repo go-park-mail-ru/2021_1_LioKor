@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
 	mailRepository "liokor_mail/internal/pkg/mail/repository"
@@ -12,12 +11,11 @@ import (
 	userRepository "liokor_mail/internal/pkg/user/repository"
 	userUsecase "liokor_mail/internal/pkg/user/usecase"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"strconv"
-	"strings"
 	"time"
+
+	"liokor_mail/internal/app/server/middlewareHelpers"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -37,54 +35,8 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
-	if len(config.ApiLogPath) > 0 {
-		logFile, err := os.Create(config.ApiLogPath)
-		if err == nil {
-			defer logFile.Close()
-			e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-				Output: logFile,
-			}))
-			log.Printf("INFO: Logging API calls to %s\n", config.ApiLogPath)
-		} else {
-			log.Println("WARN: Unable to create log file!")
-		}
-	} else {
-		log.Println("WARN: Logging disabled")
-	}
-
-	if len(config.AllowedOrigin) > 0 {
-		url, err := url.Parse(config.AllowedOrigin)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		csrfCookieDomain := url.Hostname()
-		if len(csrfCookieDomain) == 0 {
-			log.Fatal("Invalid domain specified in allowedOrigin")
-			return
-		}
-
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowOrigins:     []string{config.AllowedOrigin},
-			AllowCredentials: true,
-		}))
-
-		e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-			Skipper: func(c echo.Context) bool {
-				host := c.Request().Host
-				if strings.HasPrefix(host, "localhost:") || host == "localhost" {
-					return true
-				}
-				return false
-			},
-			CookieSameSite: http.SameSiteStrictMode,
-			CookieDomain:   csrfCookieDomain,
-			CookiePath:     "/",
-		}))
-		log.Printf("INFO: %s added to CORS and CSRF protection enabled for %s\n", config.AllowedOrigin, csrfCookieDomain)
-	} else {
-		log.Println("WARN: allowedOrigin not set in config => CORS and CSRF middlewares are not enabled!")
-	}
+	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
+	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin)
 
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")
