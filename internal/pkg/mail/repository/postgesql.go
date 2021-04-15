@@ -21,7 +21,8 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 			"u.avatar_url, m.body, m.received_date FROM dialogues d JOIN mails m ON d.last_mail_id=m.id "+
 			"LEFT JOIN users u ON "+
 			"CASE WHEN d.user_1=$1 THEN LOWER(SPLIT_PART(d.user_2, $5, 1))=LOWER(u.username) WHEN d.user_2=$1 THEN LOWER(SPLIT_PART(d.user_1,$5, 1))=LOWER(u.username) END "+
-			"WHERE ((d.user_1=$1 OR d.user_2=$1) AND d.id > $3) AND (d.user_1 LIKE $4 OR d.user_2 LIKE $4) "+
+			"WHERE ((d.user_1=$1 OR d.user_2=$1) AND d.id > $3) AND " +
+			"CASE WHEN d.user_2=$1 THEN d.user_1 LIKE $4 WHEN d.user_1=$1 THEN d.user_2 LIKE $4 END "+
 			"ORDER BY d.received_date DESC LIMIT $2;",
 		username,
 		limit,
