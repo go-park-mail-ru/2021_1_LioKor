@@ -70,16 +70,16 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 		return mail.InvalidEmailError{"too many mails, wait some time"}
 	}
 
+	err = uc.Repository.AddMail(email)
+	if err != nil {
+		return err
+	}
+
 	if !strings.HasSuffix(email.Recipient, uc.Config.MailDomain) {
 		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 		if err != nil {
 			return err
 		}
-	}
-
-	err = uc.Repository.AddMail(email)
-	if err != nil {
-		return err
 	}
 
 	return nil
