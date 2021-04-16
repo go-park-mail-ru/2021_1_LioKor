@@ -8,7 +8,7 @@ import (
 	"net/url"
 )
 
-func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
+func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string, debug bool) {
 	if len(allowedOrigin) > 0 {
 		url, err := url.Parse(allowedOrigin)
 		if err != nil {
@@ -25,6 +25,9 @@ func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
 		}))
 
 		e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+			Skipper: func(c echo.Context) bool {
+				return debug
+			},
 			CookieSameSite: http.SameSiteStrictMode,
 			CookieDomain:   csrfCookieDomain,
 			CookiePath:     "/",
