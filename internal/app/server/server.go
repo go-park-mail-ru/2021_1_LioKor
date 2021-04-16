@@ -25,6 +25,10 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	}
 	defer dbInstance.Close()
 
+	if config.Debug {
+		log.Println("WARN: RUNNING IN THE DEBUG MODE! DON'T USE IN PRODUCTION!")
+	}
+
 	userRep := &userRepository.PostgresUserRepository{dbInstance}
 	userUc := &userUsecase.UserUseCase{userRep, config}
 	userHandler := userDelivery.UserHandler{userUc}
@@ -36,7 +40,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e := echo.New()
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
-	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin)
+	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
 
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")

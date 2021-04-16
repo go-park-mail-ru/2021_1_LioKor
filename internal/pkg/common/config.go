@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	Host              string `json:"host"`
-	Port              int    `json:"port"`
+	Debug             bool   `json:"debug"`
+	Host              string `json:"apiHost"`
+	Port              int    `json:"apiPort"`
 	AllowedOrigin     string `json:"allowedOrigin"`
 	AvatarStoragePath string `json:"avatarStoragePath"`
 	DbString          string `json:"dbString"`
