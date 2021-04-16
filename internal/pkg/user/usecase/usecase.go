@@ -73,8 +73,11 @@ func (uc *UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, er
 }
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
-	if !validators.ValidateUsername(newUser.Username) || !validators.ValidatePassword(newUser.Password) {
-		return user.InvalidUserError{"invalid username or password"}
+	if !validators.ValidateUsername(newUser.Username) {
+		return user.InvalidUsernameError{"invalid username"}
+	}
+	if !validators.ValidatePassword(newUser.Password) {
+		return user.WeakPasswordError{"password is too weak"}
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
