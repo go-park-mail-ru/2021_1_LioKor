@@ -20,6 +20,9 @@ func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string, debug bool) {
 		}
 
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			Skipper: func(c echo.Context) bool {
+				return debug
+			},
 			AllowOrigins:     []string{allowedOrigin},
 			AllowCredentials: true,
 		}))
