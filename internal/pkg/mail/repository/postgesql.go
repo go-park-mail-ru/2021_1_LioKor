@@ -41,18 +41,12 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 		err = rows.Scan(
 			&dialogue.Id,
 			&dialogue.Email,
-			&dialogue.AvatarURLDB,
+			&dialogue.AvatarURL,
 			&dialogue.Body,
 			&dialogue.Received_date,
 		)
 		if err != nil {
 			return nil, err
-		}
-		//TODO: оставить только AvatarURL c типом sql.NullString
-		if dialogue.AvatarURLDB.Valid {
-			dialogue.AvatarURL = dialogue.AvatarURLDB.String
-		} else {
-			dialogue.AvatarURL = ""
 		}
 		dialogues = append(dialogues, dialogue)
 	}

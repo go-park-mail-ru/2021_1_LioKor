@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/stretchr/testify/assert"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
@@ -8,7 +9,14 @@ import (
 	"time"
 )
 
-var dbConfig = "host=localhost user=liokor password=Qwerty123 dbname=liokor_mail_test sslmode=disable"
+var dbConfig = common.Config{
+	DBHost: "127.0.0.1",
+	DBPort: 5432,
+	DBUser: "postgres",
+	DBPassword: "12",
+	DBDatabase: "liokor_mail",
+	DBConnectTimeout: 10,
+}
 
 func TestCreateUserSuccess(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
@@ -24,7 +32,7 @@ func TestCreateUserSuccess(t *testing.T) {
 	newUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -51,7 +59,7 @@ func TestCreateUserFail(t *testing.T) {
 	newUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    "/media/",
+		AvatarURL:     common.NullString{sql.NullString{String: "/media",Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -81,7 +89,7 @@ func TestGetUserByUsername(t *testing.T) {
 	retUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -117,7 +125,7 @@ func TestUpdateUser(t *testing.T) {
 	updUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "New Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",

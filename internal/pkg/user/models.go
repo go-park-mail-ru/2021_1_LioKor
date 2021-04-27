@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"liokor_mail/internal/pkg/common"
+	"time"
+)
 
 type Credentials struct {
 	Username string
@@ -24,7 +27,7 @@ type User struct {
 	Id           int    `json:"-"`
 	Username     string `json:"username"`
 	HashPassword string `json:"-"`
-	AvatarURL    string `json:"avatarUrl"`
+	AvatarURL    common.NullString `json:"avatarUrl"`
 	FullName     string `json:"fullname"`
 	ReserveEmail string `json:"reserveEmail"`
 	RegisterDate string `json:"-"`

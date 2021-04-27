@@ -19,7 +19,7 @@ import (
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	dbInstance, err := common.NewPostgresDataBase(config.DbString)
+	dbInstance, err := common.NewPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -35,9 +35,11 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
 	mailUC := &mailUsecase.MailUseCase{mailRep, config}
-	mailHander := mailDelivery.MailHandler{mailUC, userUc}
+	mailHander := mailDelivery.MailHandler{mailUC}
 
 	e := echo.New()
+
+	isAuth := middlewareHelpers.AuthMiddleware{userUc}
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
@@ -46,16 +48,16 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.Static("/swagger", "swagger")
 
 	e.POST("/user/auth", userHandler.Auth)
-	e.DELETE("/user/session", userHandler.Logout)
-	e.GET("/user", userHandler.Profile)
+	e.DELETE("/user/session", userHandler.Logout, isAuth.IsAuth)
+	e.GET("/user", userHandler.Profile, isAuth.IsAuth)
 	e.POST("/user", userHandler.SignUp)
-	e.PUT("/user/:username", userHandler.UpdateProfile)
-	e.PUT("/user/:username/password", userHandler.ChangePassword)
+	e.PUT("/user/:username", userHandler.UpdateProfile, isAuth.IsAuth)
+	e.PUT("/user/:username/password", userHandler.ChangePassword, isAuth.IsAuth)
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
-	e.GET("/email/dialogues", mailHander.GetDialogues)
-	e.GET("/email/emails", mailHander.GetEmails)
-	e.POST("/email", mailHander.SendEmail)
+	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
+	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
+	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
 
 	go func() {
 		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)

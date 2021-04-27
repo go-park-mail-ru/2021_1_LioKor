@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
 	mailMocks "liokor_mail/internal/pkg/mail/mocks"
 	"liokor_mail/internal/pkg/user"
-	userMocks "liokor_mail/internal/pkg/user/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,12 +20,9 @@ func TestGetDialogues(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockUserUC := userMocks.NewMockUseCase(mockCtrl)
 	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
-
 	mailHandler := MailHandler{
 		mockMailUC,
-		mockUserUC,
 	}
 
 	e := echo.New()
@@ -39,7 +36,7 @@ func TestGetDialogues(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "sessionTest",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{Valid: true, String: "/media/test"}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -50,26 +47,30 @@ func TestGetDialogues(t *testing.T) {
 		{
 			Id: 1,
 			Email: "lio@liokor.ru",
-			AvatarURLDB: sql.NullString{Valid: true, String: "/media/test"},
+			AvatarURL: common.NullString{sql.NullString{Valid: true, String: "/media/test"}},
 			Body: "Test",
 			Received_date: time.Now(),
 		},
 		{
 			Id: 2,
 			Email: "ser@liokor.ru",
-			AvatarURLDB: sql.NullString{Valid: false, String: ""},
+			AvatarURL: common.NullString{sql.NullString{Valid: false, String: ""}},
 			Body: "Test",
 			Received_date: time.Now(),
 		},
 	}
+	echoContext.Set("sessionUser", sessionUser)
 
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 1, 5, "a").Return(dialogues, nil).Times(1),
-		)
+	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 1, 5, "a").Return(dialogues, nil).Times(1)
 	err := mailHandler.GetDialogues(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
+	}
+
+	dEmails := make([]mail.Dialogue, 0, 0)
+	err = json.Unmarshal(response.Body.Bytes(), &dEmails)
+	if err == nil {
+		t.Log(dEmails)
 	}
 
 	req = httptest.NewRequest("GET", url, nil)
@@ -77,7 +78,6 @@ func TestGetDialogues(t *testing.T) {
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 
-	mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(user.User{}, user.InvalidSessionError{"Session doesn't exists"}).Times(1)
 	err = mailHandler.GetDialogues(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusUnauthorized {
@@ -91,11 +91,9 @@ func TestGetDialogues(t *testing.T) {
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
 
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 1, 5, "a").Return(nil, mail.InvalidEmailError{"Error"}).Times(1),
-	)
+	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 1, 5, "a").Return(nil, mail.InvalidEmailError{"Error"}).Times(1)
 	err = mailHandler.GetDialogues(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {
@@ -110,12 +108,10 @@ func TestGetEmails(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockUserUC := userMocks.NewMockUseCase(mockCtrl)
 	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
 
 	mailHandler := MailHandler{
 		mockMailUC,
-		mockUserUC,
 	}
 
 	e := echo.New()
@@ -129,7 +125,7 @@ func TestGetEmails(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "alt",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{ String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -153,10 +149,9 @@ func TestGetEmails(t *testing.T) {
 		},
 	}
 
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().GetEmails(sessionUser.Username, "lio@liokor.ru", 1, 5).Return(emails, nil).Times(1),
-	)
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().GetEmails(sessionUser.Username, "lio@liokor.ru", 1, 5).Return(emails, nil).Times(1)
 	err := mailHandler.GetEmails(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -167,10 +162,9 @@ func TestGetEmails(t *testing.T) {
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().GetEmails(sessionUser.Username, "lio@liokor.ru", 0, 50).Return(nil, mail.InvalidEmailError{"error"}).Times(1),
-	)
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().GetEmails(sessionUser.Username, "lio@liokor.ru", 0, 50).Return(nil, mail.InvalidEmailError{"error"}).Times(1)
 	err = mailHandler.GetEmails(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusBadRequest {
@@ -185,8 +179,8 @@ func TestGetEmails(t *testing.T) {
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
 
-	mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1)
 	err = mailHandler.GetEmails(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusBadRequest {
@@ -201,12 +195,10 @@ func TestSendEmail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockUserUC := userMocks.NewMockUseCase(mockCtrl)
 	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
 
 	mailHandler := MailHandler{
 		mockMailUC,
-		mockUserUC,
 	}
 
 	e := echo.New()
@@ -227,7 +219,7 @@ func TestSendEmail(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "alt",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -240,11 +232,9 @@ func TestSendEmail(t *testing.T) {
 		Body: "Testing",
 		Subject: "Test",
 	}
+	echoContext.Set("sessionUser", sessionUser)
 
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().SendEmail(emailSent).Return(nil).Times(1),
-	)
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(nil).Times(1)
 	err := mailHandler.SendEmail(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -254,10 +244,9 @@ func TestSendEmail(t *testing.T) {
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
-	gomock.InOrder(
-		mockUserUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockMailUC.EXPECT().SendEmail(emailSent).Return(mail.InvalidEmailError{"error"}).Times(1),
-	)
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(mail.InvalidEmailError{"error"}).Times(1)
 	err = mailHandler.SendEmail(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {

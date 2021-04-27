@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"database/sql"
 	"github.com/golang/mock/gomock"
 	"golang.org/x/crypto/bcrypt"
 	"liokor_mail/internal/pkg/common"
@@ -38,7 +39,7 @@ func TestLogin(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -153,7 +154,7 @@ func TestGetUserBySessionToken(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -284,7 +285,7 @@ func TestUpdateUser(t *testing.T) {
 	newData := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    avatarBase64,
+		AvatarURL:    common.NullString{sql.NullString{String: avatarBase64,Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -293,7 +294,7 @@ func TestUpdateUser(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -302,7 +303,7 @@ func TestUpdateUser(t *testing.T) {
 	updUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/someRandomString",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/someRandomString",Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -321,7 +322,7 @@ func TestUpdateUser(t *testing.T) {
 	invalidNewData := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    "invalidImage",
+		AvatarURL:    common.NullString{sql.NullString{String: "InvalidImage",Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -373,7 +374,7 @@ func TestGetUserByUsername(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -413,7 +414,7 @@ func TestChangePassword(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",

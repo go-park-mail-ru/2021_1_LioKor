@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"database/sql"
 	"golang.org/x/crypto/bcrypt"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
@@ -86,7 +87,7 @@ func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 		0,
 		newUser.Username,
 		string(hashPSWD),
-		newUser.AvatarURL,
+		common.NullString{sql.NullString{String: newUser.AvatarURL, Valid: true}},
 		newUser.FullName,
 		newUser.ReserveEmail,
 		time.Now().String(),
@@ -105,17 +106,18 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 		return user.User{}, err
 	}
 	if newData.AvatarURL != sessionUser.AvatarURL {
-		if strings.HasPrefix(newData.AvatarURL, "data:") {
+		if strings.HasPrefix(newData.AvatarURL.String, "data:") {
 			avatarFileName := common.GenerateRandomString()
-			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath+avatarFileName, newData.AvatarURL, 500)
+			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath+avatarFileName, newData.AvatarURL.String, 500)
 			if err != nil {
 				log.Println(err.Error())
 				return sessionUser, user.InvalidImageError{"invalid image"}
 			}
-			if len(sessionUser.AvatarURL) > 0 {
-				_ = os.Remove(sessionUser.AvatarURL)
+			if len(sessionUser.AvatarURL.String) > 0 {
+				_ = os.Remove(sessionUser.AvatarURL.String)
 			}
-			sessionUser.AvatarURL = pathToAvatar
+			sessionUser.AvatarURL.String = pathToAvatar
+			sessionUser.AvatarURL.Valid = true
 		} else {
 			return sessionUser, user.InvalidImageError{"invalid image"}
 		}

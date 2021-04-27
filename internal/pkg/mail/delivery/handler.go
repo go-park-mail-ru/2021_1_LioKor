@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/labstack/echo/v4"
-	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
 	"liokor_mail/internal/pkg/user"
 	"net/http"
@@ -13,13 +12,13 @@ import (
 
 type MailHandler struct {
 	MailUsecase mail.MailUseCase
-	UserUsecase user.UseCase
 }
 
 func (h *MailHandler) GetDialogues(c echo.Context) error {
-	user, err := common.IsAuthenticated(&c, h.UserUsecase)
-	if err != nil {
-		return err
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	last, err := strconv.Atoi(c.QueryParam("last"))
@@ -32,7 +31,7 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	}
 	find := c.QueryParam("find")
 
-	dialogues, err := h.MailUsecase.GetDialogues(user.Username, last, amount, find)
+	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, last, amount, find)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -41,9 +40,10 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 }
 
 func (h *MailHandler) GetEmails(c echo.Context) error {
-	user, err := common.IsAuthenticated(&c, h.UserUsecase)
-	if err != nil {
-		return err
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	email := c.QueryParam("with")
@@ -59,7 +59,7 @@ func (h *MailHandler) GetEmails(c echo.Context) error {
 	if err != nil || amount > 50 {
 		amount = 50
 	}
-	emails, err := h.MailUsecase.GetEmails(user.Username, email, last, amount)
+	emails, err := h.MailUsecase.GetEmails(sessionUser.Username, email, last, amount)
 	if err != nil {
 		switch err.(type) {
 		case mail.InvalidEmailError:
@@ -73,20 +73,21 @@ func (h *MailHandler) GetEmails(c echo.Context) error {
 }
 
 func (h *MailHandler) SendEmail(c echo.Context) error {
-	user, err := common.IsAuthenticated(&c, h.UserUsecase)
-	if err != nil {
-		return err
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	newMail := mail.Mail{}
 
 	defer c.Request().Body.Close()
 
-	err = json.NewDecoder(c.Request().Body).Decode(&newMail)
+	err := json.NewDecoder(c.Request().Body).Decode(&newMail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	newMail.Sender = user.Username
+	newMail.Sender = sessionUser.Username
 
 	err = h.MailUsecase.SendEmail(newMail)
 	if err != nil {

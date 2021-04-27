@@ -7,7 +7,14 @@ import (
 	"time"
 )
 
-var dbConfig = "host=localhost user=liokor password=Qwerty123 dbname=liokor_mail_test sslmode=disable"
+var dbConfig = common.Config{
+	DBHost: "127.0.0.1",
+	DBPort: 5432,
+	DBUser: "liokor",
+	DBPassword: "Qwerty123",
+	DBDatabase: "liokor_mail",
+	DBConnectTimeout: 10,
+}
 
 func TestAddMail(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)

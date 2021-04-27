@@ -2,9 +2,11 @@ package delivery
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
+	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/mocks"
 	"net/http"
@@ -89,19 +91,7 @@ func TestLogout(t *testing.T) {
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
-	retUser := user.User{
-		Username:     "test",
-		HashPassword: "hash",
-		AvatarURL:    "/media/test",
-		FullName:     "Test test",
-		ReserveEmail: "test@test.test",
-		RegisterDate: "",
-		IsAdmin:      false,
-	}
-	gomock.InOrder(
-		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1),
-		mockUC.EXPECT().Logout("sessionToken").Return(nil).Times(1),
-	)
+	mockUC.EXPECT().Logout("sessionToken").Return(nil).Times(1)
 	err := userHandler.Logout(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid session token: %v\n", err)
@@ -121,17 +111,16 @@ func TestLogout(t *testing.T) {
 	}
 
 	req = httptest.NewRequest("DELETE", url, nil)
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "not_session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
-	mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(user.User{}, user.InvalidSessionError{"session doesn't exist"}).Times(1)
 	err = userHandler.Logout(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusUnauthorized {
-			t.Errorf("Didn't invalid cookie: %v\n", err)
+			t.Errorf("Didn't pass invalid cookie: %v\n", err)
 		}
 	} else {
-		t.Errorf("Didn't invalid cookie: %v\n", err)
+		t.Errorf("Didn't pass invalid cookie: %v\n", err)
 	}
 }
 
@@ -154,13 +143,14 @@ func TestProfile(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
 		IsAdmin:      false,
 	}
-	mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1)
+	echoContext.Set("sessionUser", retUser)
+
 	err := userHandler.Profile(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid session token: %v\n", err)
@@ -186,29 +176,17 @@ func TestProfileByUsername(t *testing.T) {
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
 
-	sessionUser := user.User{
-		Username:     "sessionTest",
-		HashPassword: "hash",
-		AvatarURL:    "/media/test",
-		FullName:     "Test test",
-		ReserveEmail: "test@test.test",
-		RegisterDate: "",
-		IsAdmin:      false,
-	}
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
 		IsAdmin:      false,
 	}
 
-	gomock.InOrder(
-		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockUC.EXPECT().GetUserByUsername("test").Return(retUser, nil).Times(1),
-	)
+	mockUC.EXPECT().GetUserByUsername("test").Return(retUser, nil).Times(1)
 	err := userHandler.ProfileByUsername(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -222,10 +200,7 @@ func TestProfileByUsername(t *testing.T) {
 	echoContext.SetPath("/:username")
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
-	gomock.InOrder(
-		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(sessionUser, nil).Times(1),
-		mockUC.EXPECT().GetUserByUsername("test").Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1),
-	)
+	mockUC.EXPECT().GetUserByUsername("test").Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
 	err = userHandler.ProfileByUsername(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusNotFound {
@@ -319,7 +294,7 @@ func TestUpdateProfile(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -328,16 +303,16 @@ func TestUpdateProfile(t *testing.T) {
 	updUser := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    "",
+		AvatarURL:    common.NullString{sql.NullString{String: "", Valid: true}},
 		FullName:     "New Full Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
 		IsAdmin:      false,
 	}
-	gomock.InOrder(
-		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1),
-		mockUC.EXPECT().UpdateUser("test", updUser).Return(updUser, nil).Times(1),
-	)
+
+	echoContext.Set("sessionUser", retUser)
+
+	mockUC.EXPECT().UpdateUser("test", updUser).Return(updUser, nil).Times(1)
 	err := userHandler.UpdateProfile(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid upd data: %v\n", err)
@@ -350,8 +325,8 @@ func TestUpdateProfile(t *testing.T) {
 	echoContext.SetPath("/:username")
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test2")
+	echoContext.Set("sessionUser", retUser)
 
-	mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1)
 	err = userHandler.UpdateProfile(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusUnauthorized {
@@ -390,17 +365,16 @@ func TestChangePassword(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
 		IsAdmin:      false,
 	}
 
-	gomock.InOrder(
-		mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1),
-		mockUC.EXPECT().ChangePassword(retUser, newPSWD).Return(nil).Times(1),
-	)
+	echoContext.Set("sessionUser", retUser)
+
+	mockUC.EXPECT().ChangePassword(retUser, newPSWD).Return(nil).Times(1)
 	err := userHandler.ChangePassword(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid change password: %v\n", err)
@@ -413,8 +387,8 @@ func TestChangePassword(t *testing.T) {
 	echoContext.SetPath("/:username/password")
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test2")
+	echoContext.Set("sessionUser", retUser)
 
-	mockUC.EXPECT().GetUserBySessionToken("sessionToken").Return(retUser, nil).Times(1)
 	err = userHandler.ChangePassword(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusUnauthorized {

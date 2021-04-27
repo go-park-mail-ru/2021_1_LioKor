@@ -28,14 +28,14 @@ func TestGetDialogues(t *testing.T) {
 		{
 			Id: 1,
 			Email: "lio@liokor.ru",
-			AvatarURLDB: sql.NullString{Valid: true, String: "/media/test"},
+			AvatarURL: common.NullString{sql.NullString{String: "/media/test",Valid: true}},
 			Body: "Test",
 			Received_date: time.Now(),
 		},
 		{
 			Id: 2,
 			Email: "ser@liokor.ru",
-			AvatarURLDB: sql.NullString{Valid: false, String: ""},
+			AvatarURL: common.NullString{sql.NullString{String: "",Valid: false}},
 			Body: "Test",
 			Received_date: time.Now(),
 		},
