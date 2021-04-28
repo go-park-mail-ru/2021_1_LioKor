@@ -22,11 +22,11 @@ type DialogueEmail struct {
 }
 
 type Dialogue struct {
-	Id            int            `json:"id"`
-	Email         string         `json:"username"`
-	AvatarURL     common.NullString     `json:"avatarUrl"`
-	Body          string         `json:"body"`
-	Received_date time.Time      `json:"time"`
+	Id            int               `json:"id"`
+	Email         string            `json:"username"`
+	AvatarURL     common.NullString `json:"avatarUrl"`
+	Body          string            `json:"body"`
+	Received_date time.Time         `json:"time"`
 }
 
 type InvalidEmailError struct {
@@ -36,4 +36,3 @@ type InvalidEmailError struct {
 func (e InvalidEmailError) Error() string {
 	return e.Message
 }
-

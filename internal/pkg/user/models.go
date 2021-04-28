@@ -24,14 +24,14 @@ type UserSignUp struct {
 }
 
 type User struct {
-	Id           int    `json:"-"`
-	Username     string `json:"username"`
-	HashPassword string `json:"-"`
+	Id           int               `json:"-"`
+	Username     string            `json:"username"`
+	HashPassword string            `json:"-"`
 	AvatarURL    common.NullString `json:"avatarUrl"`
-	FullName     string `json:"fullname"`
-	ReserveEmail string `json:"reserveEmail"`
-	RegisterDate string `json:"-"`
-	IsAdmin      bool   `json:"-"`
+	FullName     string            `json:"fullname"`
+	ReserveEmail string            `json:"reserveEmail"`
+	RegisterDate string            `json:"-"`
+	IsAdmin      bool              `json:"-"`
 }
 
 type Session struct {

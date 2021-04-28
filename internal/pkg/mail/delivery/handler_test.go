@@ -45,17 +45,17 @@ func TestGetDialogues(t *testing.T) {
 
 	dialogues := []mail.Dialogue{
 		{
-			Id: 1,
-			Email: "lio@liokor.ru",
-			AvatarURL: common.NullString{sql.NullString{Valid: true, String: "/media/test"}},
-			Body: "Test",
+			Id:            1,
+			Email:         "lio@liokor.ru",
+			AvatarURL:     common.NullString{sql.NullString{Valid: true, String: "/media/test"}},
+			Body:          "Test",
 			Received_date: time.Now(),
 		},
 		{
-			Id: 2,
-			Email: "ser@liokor.ru",
-			AvatarURL: common.NullString{sql.NullString{Valid: false, String: ""}},
-			Body: "Test",
+			Id:            2,
+			Email:         "ser@liokor.ru",
+			AvatarURL:     common.NullString{sql.NullString{Valid: false, String: ""}},
+			Body:          "Test",
 			Received_date: time.Now(),
 		},
 	}
@@ -125,7 +125,7 @@ func TestGetEmails(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "alt",
 		HashPassword: "hash",
-		AvatarURL:    common.NullString{sql.NullString{ String: "/media/test", Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -134,18 +134,18 @@ func TestGetEmails(t *testing.T) {
 
 	emails := []mail.DialogueEmail{
 		{
-			Id : 1,
-			Sender: "alt@liokor.ru",
-			Subject: "Test",
+			Id:            1,
+			Sender:        "alt@liokor.ru",
+			Subject:       "Test",
 			Received_date: time.Now(),
-			Body: "Test",
+			Body:          "Test",
 		},
 		{
-			Id : 2,
-			Sender: "lio@liokor.ru",
-			Subject: "Test",
+			Id:            2,
+			Sender:        "lio@liokor.ru",
+			Subject:       "Test",
 			Received_date: time.Now(),
-			Body: "Test",
+			Body:          "Test",
 		},
 	}
 
@@ -207,8 +207,8 @@ func TestSendEmail(t *testing.T) {
 
 	email := mail.Mail{
 		Recipient: "altana@liokor.ru",
-		Body: "Testing",
-		Subject: "Test",
+		Body:      "Testing",
+		Subject:   "Test",
 	}
 	body, _ := json.Marshal(email)
 	req := httptest.NewRequest("POST", url, bytes.NewReader(body))
@@ -227,10 +227,10 @@ func TestSendEmail(t *testing.T) {
 	}
 
 	emailSent := mail.Mail{
-		Sender: sessionUser.Username,
+		Sender:    sessionUser.Username,
 		Recipient: "altana@liokor.ru",
-		Body: "Testing",
-		Subject: "Test",
+		Body:      "Testing",
+		Subject:   "Test",
 	}
 	echoContext.Set("sessionUser", sessionUser)
 

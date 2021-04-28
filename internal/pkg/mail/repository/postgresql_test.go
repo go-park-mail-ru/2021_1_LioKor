@@ -8,11 +8,11 @@ import (
 )
 
 var dbConfig = common.Config{
-	DBHost: "127.0.0.1",
-	DBPort: 5432,
-	DBUser: "liokor",
-	DBPassword: "Qwerty123",
-	DBDatabase: "liokor_mail",
+	DBHost:           "127.0.0.1",
+	DBPort:           5432,
+	DBUser:           "liokor",
+	DBPassword:       "Qwerty123",
+	DBDatabase:       "liokor_mail",
 	DBConnectTimeout: 10,
 }
 

@@ -110,7 +110,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err = common.NewPostgresDataBase(config.DbString)
+	db, err = common.NewPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}

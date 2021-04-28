@@ -21,7 +21,7 @@ type Config struct {
 	DBDatabase       string `json:"dbName"`
 	DBUser           string `json:"dbUser"`
 	DBPassword       string `json:"dbPassword"`
-	DBConnectTimeout int `json:"dbTimeout"`
+	DBConnectTimeout int    `json:"dbTimeout"`
 }
 
 func (config *Config) ReadFromFile(path string) error {

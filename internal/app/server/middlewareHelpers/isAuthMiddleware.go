@@ -11,7 +11,6 @@ type AuthMiddleware struct {
 	UserUsecase user.UseCase
 }
 
-
 func (m *AuthMiddleware) IsAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sessionUser, err := m.isAuthenticated(&c)
@@ -23,8 +22,7 @@ func (m *AuthMiddleware) IsAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-
-func  (m *AuthMiddleware) isAuthenticated(c *echo.Context) (user.User, error) {
+func (m *AuthMiddleware) isAuthenticated(c *echo.Context) (user.User, error) {
 	sessionToken, err := (*c).Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -46,7 +44,7 @@ func  (m *AuthMiddleware) isAuthenticated(c *echo.Context) (user.User, error) {
 	return sessionUser, nil
 }
 
-func  (m *AuthMiddleware) deleteSessionCookie(c *echo.Context) {
+func (m *AuthMiddleware) deleteSessionCookie(c *echo.Context) {
 	(*c).SetCookie(&http.Cookie{
 		Name:     "session_token",
 		Value:    "",

@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 type PostgresDataBase struct {
 	DBConn *pgxpool.Pool
 }

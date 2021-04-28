@@ -39,7 +39,7 @@ func TestLogin(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -154,7 +154,7 @@ func TestGetUserBySessionToken(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -285,7 +285,7 @@ func TestUpdateUser(t *testing.T) {
 	newData := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    common.NullString{sql.NullString{String: avatarBase64,Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: avatarBase64, Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -294,7 +294,7 @@ func TestUpdateUser(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -303,7 +303,7 @@ func TestUpdateUser(t *testing.T) {
 	updUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/someRandomString",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/someRandomString", Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -322,7 +322,7 @@ func TestUpdateUser(t *testing.T) {
 	invalidNewData := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    common.NullString{sql.NullString{String: "InvalidImage",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "InvalidImage", Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -374,7 +374,7 @@ func TestGetUserByUsername(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -414,7 +414,7 @@ func TestChangePassword(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",

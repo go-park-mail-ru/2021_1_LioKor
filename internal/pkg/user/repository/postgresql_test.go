@@ -10,11 +10,11 @@ import (
 )
 
 var dbConfig = common.Config{
-	DBHost: "127.0.0.1",
-	DBPort: 5432,
-	DBUser: "postgres",
-	DBPassword: "12",
-	DBDatabase: "liokor_mail",
+	DBHost:           "127.0.0.1",
+	DBPort:           5432,
+	DBUser:           "postgres",
+	DBPassword:       "12",
+	DBDatabase:       "liokor_mail",
 	DBConnectTimeout: 10,
 }
 
@@ -32,7 +32,7 @@ func TestCreateUserSuccess(t *testing.T) {
 	newUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -59,7 +59,7 @@ func TestCreateUserFail(t *testing.T) {
 	newUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:     common.NullString{sql.NullString{String: "/media",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media", Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -89,7 +89,7 @@ func TestGetUserByUsername(t *testing.T) {
 	retUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "New Test User",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -125,7 +125,7 @@ func TestUpdateUser(t *testing.T) {
 	updUser := user.User{
 		Username:     "newTestUser",
 		HashPassword: "hashPassword",
-		AvatarURL:    common.NullString{sql.NullString{String: "/media/test",Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "New Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
