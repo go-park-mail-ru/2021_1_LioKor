@@ -15,5 +15,8 @@
 
     "smtpHost": "127.0.0.1",
     "smtpPort": 25,
-    "mailDomain": "liokor.ru"
+    "mailDomain": "liokor.ru",
+
+    "authHost": "127.0.0.1",
+    "authPort": 8081
 }

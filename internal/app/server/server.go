@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
 	mailRepository "liokor_mail/internal/pkg/mail/repository"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"liokor_mail/internal/app/server/middlewareHelpers"
+	session "liokor_mail/internal/pkg/common/protobuf_sessions"
 )
 
 func StartServer(config common.Config, quit chan os.Signal) {
@@ -29,17 +31,31 @@ func StartServer(config common.Config, quit chan os.Signal) {
 		log.Println("WARN: RUNNING IN THE DEBUG MODE! DON'T USE IN PRODUCTION!")
 	}
 
+
+	grpcConn, err := grpc.Dial(
+		fmt.Sprintf("%s:%d", config.AuthHost, config.AuthPort),
+		grpc.WithInsecure(),
+		)
+	if err != nil {
+		log.Fatalf("Unable to connect to grpc: %v\n", err)
+	}
+
+	defer grpcConn.Close()
+
+	sessManager := session.NewIsAuthClient(grpcConn)
+
 	userRep := &userRepository.PostgresUserRepository{dbInstance}
-	userUc := &userUsecase.UserUseCase{userRep, config}
+	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
 	userHandler := userDelivery.UserHandler{userUc}
 
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
 	mailUC := &mailUsecase.MailUseCase{mailRep, config}
 	mailHander := mailDelivery.MailHandler{mailUC}
 
+
 	e := echo.New()
 
-	isAuth := middlewareHelpers.AuthMiddleware{userUc}
+	isAuth := middlewareHelpers.AuthMiddleware{userUc, sessManager}
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
@@ -52,6 +68,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.GET("/user", userHandler.Profile, isAuth.IsAuth)
 	e.POST("/user", userHandler.SignUp)
 	e.PUT("/user/:username", userHandler.UpdateProfile, isAuth.IsAuth)
+	e.PUT("/user/:username/avatar", userHandler.UpdateAvatar, isAuth.IsAuth)
 	e.PUT("/user/:username/password", userHandler.ChangePassword, isAuth.IsAuth)
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 

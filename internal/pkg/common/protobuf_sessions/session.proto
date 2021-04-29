@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package protobuf_sessions;
+
+option go_package = "./;protobuf_sessions";
+
+import "google/protobuf/timestamp.proto";
+
+message SessionToken {
+    string sessionToken = 1;
+}
+
+message Session {
+    int32 userId = 1;
+    string sessionToken = 2;
+    google.protobuf.Timestamp expiration = 3;
+}
+
+message Empty {
+
+}
+
+service isAuth {
+    rpc Create (Session) returns (Session) {}
+    rpc Get (SessionToken) returns (Session) {}
+    rpc Delete (SessionToken) returns (Empty) {}
+}

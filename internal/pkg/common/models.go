@@ -3,6 +3,7 @@ package common
 import (
 	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 type NullString struct {
@@ -28,4 +29,35 @@ func (ns *NullString) UnmarshalJSON(data []byte) error {
 		ns.Valid = false
 	}
 	return nil
+}
+
+type Session struct {
+	UserId       int
+	SessionToken string
+	Expiration   time.Time
+}
+
+
+type InvalidSessionError struct {
+	Message string
+}
+
+func (e InvalidSessionError) Error() string {
+	return e.Message
+}
+
+type InvalidUserError struct {
+	Message string
+}
+
+func (e InvalidUserError) Error() string {
+	return e.Message
+}
+
+type InvalidImageError struct {
+	Message string
+}
+
+func (e InvalidImageError) Error() string {
+	return e.Message
 }

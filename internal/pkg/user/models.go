@@ -2,17 +2,11 @@ package user
 
 import (
 	"liokor_mail/internal/pkg/common"
-	"time"
 )
 
 type Credentials struct {
 	Username string
 	Password string
-}
-
-type SessionToken struct {
-	Value      string
-	Expiration time.Time
 }
 
 type UserSignUp struct {
@@ -34,37 +28,7 @@ type User struct {
 	IsAdmin      bool              `json:"-"`
 }
 
-type Session struct {
-	Username     string
-	SessionToken string
-	Expiration   time.Time
-}
-
 type ChangePassword struct {
 	OldPassword string `json:"oldPassword"`
 	NewPassword string `json:"newPassword"`
-}
-
-type InvalidSessionError struct {
-	Message string
-}
-
-func (e InvalidSessionError) Error() string {
-	return e.Message
-}
-
-type InvalidUserError struct {
-	Message string
-}
-
-func (e InvalidUserError) Error() string {
-	return e.Message
-}
-
-type InvalidImageError struct {
-	Message string
-}
-
-func (e InvalidImageError) Error() string {
-	return e.Message
 }

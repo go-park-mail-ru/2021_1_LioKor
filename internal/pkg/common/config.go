@@ -13,8 +13,12 @@ type Config struct {
 	AvatarStoragePath string `json:"avatarStoragePath"`
 	MailDomain        string `json:"mailDomain"`
 	ApiLogPath        string `json:"apiLogPath"`
+	
 	SmtpHost          string `json:"smtpHost"`
 	SmtpPort          int    `json:"smtpPort"`
+	
+	AuthHost         string     `json:"authHost"`
+	AuthPort         int     `json:"authPort"`
 
 	DBHost           string `json:"dbHost"`
 	DBPort           uint16 `json:"dbPort"`
