@@ -36,8 +36,9 @@ func TestAuth(t *testing.T) {
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
-	retSession := user.SessionToken{
-		Value:      "session token",
+	retSession := common.Session{
+		UserId: 1,
+		SessionToken:      "session token",
 		Expiration: time.Now().Add(10 * 24 * time.Hour),
 	}
 	gomock.InOrder(
@@ -64,7 +65,7 @@ func TestAuth(t *testing.T) {
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
-	mockUC.EXPECT().Login(wrongCreds).Return(user.InvalidUserError{"Invalid credentials"}).Times(1)
+	mockUC.EXPECT().Login(wrongCreds).Return(common.InvalidUserError{"Invalid credentials"}).Times(1)
 	err = userHandler.Auth(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusUnauthorized {
@@ -87,7 +88,7 @@ func TestLogout(t *testing.T) {
 	e := echo.New()
 	url := "/user/logout"
 	req := httptest.NewRequest("DELETE", url, nil)
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
@@ -111,7 +112,7 @@ func TestLogout(t *testing.T) {
 	}
 
 	req = httptest.NewRequest("DELETE", url, nil)
-	req.Header.Add("Cookie", "not_session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "not_session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 	err = userHandler.Logout(echoContext)
@@ -136,7 +137,7 @@ func TestProfile(t *testing.T) {
 	e := echo.New()
 	url := "/user"
 	req := httptest.NewRequest("GET", url, nil)
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
@@ -169,7 +170,7 @@ func TestProfileByUsername(t *testing.T) {
 	e := echo.New()
 	url := "/user/test"
 	req := httptest.NewRequest("GET", url, nil)
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 	echoContext.SetPath("/:username")
@@ -194,13 +195,13 @@ func TestProfileByUsername(t *testing.T) {
 
 	url = "/user/test"
 	req = httptest.NewRequest("GET", url, nil)
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 	echoContext.SetPath("/:username")
 	echoContext.SetParamNames("username")
 	echoContext.SetParamValues("test")
-	mockUC.EXPECT().GetUserByUsername("test").Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
+	mockUC.EXPECT().GetUserByUsername("test").Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
 	err = userHandler.ProfileByUsername(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusNotFound {
@@ -234,14 +235,15 @@ func TestSignUp(t *testing.T) {
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 
-	retSessionToken := user.SessionToken{
-		Value:      "sessionToken",
+	retSession := common.Session{
+		UserId: 1,
+		SessionToken:      "sessionToken",
 		Expiration: time.Now().Add(10 * 24 * time.Hour),
 	}
 
 	gomock.InOrder(
 		mockUC.EXPECT().SignUp(newUser).Return(nil).Times(1),
-		mockUC.EXPECT().CreateSession(newUser.Username).Return(retSessionToken, nil).Times(1),
+		mockUC.EXPECT().CreateSession(newUser.Username).Return(retSession, nil).Times(1),
 	)
 	err := userHandler.SignUp(echoContext)
 	if err != nil {
@@ -251,7 +253,7 @@ func TestSignUp(t *testing.T) {
 	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
-	mockUC.EXPECT().SignUp(newUser).Return(user.InvalidUserError{"username exists"}).Times(1)
+	mockUC.EXPECT().SignUp(newUser).Return(common.InvalidUserError{"username exists"}).Times(1)
 	err = userHandler.SignUp(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusConflict {
@@ -273,18 +275,16 @@ func TestUpdateProfile(t *testing.T) {
 
 	e := echo.New()
 	newData := struct {
-		AvatarURL    string `json:"avatarUrl"`
 		FullName     string `json:"fullname"`
 		ReserveEmail string `json:"reserveEmail"`
 	}{
-		AvatarURL:    "",
 		FullName:     "New Full Name",
 		ReserveEmail: "newtest@test.test",
 	}
 	body, _ := json.Marshal(newData)
 	url := "/user/test"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 	echoContext.SetPath("/:username")
@@ -303,7 +303,17 @@ func TestUpdateProfile(t *testing.T) {
 	updUser := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    common.NullString{sql.NullString{String: "", Valid: true}},
+		AvatarURL:    common.NullString{sql.NullString{String: "", Valid: false}},
+		FullName:     "New Full Name",
+		ReserveEmail: "newtest@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	newUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "New Full Name",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -312,14 +322,14 @@ func TestUpdateProfile(t *testing.T) {
 
 	echoContext.Set("sessionUser", retUser)
 
-	mockUC.EXPECT().UpdateUser("test", updUser).Return(updUser, nil).Times(1)
+	mockUC.EXPECT().UpdateUser("test", updUser).Return(newUser, nil).Times(1)
 	err := userHandler.UpdateProfile(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid upd data: %v\n", err)
 	}
 
 	req = httptest.NewRequest("PUT", url, bytes.NewReader(body))
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 	echoContext.SetPath("/:username")
@@ -336,6 +346,75 @@ func TestUpdateProfile(t *testing.T) {
 		t.Errorf("Didn't pass username not equal session user: %v\n", err)
 	}
 }
+
+func TestUpdateAvatar(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	userHandler := UserHandler{
+		UserUsecase: mockUC,
+	}
+
+	e := echo.New()
+	var newAvatar = struct {
+		AvatarUrl string `json:"avatarUrl"`
+	}{"newAvatar"}
+	body, _ := json.Marshal(newAvatar)
+	url := "/user/test/avatar"
+	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+	echoContext.SetPath("/:username/avatar")
+	echoContext.SetParamNames("username")
+	echoContext.SetParamValues("test")
+
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+	updUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/newTest", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+	echoContext.Set("sessionUser", retUser)
+
+	mockUC.EXPECT().UpdateAvatar("test", newAvatar.AvatarUrl).Return(updUser, nil).Times(1)
+	err := userHandler.UpdateAvatar(echoContext)
+	if err != nil {
+		t.Errorf("Didn't pass valid upd data: %v\n", err)
+	}
+
+	req = httptest.NewRequest("PUT", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
+	echoContext.SetPath("/:username/avatar")
+	echoContext.SetParamNames("username")
+	echoContext.SetParamValues("test2")
+	echoContext.Set("sessionUser", retUser)
+
+	err = userHandler.UpdateAvatar(echoContext)
+	if httperr, ok := err.(*echo.HTTPError); ok {
+		if httperr.Code != http.StatusUnauthorized {
+			t.Errorf("Didn't pass username not equal session user: %v\n", err)
+		}
+	} else {
+		t.Errorf("Didn't pass username not equal session user: %v\n", err)
+	}
+}
+
 
 func TestChangePassword(t *testing.T) {
 
@@ -355,7 +434,7 @@ func TestChangePassword(t *testing.T) {
 	body, _ := json.Marshal(newPSWD)
 	url := "/user/test/password"
 	req := httptest.NewRequest("PUT", url, bytes.NewReader(body))
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
 	echoContext := e.NewContext(req, response)
 	echoContext.SetPath("/:username/password")
@@ -381,7 +460,7 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	req = httptest.NewRequest("PUT", url, bytes.NewReader(body))
-	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 May 2021 03:30:48 GMT; HttpOnly")
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 	echoContext.SetPath("/:username/password")

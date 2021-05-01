@@ -21,38 +21,43 @@ CREATE TABLE IF NOT EXISTS mails (
     recipient CITEXT NOT NULL,
     subject TEXT,
     body TEXT,
-    received_date  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    received_date  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    unread BOOLEAN DEFAULT TRUE,
+    status INT DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS folders (
+    id BIGSERIAL PRIMARY KEY,
+    folder_name CITEXT NOT NULL,
+    owner INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE(folder_name, owner)
 );
 
 CREATE TABLE IF NOT EXISTS dialogues (
     id BIGSERIAL PRIMARY KEY,
-    user_1 CITEXT NOT NULL,
-    user_2 CITEXT NOT NULL,
+    owner CITEXT NOT NULL,
+    other CITEXT NOT NULL,
     last_mail_id INTEGER REFERENCES mails (id) ON DELETE SET NULL,
     received_date  TIMESTAMP,
-    UNIQUE (user_1, user_2)
+    unread INT DEFAULT 0,
+    folder INTEGER REFERENCES folders (id) DEFAULT NULL,
+    UNIQUE (owner, other)
 );
+
 
 CREATE OR REPLACE FUNCTION add_dialogue()
     RETURNS TRIGGER
     AS $add_dialogue$
 DECLARE
-    bigger CITEXT;
-    smaller CITEXT;
 BEGIN
-    IF NEW.sender > NEW.recipient THEN
-        bigger := NEW.sender;
-        smaller := NEW.recipient;
-    ELSE
-        bigger := NEW.recipient;
-        smaller := NEW.sender;
-    END IF;
     IF EXISTS (
-        SELECT * FROM dialogues WHERE user_1=bigger AND user_2=smaller LIMIT 1
+        SELECT * FROM dialogues WHERE (owner=NEW.sender AND other=NEW.recipient) OR (other=NEW.sender AND owner=NEW.recipient) LIMIT 1
     ) THEN
-        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date WHERE user_1=bigger AND user_2=smaller;
+        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date WHERE owner=NEW.sender AND other=NEW.recipient;
+        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date, unread=(unread + 1) WHERE other=NEW.sender AND owner=NEW.recipient;
     ELSE
-        INSERT INTO dialogues(user_1, user_2, last_mail_id, received_date) values (bigger, smaller, NEW.id, NEW.received_date);
+        INSERT INTO dialogues(owner, other, last_mail_id, received_date) values (NEW.sender, NEW.recipient, NEW.id, NEW.received_date);
+        INSERT INTO dialogues(owner, other, last_mail_id, received_date, unread) values (NEW.recipient, NEW.sender, NEW.id, NEW.received_date, 1);
     END IF;
 RETURN NEW;
 END;

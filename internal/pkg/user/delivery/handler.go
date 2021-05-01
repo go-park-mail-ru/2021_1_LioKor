@@ -92,20 +92,10 @@ func (h *UserHandler) Logout(c echo.Context) error {
 }
 
 func (h *UserHandler) Profile(c echo.Context) error {
-	UserId, ok := c.Get("sessionUserId").(int)
-
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
-	}
-
-	sessionUser, err := h.UserUsecase.GetUserById(UserId)
-	if err != nil {
-		switch err.(type) {
-		case common.InvalidUserError:
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
 	}
 
 	return c.JSON(http.StatusOK, sessionUser)
@@ -156,19 +146,10 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateProfile(c echo.Context) error {
-	UserId, ok := c.Get("sessionUserId").(int)
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
-	}
-
-	sessionUser, err := h.UserUsecase.GetUserById(UserId)
-	if err != nil {
-		switch err.(type) {
-		case common.InvalidUserError:
-			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
 	}
 
 	username := c.Param("username")
@@ -180,7 +161,7 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 
 	defer c.Request().Body.Close()
 
-	err = json.NewDecoder(c.Request().Body).Decode(&newData)
+	err := json.NewDecoder(c.Request().Body).Decode(&newData)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -195,18 +176,10 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 
 
 func (h *UserHandler) UpdateAvatar(c echo.Context) error {
-	UserId, ok := c.Get("sessionUserId").(int)
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
-	}
-	sessionUser, err := h.UserUsecase.GetUserById(UserId)
-	if err != nil {
-		switch err.(type) {
-		case common.InvalidUserError:
-			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
 	}
 
 	username := c.Param("username")
@@ -214,16 +187,18 @@ func (h *UserHandler) UpdateAvatar(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Access denied")
 	}
 
-	var newAvatar string
+	var newAvatar struct {
+		AvatarUrl string `json:"avatarUrl"`
+	}
 
 	defer c.Request().Body.Close()
 
-	err = json.NewDecoder(c.Request().Body).Decode(&newAvatar)
+	err := json.NewDecoder(c.Request().Body).Decode(&newAvatar)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	sessionUser, err = h.UserUsecase.UpdateAvatar(sessionUser.Username, newAvatar)
+	sessionUser, err = h.UserUsecase.UpdateAvatar(sessionUser.Username, newAvatar.AvatarUrl)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
@@ -233,18 +208,10 @@ func (h *UserHandler) UpdateAvatar(c echo.Context) error {
 }
 
 func (h *UserHandler) ChangePassword(c echo.Context) error {
-	UserId, ok := c.Get("sessionUserId").(int)
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
-	}
-	sessionUser, err := h.UserUsecase.GetUserById(UserId)
-	if err != nil {
-		switch err.(type) {
-		case common.InvalidUserError:
-			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
 	}
 
 	username := c.Param("username")
@@ -256,7 +223,7 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 
 	defer c.Request().Body.Close()
 
-	err = json.NewDecoder(c.Request().Body).Decode(&changePassword)
+	err := json.NewDecoder(c.Request().Body).Decode(&changePassword)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

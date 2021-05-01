@@ -19,6 +19,8 @@ type DialogueEmail struct {
 	Subject       string    `json:"title"`
 	Received_date time.Time `json:"time"`
 	Body          string    `json:"body"`
+	Unread bool `json:"new"`
+	Status int `json:"status"`
 }
 
 type Dialogue struct {
@@ -27,6 +29,14 @@ type Dialogue struct {
 	AvatarURL     common.NullString `json:"avatarUrl"`
 	Body          string            `json:"body"`
 	Received_date time.Time         `json:"time"`
+	Unread int `json:"new"`
+	Owner string
+}
+
+type Folder struct {
+	Id int `json:"folderId"`
+	FolderName string `json:"folderName"`
+	Owner int `json:"owner"`
 }
 
 type InvalidEmailError struct {
@@ -36,3 +46,4 @@ type InvalidEmailError struct {
 func (e InvalidEmailError) Error() string {
 	return e.Message
 }
+

@@ -3,6 +3,7 @@ package middlewareHelpers
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"liokor_mail/internal/pkg/common"
 	session "liokor_mail/internal/pkg/common/protobuf_sessions"
 	"liokor_mail/internal/pkg/user"
 	"net/http"
@@ -16,22 +17,22 @@ type AuthMiddleware struct {
 
 func (m *AuthMiddleware) IsAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		sessionUserId, err := m.isAuthenticated(&c)
+		sessionUser, err := m.isAuthenticated(&c)
 		if err != nil {
 			return err
 		}
-		c.Set("sessionUserId", sessionUserId)
+		c.Set("sessionUser", sessionUser)
 		return next(c)
 	}
 }
 
-func (m *AuthMiddleware) isAuthenticated(c *echo.Context) (int, error) {
+func (m *AuthMiddleware) isAuthenticated(c *echo.Context) (user.User, error) {
 	sessionToken, err := (*c).Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			return -1, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+			return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
-		return -1, echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return user.User{}, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	s, err := m.SessionManager.Get(
@@ -40,9 +41,21 @@ func (m *AuthMiddleware) isAuthenticated(c *echo.Context) (int, error) {
 	)
 	if err != nil {
 		m.deleteSessionCookie(c)
-		return -1, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		return user.User{}, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-	return int(s.UserId), nil
+
+	sessionUser, err := m.UserUsecase.GetUserById(int(s.UserId))
+
+	if err != nil {
+		switch err.(type) {
+		case common.InvalidUserError:
+			return user.User{},echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return user.User{},echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return sessionUser, nil
 }
 
 func (m *AuthMiddleware) deleteSessionCookie(c *echo.Context) {

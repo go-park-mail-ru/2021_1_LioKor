@@ -23,6 +23,8 @@ func (sr *PostgresSessionsRepository) Create(session common.Session) error {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "sessions_user_id_fkey" {
 				return common.InvalidUserError{"user doesn't exist"}
+			} else if pgerr.ConstraintName == "sessions_pkey" {
+				return common.InvalidSessionError{"sessionToken exists"}
 			}
 		}
 		return err

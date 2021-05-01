@@ -41,9 +41,9 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 	return nil
 }
 
-func (uc *MailUseCase) GetDialogues(username string, last int, amount int, find string) ([]mail.Dialogue, error) {
+func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int) ([]mail.Dialogue, error) {
 	username += "@" + uc.Config.MailDomain
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, last, find, ("@" + uc.Config.MailDomain))
+	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain))
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +53,14 @@ func (uc *MailUseCase) GetDialogues(username string, last int, amount int, find 
 func (uc *MailUseCase) GetEmails(username string, email string, last int, amount int) ([]mail.DialogueEmail, error) {
 	username += "@" + uc.Config.MailDomain
 	emails, err := uc.Repository.GetMailsForUser(username, email, amount, last)
+	if err != nil {
+		return nil, err
+	}
+	err = uc.Repository.ReadMail(username, email)
+	if err != nil {
+		return nil, err
+	}
+	err = uc.Repository.ReadDialogue(username, email)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +78,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 		return mail.InvalidEmailError{"too many mails, wait some time"}
 	}
 
-	err = uc.Repository.AddMail(email)
+	mailId, err := uc.Repository.AddMail(email)
 	if err != nil {
 		return err
 	}
@@ -78,9 +86,36 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 	if !strings.HasSuffix(email.Recipient, uc.Config.MailDomain) {
 		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 		if err != nil {
+			err = uc.Repository.UpdateMailStatus(mailId, 0)
 			return err
 		}
 	}
-
 	return nil
+}
+
+func (uc *MailUseCase) GetFolders(owner int)([]mail.Folder, error) {
+	folders, err := uc.Repository.GetFolders(owner)
+	if err != nil {
+		return nil, err
+	}
+	return folders, nil
+}
+
+func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, error){
+	folder, err := uc.Repository.CreateFolder(owner, folderName)
+	if err != nil {
+		return mail.Folder{}, err
+	}
+	return folder, nil
+}
+
+func (uc *MailUseCase) UpdateFolder(owner string, folderId int, dialogueId int) error{
+	owner += "@" + uc.Config.MailDomain
+
+	err := uc.Repository.AddDialogueToFolder(owner, folderId, dialogueId)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }

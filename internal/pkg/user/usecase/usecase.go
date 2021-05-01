@@ -54,6 +54,7 @@ func (uc *UserUseCase) Logout(sessionToken string) error {
 		}
 		return err
 	}
+
 	return nil
 }
 

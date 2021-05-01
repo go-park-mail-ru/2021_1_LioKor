@@ -3,7 +3,6 @@ package repository
 import (
 	"github.com/stretchr/testify/assert"
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/user"
 	"testing"
 	"time"
 )
@@ -29,7 +28,7 @@ func TestCreateSessionSuccess(t *testing.T) {
 		dbInstance,
 	}
 
-	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-04-11T15:04:05Z")
+	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-05-11T15:04:05Z")
 
 	session := common.Session{
 		UserId:     1,
@@ -55,20 +54,33 @@ func TestCreateSessionFail(t *testing.T) {
 	}
 
 	invalidSession := common.Session{
-		UserId:     0,
+		UserId:     1,
 		SessionToken: "sessionToken",
 		Expiration:   time.Now(),
 	}
 	err = sessionRep.Create(invalidSession)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidSessionError:
+		break
+	default:
+		t.Errorf("Created session for not unique session token: %v\n", err)
+	}
+
+	invalidSession = common.Session{
+		UserId:     0,
+		SessionToken: "uniqueSessionToken",
+		Expiration:   time.Now(),
+	}
+	err = sessionRep.Create(invalidSession)
+	switch err.(type) {
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Created session for non existing user: %v\n", err)
 	}
 }
 
-func TestGetSessionBySessionToken(t *testing.T) {
+func TestGetSession(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
@@ -87,14 +99,14 @@ func TestGetSessionBySessionToken(t *testing.T) {
 
 	_, err = sessionRep.Get("invalidSessionToken")
 	switch err.(type) {
-	case user.InvalidSessionError:
+	case common.InvalidSessionError:
 		break
 	default:
 		t.Errorf("Found session for non existing token: %v\n", err)
 	}
 }
 
-func TestRemoveSessionSuccess(t *testing.T) {
+func TestDeleteSessionSuccess(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
@@ -111,7 +123,7 @@ func TestRemoveSessionSuccess(t *testing.T) {
 	}
 }
 
-func TestRemoveSessionFail(t *testing.T) {
+func TestDeleteSessionFail(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
 		t.Errorf("Database error: %v\n", err)
@@ -124,7 +136,7 @@ func TestRemoveSessionFail(t *testing.T) {
 
 	err = sessionRep.Delete("invalidSessionToken")
 	switch err.(type) {
-	case user.InvalidSessionError:
+	case common.InvalidSessionError:
 		break
 	default:
 		t.Errorf("Deleted session for non existing token: %v\n", err)

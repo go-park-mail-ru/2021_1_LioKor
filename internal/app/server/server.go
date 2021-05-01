@@ -76,6 +76,10 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
 
+	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)
+	e.POST("/email/folder", mailHander.CreateFolder, isAuth.IsAuth)
+	e.PUT("/email/folder", mailHander.UpdateFolder, isAuth.IsAuth)
+
 	go func() {
 		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
 		err := e.Start(addr)

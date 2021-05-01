@@ -67,7 +67,7 @@ func TestCreateUserFail(t *testing.T) {
 
 	err = userRep.CreateUser(newUser)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Created user with existing username: %v\n", err)
@@ -103,7 +103,7 @@ func TestGetUserByUsername(t *testing.T) {
 
 	_, err = userRep.GetUserByUsername("invalidUser")
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Found non existing user: %v\n", err)
@@ -135,15 +135,43 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("Couldn't update user: %v\n", err)
 	}
-	assert.Equal(t, updUser.Username, u.Username)
+	assert.Equal(t, updUser.FullName, u.FullName)
 
 	_, err = userRep.UpdateUser("invalidUser", updUser)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Found non existing user: %v\n", err)
 	}
+}
+
+func TestUpgradeAvatar(t *testing.T) {
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
+	if err != nil {
+		t.Errorf("Database error: %v\n", err)
+	}
+	defer dbInstance.Close()
+
+	userRep := PostgresUserRepository{
+		dbInstance,
+	}
+
+	updUser := user.User{
+		Username:     "newTestUser",
+		HashPassword: "hashPassword",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/newTest", Valid: true}},
+		FullName:     "New Name",
+		ReserveEmail: "newtest@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	u, err := userRep.UpdateAvatar(updUser.Username, common.NullString{sql.NullString{String: "/media/newTest", Valid: true}})
+	if err != nil {
+		t.Errorf("Couldn't update avatar: %v\n", err)
+	}
+	assert.Equal(t, updUser.AvatarURL, u.AvatarURL)
 }
 
 func TestChangePassword(t *testing.T) {
@@ -164,7 +192,7 @@ func TestChangePassword(t *testing.T) {
 
 	err = userRep.ChangePassword("invalidUser", "newHashPassword")
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Changed non existing user: %v\n", err)
