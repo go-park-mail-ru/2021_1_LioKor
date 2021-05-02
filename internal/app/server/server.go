@@ -49,9 +49,9 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	userHandler := userDelivery.UserHandler{userUc}
 
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
+
 	mailUC := &mailUsecase.MailUseCase{mailRep, config}
 	mailHander := mailDelivery.MailHandler{mailUC}
-
 
 	e := echo.New()
 

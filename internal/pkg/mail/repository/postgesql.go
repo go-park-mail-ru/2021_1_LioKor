@@ -16,6 +16,7 @@ type PostgresMailRepository struct {
 func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string) ([]mail.Dialogue, error) {
 	find = "%" + find + "%"
 
+
 	query := "SELECT d.id, "+
 		"d.other AS email, "+
 		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d "+

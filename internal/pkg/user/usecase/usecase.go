@@ -88,8 +88,12 @@ func (uc *UserUseCase) CreateSession(username string) (common.Session, error) {
 
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
-	if !validators.ValidateUsername(newUser.Username) || !validators.ValidatePassword(newUser.Password) {
-		return common.InvalidUserError{"invalid username or password"}
+
+	if !validators.ValidateUsername(newUser.Username) {
+		return common.InvalidUsernameError{"invalid username"}
+	}
+	if !validators.ValidatePassword(newUser.Password) {
+		return user.WeakPasswordError{"password is too weak"}
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)

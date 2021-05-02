@@ -132,6 +132,10 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 		switch err.(type) {
 		case common.InvalidUserError:
 			return echo.NewHTTPError(http.StatusConflict, err.Error())
+		case user.InvalidUsernameError:
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		case user.WeakPasswordError:
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		default:
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
