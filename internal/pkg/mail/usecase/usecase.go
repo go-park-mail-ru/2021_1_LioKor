@@ -62,15 +62,17 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 func (uc *MailUseCase) SendEmail(email mail.Mail) error {
 	email.Sender += "@" + uc.Config.MailDomain
 
-	lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3*time.Minute)
-	if err != nil {
-		return err
-	}
-	if lastMailsCount > 5 {
-		return mail.InvalidEmailError{"too many mails, wait some time"}
+	if !uc.Config.Debug {
+		lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3*time.Minute)
+		if err != nil {
+			return err
+		}
+		if lastMailsCount > 5 {
+			return mail.InvalidEmailError{"too many mails, wait some time"}
+		}
 	}
 
-	err = uc.Repository.AddMail(email)
+	err := uc.Repository.AddMail(email)
 	if err != nil {
 		return err
 	}

@@ -53,15 +53,27 @@ func (e InvalidSessionError) Error() string {
 type InvalidUserError struct {
 	Message string
 }
-
 func (e InvalidUserError) Error() string {
+	return e.Message
+}
+
+type InvalidUsernameError struct {
+	Message string
+}
+func (e InvalidUsernameError) Error() string {
+	return e.Message
+}
+
+type WeakPasswordError struct {
+	Message string
+}
+func (e WeakPasswordError) Error() string {
 	return e.Message
 }
 
 type InvalidImageError struct {
 	Message string
 }
-
 func (e InvalidImageError) Error() string {
 	return e.Message
 }
