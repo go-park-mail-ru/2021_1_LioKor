@@ -32,8 +32,8 @@ func StartAuthServer(config common.Config, quit chan os.Signal) {
 	sessionUC := &sessionUsecase.SessionUsecase{sessionRep}
 	sessionDel := &sessionDelivery.SessionsDelivery{sessionUC}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.AuthPort))
-
+	addr := fmt.Sprintf("%s:%d", config.AuthHost, config.AuthPort)
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -43,7 +43,7 @@ func StartAuthServer(config common.Config, quit chan os.Signal) {
 	session.RegisterIsAuthServer(server, sessionDel)
 
 	go func() {
-		log.Printf("starting server at %v\n", config.AuthPort)
+		log.Printf("INFO: TCP server has started at %s\n", addr)
 		err = server.Serve(lis)
 		if err != nil {
 			log.Fatal(err)
