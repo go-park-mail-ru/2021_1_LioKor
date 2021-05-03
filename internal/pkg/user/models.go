@@ -33,6 +33,12 @@ type ChangePassword struct {
 	NewPassword string `json:"newPassword"`
 }
 
+type InvalidUsernameError struct {
+	Message string
+}
+func (e InvalidUsernameError) Error() string {
+	return e.Message
+}
 
 type WeakPasswordError struct {
 	Message string
@@ -40,4 +46,3 @@ type WeakPasswordError struct {
 func (e WeakPasswordError) Error() string {
 	return e.Message
 }
-
