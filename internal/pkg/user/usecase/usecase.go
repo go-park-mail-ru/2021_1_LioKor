@@ -90,7 +90,7 @@ func (uc *UserUseCase) CreateSession(username string) (common.Session, error) {
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 
 	if !validators.ValidateUsername(newUser.Username) {
-		return common.InvalidUsernameError{"invalid username"}
+		return user.InvalidUsernameError{"invalid username"}
 	}
 	if !validators.ValidatePassword(newUser.Password) {
 		return user.WeakPasswordError{"password is too weak"}

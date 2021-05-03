@@ -10,7 +10,7 @@ type NullString struct {
 	sql.NullString
 }
 
-func (ns *NullString) MarshalJSON() ([]byte, error) {
+func (ns NullString) MarshalJSON() ([]byte, error) {
 	if ns.Valid {
 		return json.Marshal(ns.String)
 	}
