@@ -173,12 +173,12 @@ paths:
       parameters:
       - name: "username"
         in: "path"
-        description: "name that need to be updated"
+        description: "username of user whose avatar needs to be updated"
         required: true
         type: "string"
       - in: "body"
         name: "body"
-        description: "Updated user object"
+        description: "new avatar as data url"
         required: true
         schema:
           $ref: "#/definitions/avatarChange"
@@ -269,6 +269,54 @@ paths:
           description: "Email was sent"
         "401":
           description: "Not authenticated"
+  /email/folders:
+    get:
+      tags:
+      - "email"
+      summary: "Returns list of folders"
+      description: "Must be authenticated"
+      operationId: "getFolders"
+      responses:
+        "200":
+          description: "List of emails returned"
+        "401":
+          description: "Not authenticated"
+  /email/folder:
+    post:
+      tags:
+      - "email"
+      summary: "Creates email folder"
+      description: "Must be authenticated"
+      operationId: "createFolder"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "new folder data"
+        required: true
+        schema:
+          $ref: "#/definitions/newFolder"
+      responses:
+        "201":
+          description: "Folder created successfully"
+        "400":
+          description: "Invalid data provided"
+        "404":
+          description: "Folder already exists"
+        "401":
+          description: "Not authenticated"
+    put:
+      tags:
+      - "email"
+      summary: "Puts dialogue to folder"
+      description: "Must be authenticated"
+      operationId: "addToFolder"
+      responses:
+        "200":
+          description: "Folder created successfully"
+        "400":
+          description: "Invalid data provided"
+        "401":
+          description: "Not authenticated"
 
 definitions:
   User:
@@ -340,6 +388,14 @@ definitions:
         type: "string"
       body:
         type: "string"
+  newFolder:
+    type: "object"
+    required:
+    - "folderName"
+    properties:
+      folderName:
+        type: "string"
+        example: "important"
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
