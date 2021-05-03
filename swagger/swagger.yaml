@@ -135,7 +135,7 @@ paths:
     put:
       tags:
       - "user"
-      summary: "Changes password of user specified by username"
+      summary: "Changes password of a user specified by username"
       description: "Must be authenticated as {username}"
       operationId: "updateUserPassword"
       produces:
@@ -157,6 +157,36 @@ paths:
           description: "Password changed successfully"
         "400":
           description: "Invalid password data provided"
+        "401":
+          description: "Access denied"
+        "404":
+          description: "User not found"
+  /user/{username}/avatar:
+    put:
+      tags:
+      - "user"
+      summary: "Changes avatar of a user specified by username"
+      description: "Must be authenticated as {username}"
+      operationId: "updateUserAvatar"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "path"
+        description: "name that need to be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/avatarChange"
+      responses:
+        "200":
+          description: "Avatar changed successfully"
+        "400":
+          description: "Invalid data provided"
         "401":
           description: "Access denied"
         "404":
@@ -289,6 +319,14 @@ definitions:
         type: "string"
       newPassword:
         type: "string"
+  avatarChange:
+    type: "object"
+    required:
+    - "avatarUrl"
+    properties:
+      avatarUrl:
+        type: "string"
+        example: "data:image/jpeg;base64,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"
   email:
     type: "object"
     required:
