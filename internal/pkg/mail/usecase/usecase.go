@@ -10,6 +10,8 @@ import (
 	"net/smtp"
 	"strings"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type MailUseCase struct {
@@ -67,33 +69,44 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 	return emails, nil
 }
 
-func (uc *MailUseCase) SendEmail(email mail.Mail) error {
+func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	email.Sender += "@" + uc.Config.MailDomain
+	isInternal := strings.HasSuffix(email.Recipient, uc.Config.MailDomain)
 
-	if !uc.Config.Debug {
+	if !(uc.Config.Debug || isInternal) {
 		lastMailsCount, err := uc.Repository.CountMailsFromUser(email.Sender, 3*time.Minute)
 		if err != nil {
-			return err
+			return email, err
 		}
 		if lastMailsCount > 5 {
-			return mail.InvalidEmailError{"too many mails, wait some time"}
+			return email, mail.InvalidEmailError{"too many mails, wait some time"}
 		}
 	}
 
+	pStrict := bluemonday.StrictPolicy()
+	email.Subject = pStrict.Sanitize(email.Subject)
+
+	pUGC := bluemonday.UGCPolicy()
+	email.Body = pUGC.Sanitize(email.Body)
+
+	if len(email.Subject) == 0 || len(email.Body) == 0 {
+		return email, errors.New("Empty subject or body after sanitizing!")
+	}
 
 	mailId, err := uc.Repository.AddMail(email)
 	if err != nil {
-		return err
+		return email, err
 	}
 
-	if !strings.HasSuffix(email.Recipient, uc.Config.MailDomain) {
+	if !isInternal {
 		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body)
 		if err != nil {
 			err = uc.Repository.UpdateMailStatus(mailId, 0)
-			return err
+			return email, err
 		}
 	}
-	return nil
+
+	return email, nil
 }
 
 func (uc *MailUseCase) GetFolders(owner int)([]mail.Folder, error) {

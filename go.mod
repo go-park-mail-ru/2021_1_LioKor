@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/labstack/echo-contrib v0.9.0
 	github.com/labstack/echo/v4 v4.2.2
+	github.com/microcosm-cc/bluemonday v1.0.9
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect

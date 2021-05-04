@@ -15,6 +15,8 @@ import (
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/utils"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 const CONFIG_PATH = "config.json"
@@ -76,6 +78,12 @@ func (s *Session) HandleMail() error {
 
 	subject := utils.ParseSubject(s.Header.Get("Subject"))
 	body := s.Body
+
+	pStrict := bluemonday.StrictPolicy()
+	subject = pStrict.Sanitize(subject)
+
+	pUGC := bluemonday.UGCPolicy()
+	body = pUGC.Sanitize(body)
 
 	for _, recipient := range s.Recipients {
 		_, err := db.DBConn.Exec(

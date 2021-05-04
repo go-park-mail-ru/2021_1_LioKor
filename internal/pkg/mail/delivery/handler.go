@@ -89,11 +89,11 @@ func (h *MailHandler) SendEmail(c echo.Context) error {
 	}
 	newMail.Sender = sessionUser.Username
 
-	err = h.MailUsecase.SendEmail(newMail)
+	email, err := h.MailUsecase.SendEmail(newMail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.String(http.StatusOK, "Email sent")
+	return c.JSON(http.StatusOK, email)
 }
 
 func (h *MailHandler) GetFolders(c echo.Context) error {
