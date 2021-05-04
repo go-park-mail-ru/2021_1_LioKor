@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo-contrib/prometheus"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
@@ -59,6 +60,9 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
+
+	p := prometheus.NewPrometheus("echo", nil)
+    p.Use(e)
 
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")
