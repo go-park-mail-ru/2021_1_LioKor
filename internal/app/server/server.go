@@ -17,9 +17,32 @@ import (
 	"os"
 	"time"
 
+	"encoding/pem"
+	"crypto/rsa"
+	"crypto/x509"
+	"io/ioutil"
+
 	"liokor_mail/internal/app/server/middlewareHelpers"
 	session "liokor_mail/internal/pkg/common/protobuf_sessions"
 )
+
+func GetPrivateKey(path string) (*rsa.PrivateKey, error) {
+	keyString, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode([]byte(keyString))
+	if block == nil {
+		return nil, err
+	}
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKey, nil
+}
 
 func StartServer(config common.Config, quit chan os.Signal) {
 	dbInstance, err := common.NewPostgresDataBase(config)
@@ -49,9 +72,15 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
 	userHandler := userDelivery.UserHandler{userUc}
 
+	privateKey, err := GetPrivateKey(config.DkimPrivateKeyPath)
+	if err != nil {
+		log.Printf("WARN: Unable to load private key: %v", err)
+		privateKey = nil
+	} else {
+		log.Println("INFO: Private key for DKIM successfully loaded!")
+	}
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
-
-	mailUC := &mailUsecase.MailUseCase{mailRep, config}
+	mailUC := &mailUsecase.MailUseCase{mailRep, config, privateKey}
 	mailHander := mailDelivery.MailHandler{mailUC}
 
 	e := echo.New()

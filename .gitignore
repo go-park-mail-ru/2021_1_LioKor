@@ -7,6 +7,8 @@ swagger/*
 
 go_backend.log
 lk_mail_api.log
+
 config.json
+rsa.private
 
 test_cover
