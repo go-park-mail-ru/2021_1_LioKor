@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 type MailUseCase struct {
@@ -34,7 +36,7 @@ func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data
 	host := mxrecords[0].Host
 	host = host[:len(host)-1]
 
-	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/plain\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data)
+	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/html\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data)
 	err = smtp.SendMail(host+":25", nil, from, []string{to}, []byte(mail))
 	if err != nil {
 		log.Println(err)
@@ -85,7 +87,16 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 
 	pStrict := bluemonday.StrictPolicy()
 	email.Subject = pStrict.Sanitize(email.Subject)
+	// to strip all non-markdown tags
+	email.Body = pStrict.Sanitize(email.Body)
 
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+	parser := parser.NewWithExtensions(extensions)
+
+	md := []byte(email.Body)
+	email.Body = string(markdown.ToHTML(md, parser, nil))
+
+	// to remove restricted tags and add nofollow to links
 	pUGC := bluemonday.UGCPolicy()
 	email.Body = pUGC.Sanitize(email.Body)
 
