@@ -10,6 +10,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/labstack/echo/v4 v4.2.2
+	github.com/labstack/gommon v0.3.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
