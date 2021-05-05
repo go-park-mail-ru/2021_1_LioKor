@@ -34,8 +34,8 @@ type Dialogue struct {
 }
 
 type Folder struct {
-	Id int `json:"folderId"`
-	FolderName string `json:"folderName"`
+	Id int `json:"id"`
+	FolderName string `json:"name"`
 	Owner int `json:"owner"`
 }
 
@@ -46,4 +46,3 @@ type InvalidEmailError struct {
 func (e InvalidEmailError) Error() string {
 	return e.Message
 }
-

@@ -215,6 +215,10 @@ paths:
           in: "query"
           description: "filter for email addresses to return"
           required: false
+        - name: "folder"
+          in: "query"
+          description: "Folder id to return dialogues from"
+          required: false
         responses:
           "200":
             description: "Returns list of dialogues"
@@ -310,9 +314,16 @@ paths:
       summary: "Puts dialogue to folder"
       description: "Must be authenticated"
       operationId: "addToFolder"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "what to put in folder"
+        required: true
+        schema:
+          $ref: "#/definitions/putToFolder"
       responses:
         "200":
-          description: "Folder created successfully"
+          description: "Dialogue was added to folder"
         "400":
           description: "Invalid data provided"
         "401":
@@ -391,11 +402,21 @@ definitions:
   newFolder:
     type: "object"
     required:
-    - "folderName"
+    - "name"
     properties:
-      folderName:
+      name:
         type: "string"
         example: "important"
+  putToFolder:
+    type: "object"
+    require:
+    - "folderId"
+    - "dialogueId"
+    properties:
+      folderId:
+        type: "integer"
+      dialogueId:
+        type: "integer"
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
