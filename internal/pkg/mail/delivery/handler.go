@@ -160,5 +160,5 @@ func (h *MailHandler) UpdateFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.String(http.StatusOK, "Dialogue added to folder")
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue was added to folder"})
 }

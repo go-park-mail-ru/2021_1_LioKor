@@ -39,6 +39,10 @@ type Folder struct {
 	Owner int `json:"owner"`
 }
 
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
 type InvalidEmailError struct {
 	Message string
 }
