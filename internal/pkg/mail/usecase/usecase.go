@@ -2,71 +2,23 @@ package usecase
 
 import (
 	"errors"
-	"fmt"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
-	"log"
-	"net"
-	"net/smtp"
+	"liokor_mail/internal/utils"
 	"strings"
 	"time"
-	"bytes"
 
 	"crypto/rsa"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/parser"
-	"github.com/emersion/go-msgauth/dkim"
 )
 
 type MailUseCase struct {
 	Repository mail.MailRepository
 	Config     common.Config
 	PrivateKey *rsa.PrivateKey
-}
-
-func (uc *MailUseCase) SMTPSendMail(from string, to string, subject string, data string, privateKey *rsa.PrivateKey) error {
-	recipientSplitted := strings.Split(to, "@")
-	if len(recipientSplitted) != 2 {
-		return errors.New("invalid recipient address!")
-	}
-	hostAddr := recipientSplitted[1]
-	mxrecords, err := net.LookupMX(hostAddr)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	host := mxrecords[0].Host
-	host = host[:len(host)-1]
-
-	mail := fmt.Sprintf("From: <%s>\r\nTo: %s\r\nContent-Type: text/html\r\nSubject: %s\r\n\r\n%s\r\n", from, to, subject, data)
-
-	var bodyBuffer bytes.Buffer
-
-	if privateKey == nil {
-		bodyBuffer.WriteString(mail)
-	} else {
-		r := strings.NewReader(mail)
-		options := &dkim.SignOptions{
-			Domain: "liokor.ru",
-			Selector: "wolf",
-			Signer: privateKey,
-		}
-		err = dkim.Sign(&bodyBuffer, r, options)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-	}
-
-	err = smtp.SendMail(host+":25", nil, from, []string{to}, bodyBuffer.Bytes())
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
 }
 
 func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int) ([]mail.Dialogue, error) {
@@ -134,7 +86,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	}
 
 	if !isInternal {
-		err = uc.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
+		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
 		if err != nil {
 			err = uc.Repository.UpdateMailStatus(mailId, 0)
 			return email, err
