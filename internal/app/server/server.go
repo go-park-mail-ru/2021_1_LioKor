@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/labstack/echo-contrib/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	echoPrometheus "github.com/globocom/echo-prometheus"
+	// "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
@@ -84,13 +86,23 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
+	var configMetrics = echoPrometheus.NewConfig()
+	configMetrics.Buckets = []float64{
+		0.01,   // 10ms
+		0.1,    // 100ms
+		0.5,    // 500ms
+		1,      // 1s
+	}
+	e.Use(echoPrometheus.MetricsMiddlewareWithConfig(configMetrics))
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
 	isAuth := middlewareHelpers.AuthMiddleware{userUc, sessManager}
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
 
-	p := prometheus.NewPrometheus("echo", nil)
-	p.Use(e)
+	//p := prometheus.NewPrometheus("echo", nil)
+	//p.Use(e)
 
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")
