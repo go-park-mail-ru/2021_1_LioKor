@@ -7,6 +7,7 @@ import (
 	"liokor_mail/internal/utils"
 	"strings"
 	"time"
+	"log"
 
 	"crypto/rsa"
 
@@ -88,7 +89,11 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
 		if err != nil {
-			err = uc.Repository.UpdateMailStatus(mailId, 0)
+			log.Printf("WARN: Unable to send email to %s\n", email.Recipient)
+			errDb := uc.Repository.UpdateMailStatus(mailId, 0)
+			if errDb != nil {
+				log.Printf("ERROR: Unable to change mail status!\n")
+			}
 			return email, err
 		}
 	}
