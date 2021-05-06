@@ -104,7 +104,7 @@ func TestGetEmails(t *testing.T) {
 
 	e := echo.New()
 
-	url := "/email/emails/?with=lio@liokor.ru&last=1&amount=5"
+	url := "/email/emails/?with=lio@liokor.ru&since=1&amount=5"
 	req := httptest.NewRequest("GET", url, nil)
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
@@ -209,7 +209,7 @@ func TestSendEmail(t *testing.T) {
 	}
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().SendEmail(emailSent).Return(nil).Times(1)
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(emailSent, nil).Times(1)
 	err := mailHandler.SendEmail(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -221,7 +221,7 @@ func TestSendEmail(t *testing.T) {
 	echoContext = e.NewContext(req, response)
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().SendEmail(emailSent).Return(mail.InvalidEmailError{"error"}).Times(1)
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(emailSent, mail.InvalidEmailError{"error"}).Times(1)
 	err = mailHandler.SendEmail(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {
@@ -294,7 +294,7 @@ func TestCreateFolder(t *testing.T) {
 
 	e := echo.New()
 	folderName := struct {
-		FolderName string `json:"folderName"`
+		FolderName string `json:"name"`
 	}{
 		FolderName: "NewFolderName",
 	}

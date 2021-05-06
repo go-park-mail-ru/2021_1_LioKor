@@ -150,27 +150,27 @@ func TestSendEmail(t *testing.T) {
 
 	email := mail.Mail{
 		Sender:    "alt",
-		Recipient: "altana@liokor.ru",
+		Recipient: "altana@yandex.ru",
 		Body:      "Testing",
 		Subject:   "Test",
 	}
 	emailSent := mail.Mail{
 		Sender:    "alt@liokor.ru",
-		Recipient: "altana@liokor.ru",
-		Body:      "Testing",
+		Recipient: "altana@yandex.ru",
+		Body:      "<p>Testing</p>\n",
 		Subject:   "Test",
 	}
 	gomock.InOrder(
 		mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(0, nil).Times(1),
 		mockRep.EXPECT().AddMail(emailSent).Return(1, nil).Times(1),
 	)
-	err := mailUC.SendEmail(email)
+    _, err := mailUC.SendEmail(email)
 	if err != nil {
 		t.Errorf("Couldn't send email: %v\n", err)
 	}
 
 	mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(6, nil).Times(1)
-	err = mailUC.SendEmail(email)
+	_, err = mailUC.SendEmail(email)
 	switch err.(type) {
 	case mail.InvalidEmailError:
 		break
@@ -182,7 +182,7 @@ func TestSendEmail(t *testing.T) {
 		mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(0, nil).Times(1),
 		mockRep.EXPECT().AddMail(emailSent).Return(0, mail.InvalidEmailError{"Error"}).Times(1),
 	)
-	err = mailUC.SendEmail(email)
+	_, err = mailUC.SendEmail(email)
 	switch err.(type) {
 	case mail.InvalidEmailError:
 		break
