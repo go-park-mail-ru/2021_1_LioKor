@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	echoPrometheus "github.com/globocom/echo-prometheus"
-	// "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
@@ -86,7 +85,17 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
-	e.Use(echoPrometheus.MetricsMiddleware())
+	var configMetrics = echoPrometheus.NewConfig()
+	configMetrics.Buckets = []float64{
+		0.001,  // 1ms
+		0.01,   // 10ms
+		0.05,   // 50ms
+		0.1,    // 100ms
+		0.25,   // 250ms
+		0.5,    // 500ms
+		1,      // 1s
+	}
+	e.Use(echoPrometheus.MetricsMiddlewareWithConfig(configMetrics))
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	isAuth := middlewareHelpers.AuthMiddleware{userUc, sessManager}
