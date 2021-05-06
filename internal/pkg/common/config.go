@@ -6,19 +6,7 @@ import (
 )
 
 type Config struct {
-	Debug             bool   `json:"debug"`
-	Host              string `json:"apiHost"`
-	Port              int    `json:"apiPort"`
-	AllowedOrigin     string `json:"allowedOrigin"`
-	AvatarStoragePath string `json:"avatarStoragePath"`
-	MailDomain        string `json:"mailDomain"`
-	ApiLogPath        string `json:"apiLogPath"`
-	
-	SmtpHost          string `json:"smtpHost"`
-	SmtpPort          int    `json:"smtpPort"`
-	
-	AuthHost         string     `json:"authHost"`
-	AuthPort         int     `json:"authPort"`
+	Debug bool `json:"debug"`
 
 	DBHost           string `json:"dbHost"`
 	DBPort           uint16 `json:"dbPort"`
@@ -26,6 +14,20 @@ type Config struct {
 	DBUser           string `json:"dbUser"`
 	DBPassword       string `json:"dbPassword"`
 	DBConnectTimeout int    `json:"dbTimeout"`
+
+	Host              string `json:"apiHost"`
+	Port              int    `json:"apiPort"`
+	AllowedOrigin     string `json:"allowedOrigin"`
+	AvatarStoragePath string `json:"avatarStoragePath"`
+	ApiLogPath        string `json:"apiLogPath"`
+
+	SmtpHost           string `json:"smtpHost"`
+	SmtpPort           int    `json:"smtpPort"`
+	MailDomain         string `json:"mailDomain"`
+	DkimPrivateKeyPath string `json:"dkimPrivateKeyPath"`
+
+	AuthHost string `json:"authHost"`
+	AuthPort int    `json:"authPort"`
 }
 
 func (config *Config) ReadFromFile(path string) error {

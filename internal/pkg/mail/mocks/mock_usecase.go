@@ -95,11 +95,12 @@ func (mr *MockMailUseCaseMockRecorder) GetFolders(arg0 interface{}) *gomock.Call
 }
 
 // SendEmail mocks base method.
-func (m *MockMailUseCase) SendEmail(arg0 mail.Mail) error {
+func (m *MockMailUseCase) SendEmail(arg0 mail.Mail) (mail.Mail, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendEmail", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(mail.Mail)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SendEmail indicates an expected call of SendEmail.

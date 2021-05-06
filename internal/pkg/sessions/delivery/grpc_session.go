@@ -12,7 +12,6 @@ import (
 
 type SessionsDelivery struct {
 	SessionsUseCase sessions.SessionsUseCase
-
 }
 
 func (sd *SessionsDelivery) Create(ctx context.Context, s *session.Session) (*session.Session, error) {
@@ -31,9 +30,9 @@ func (sd *SessionsDelivery) Create(ctx context.Context, s *session.Session) (*se
 		}
 	}
 	return &session.Session{
-		UserId: int32(newSession.UserId),
+		UserId:       int32(newSession.UserId),
 		SessionToken: newSession.SessionToken,
-		Expiration: timestamppb.New(newSession.Expiration),
+		Expiration:   timestamppb.New(newSession.Expiration),
 	}, nil
 }
 
@@ -48,9 +47,9 @@ func (sd *SessionsDelivery) Get(ctx context.Context, token *session.SessionToken
 		}
 	}
 	return &session.Session{
-		UserId: int32(s.UserId),
+		UserId:       int32(s.UserId),
 		SessionToken: s.SessionToken,
-		Expiration: timestamppb.New(s.Expiration),
+		Expiration:   timestamppb.New(s.Expiration),
 	}, nil
 }
 

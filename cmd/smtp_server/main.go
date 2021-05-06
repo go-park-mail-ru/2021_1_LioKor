@@ -11,23 +11,28 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"strings"
 
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/utils"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 const CONFIG_PATH = "config.json"
 
 var db common.PostgresDataBase
 
-type Backend struct{}
+type Backend struct{
+	Config common.Config
+}
 
 func (bkd *Backend) Login(state *smtp.ConnectionState, username, password string) (smtp.Session, error) {
-	return &Session{}, nil
+	return &Session{ Config: bkd.Config }, nil
 }
 func (bkd *Backend) AnonymousLogin(state *smtp.ConnectionState) (smtp.Session, error) {
-	return &Session{}, nil
+	return &Session{ Config: bkd.Config }, nil
 }
 
 type Session struct {
@@ -35,6 +40,7 @@ type Session struct {
 	Recipients []string
 	Header     mail.Header
 	Body       string
+	Config     common.Config
 }
 
 func (s *Session) Mail(from string, opts smtp.MailOptions) error {
@@ -77,17 +83,27 @@ func (s *Session) HandleMail() error {
 	subject := utils.ParseSubject(s.Header.Get("Subject"))
 	body := s.Body
 
+	pStrict := bluemonday.StrictPolicy()
+	subject = pStrict.Sanitize(subject)
+
+	pUGC := bluemonday.UGCPolicy()
+	body = pUGC.Sanitize(body)
+
 	for _, recipient := range s.Recipients {
-		_, err := db.DBConn.Exec(
-			context.Background(),
-			"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
-			s.From,
-			recipient,
-			subject,
-			body,
-		)
-		if err != nil {
-			log.Println(err)
+		if strings.HasSuffix(recipient, "@" + s.Config.MailDomain) {
+			_, err := db.DBConn.Exec(
+				context.Background(),
+				"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
+				s.From,
+				recipient,
+				subject,
+				body,
+			)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			log.Printf("WARN: Mail to %s was not saved!", recipient)
 		}
 	}
 	return nil
@@ -116,7 +132,7 @@ func main() {
 	}
 	defer db.Close()
 
-	b := &Backend{}
+	b := &Backend{ Config: config }
 	s := smtp.NewServer(b)
 
 	s.Addr = fmt.Sprintf("%s:%d", config.SmtpHost, config.SmtpPort)

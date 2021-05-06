@@ -31,7 +31,7 @@ func TestGetDialogues(t *testing.T) {
 			AvatarURL:     common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 			Body:          "Test",
 			Received_date: time.Now(),
-			Unread: 0,
+			Unread:        0,
 		},
 		{
 			Id:            2,
@@ -39,13 +39,13 @@ func TestGetDialogues(t *testing.T) {
 			AvatarURL:     common.NullString{sql.NullString{String: "", Valid: false}},
 			Body:          "Test",
 			Received_date: time.Now(),
-			Unread: 1,
+			Unread:        1,
 		},
 	}
 
 	mockRep.
 		EXPECT().
-		GetDialoguesForUser("alt@liokor.ru", 10, "", 0,"@liokor.ru").
+		GetDialoguesForUser("alt@liokor.ru", 10, "", 0, "@liokor.ru").
 		Return(dialogues, nil).
 		Times(1)
 	_, err := mailUC.GetDialogues("alt", 10, "", 0)
@@ -55,7 +55,7 @@ func TestGetDialogues(t *testing.T) {
 
 	mockRep.
 		EXPECT().
-		GetDialoguesForUser("alt@liokor.ru", 10, "", 0,"@liokor.ru").
+		GetDialoguesForUser("alt@liokor.ru", 10, "", 0, "@liokor.ru").
 		Return(nil, mail.InvalidEmailError{
 			"Error",
 		}).
@@ -86,8 +86,8 @@ func TestGetEmails(t *testing.T) {
 			Subject:       "Test",
 			Received_date: time.Now(),
 			Body:          "Test",
-			Unread: false,
-			Status: 1,
+			Unread:        false,
+			Status:        1,
 		},
 		{
 			Id:            2,
@@ -95,8 +95,8 @@ func TestGetEmails(t *testing.T) {
 			Subject:       "Test",
 			Received_date: time.Now(),
 			Body:          "Test",
-			Unread: true,
-			Status: 1,
+			Unread:        true,
+			Status:        1,
 		},
 	}
 
@@ -150,27 +150,27 @@ func TestSendEmail(t *testing.T) {
 
 	email := mail.Mail{
 		Sender:    "alt",
-		Recipient: "altana@liokor.ru",
+		Recipient: "altana@yandex.ru",
 		Body:      "Testing",
 		Subject:   "Test",
 	}
 	emailSent := mail.Mail{
 		Sender:    "alt@liokor.ru",
-		Recipient: "altana@liokor.ru",
-		Body:      "Testing",
+		Recipient: "altana@yandex.ru",
+		Body:      "<p>Testing</p>\n",
 		Subject:   "Test",
 	}
 	gomock.InOrder(
 		mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(0, nil).Times(1),
 		mockRep.EXPECT().AddMail(emailSent).Return(1, nil).Times(1),
 	)
-	err := mailUC.SendEmail(email)
+    _, err := mailUC.SendEmail(email)
 	if err != nil {
 		t.Errorf("Couldn't send email: %v\n", err)
 	}
 
 	mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(6, nil).Times(1)
-	err = mailUC.SendEmail(email)
+	_, err = mailUC.SendEmail(email)
 	switch err.(type) {
 	case mail.InvalidEmailError:
 		break
@@ -182,7 +182,7 @@ func TestSendEmail(t *testing.T) {
 		mockRep.EXPECT().CountMailsFromUser("alt@liokor.ru", 3*time.Minute).Return(0, nil).Times(1),
 		mockRep.EXPECT().AddMail(emailSent).Return(0, mail.InvalidEmailError{"Error"}).Times(1),
 	)
-	err = mailUC.SendEmail(email)
+	_, err = mailUC.SendEmail(email)
 	switch err.(type) {
 	case mail.InvalidEmailError:
 		break
@@ -203,14 +203,14 @@ func TestGetFolders(t *testing.T) {
 
 	folders := []mail.Folder{
 		{
-			Id : 1,
+			Id:         1,
 			FolderName: "NewFolder",
-			Owner: 1,
+			Owner:      1,
 		},
 		{
-			Id : 2,
+			Id:         2,
 			FolderName: "AnotherFolder",
-			Owner: 1,
+			Owner:      1,
 		},
 	}
 	mockRep.EXPECT().GetFolders(1).Return(folders, nil).Times(1)
@@ -231,9 +231,9 @@ func TestCreateFolder(t *testing.T) {
 	}
 
 	folder := mail.Folder{
-		Id : 1,
+		Id:         1,
 		FolderName: "NewFolder",
-		Owner: 1,
+		Owner:      1,
 	}
 	mockRep.EXPECT().CreateFolder(folder.Owner, folder.FolderName).Return(folder, nil).Times(1)
 	_, err := mailUC.CreateFolder(folder.Owner, folder.FolderName)

@@ -50,7 +50,7 @@ func TestGetDialogues(t *testing.T) {
 			AvatarURL:     common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 			Body:          "Test",
 			Received_date: time.Now(),
-			Unread: 0,
+			Unread:        0,
 		},
 		{
 			Id:            2,
@@ -58,7 +58,7 @@ func TestGetDialogues(t *testing.T) {
 			AvatarURL:     common.NullString{sql.NullString{String: "", Valid: false}},
 			Body:          "Test",
 			Received_date: time.Now(),
-			Unread: 1,
+			Unread:        1,
 		},
 	}
 	echoContext.Set("sessionUser", sessionUser)
@@ -104,7 +104,7 @@ func TestGetEmails(t *testing.T) {
 
 	e := echo.New()
 
-	url := "/email/emails/?with=lio@liokor.ru&last=1&amount=5"
+	url := "/email/emails/?with=lio@liokor.ru&since=1&amount=5"
 	req := httptest.NewRequest("GET", url, nil)
 	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
 	response := httptest.NewRecorder()
@@ -127,8 +127,8 @@ func TestGetEmails(t *testing.T) {
 			Subject:       "Test",
 			Received_date: time.Now(),
 			Body:          "Test",
-			Unread: false,
-			Status: 1,
+			Unread:        false,
+			Status:        1,
 		},
 		{
 			Id:            2,
@@ -136,8 +136,8 @@ func TestGetEmails(t *testing.T) {
 			Subject:       "Test",
 			Received_date: time.Now(),
 			Body:          "Test",
-			Unread: true,
-			Status: 1,
+			Unread:        true,
+			Status:        1,
 		},
 	}
 	echoContext.Set("sessionUser", sessionUser)
@@ -209,7 +209,7 @@ func TestSendEmail(t *testing.T) {
 	}
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().SendEmail(emailSent).Return(nil).Times(1)
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(emailSent, nil).Times(1)
 	err := mailHandler.SendEmail(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -221,7 +221,7 @@ func TestSendEmail(t *testing.T) {
 	echoContext = e.NewContext(req, response)
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().SendEmail(emailSent).Return(mail.InvalidEmailError{"error"}).Times(1)
+	mockMailUC.EXPECT().SendEmail(emailSent).Return(emailSent, mail.InvalidEmailError{"error"}).Times(1)
 	err = mailHandler.SendEmail(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {
@@ -251,7 +251,7 @@ func TestGetFolders(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	sessionUser := user.User{
-		Id : 1,
+		Id:           1,
 		Username:     "alt",
 		HashPassword: "hash",
 		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
@@ -263,14 +263,14 @@ func TestGetFolders(t *testing.T) {
 
 	folders := []mail.Folder{
 		{
-			Id : 1,
+			Id:         1,
 			FolderName: "NewFolder",
-			Owner: 1,
+			Owner:      1,
 		},
 		{
-			Id : 2,
+			Id:         2,
 			FolderName: "AnotherFolder",
-			Owner: 1,
+			Owner:      1,
 		},
 	}
 	echoContext.Set("sessionUser", sessionUser)
@@ -282,7 +282,7 @@ func TestGetFolders(t *testing.T) {
 	}
 }
 
-func TestCreateFolder(t *testing.T){
+func TestCreateFolder(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -293,8 +293,9 @@ func TestCreateFolder(t *testing.T){
 	}
 
 	e := echo.New()
-	folderName := struct{
-		FolderName string `json:"folderName"` } {
+	folderName := struct {
+		FolderName string `json:"name"`
+	}{
 		FolderName: "NewFolderName",
 	}
 	body, _ := json.Marshal(folderName)
@@ -305,7 +306,7 @@ func TestCreateFolder(t *testing.T){
 	echoContext := e.NewContext(req, response)
 
 	sessionUser := user.User{
-		Id : 1,
+		Id:           1,
 		Username:     "alt",
 		HashPassword: "hash",
 		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
@@ -316,9 +317,9 @@ func TestCreateFolder(t *testing.T){
 	}
 
 	folder := mail.Folder{
-		Id : 1,
+		Id:         1,
 		FolderName: folderName.FolderName,
-		Owner: 1,
+		Owner:      1,
 	}
 	echoContext.Set("sessionUser", sessionUser)
 
@@ -356,10 +357,10 @@ func TestUpdateFolder(t *testing.T) {
 
 	e := echo.New()
 	updateFolder := struct {
-		FolderId int `json:"folderId"`
+		FolderId   int `json:"folderId"`
 		DialogueId int `json:"dialogueId"`
-	} {
-		FolderId: 1,
+	}{
+		FolderId:   1,
 		DialogueId: 1,
 	}
 	body, _ := json.Marshal(updateFolder)
@@ -370,7 +371,7 @@ func TestUpdateFolder(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	sessionUser := user.User{
-		Id : 1,
+		Id:           1,
 		Username:     "alt",
 		HashPassword: "hash",
 		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},

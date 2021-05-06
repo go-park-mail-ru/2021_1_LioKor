@@ -49,9 +49,9 @@ func (m *AuthMiddleware) isAuthenticated(c *echo.Context) (user.User, error) {
 	if err != nil {
 		switch err.(type) {
 		case common.InvalidUserError:
-			return user.User{},echo.NewHTTPError(http.StatusNotFound, err.Error())
+			return user.User{}, echo.NewHTTPError(http.StatusNotFound, err.Error())
 		default:
-			return user.User{},echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return user.User{}, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 

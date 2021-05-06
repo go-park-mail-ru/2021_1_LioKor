@@ -20,16 +20,18 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
+
 	amount, err := strconv.Atoi(c.QueryParam("amount"))
 	if err != nil || amount > 50 {
 		amount = 50
 	}
+
 	find := c.QueryParam("find")
+
 	folder, err := strconv.Atoi(c.QueryParam("folder"))
 	if err != nil {
 		folder = 0
 	}
-
 
 	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder)
 	if err != nil {
@@ -51,7 +53,7 @@ func (h *MailHandler) GetEmails(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, errors.New("invalid email"))
 	}
 
-	last, err := strconv.Atoi(c.QueryParam("last"))
+	last, err := strconv.Atoi(c.QueryParam("since"))
 	if err != nil {
 		last = 0
 	}
@@ -89,11 +91,11 @@ func (h *MailHandler) SendEmail(c echo.Context) error {
 	}
 	newMail.Sender = sessionUser.Username
 
-	err = h.MailUsecase.SendEmail(newMail)
+	email, err := h.MailUsecase.SendEmail(newMail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return c.String(http.StatusOK, "Email sent")
+	return c.JSON(http.StatusOK, email)
 }
 
 func (h *MailHandler) GetFolders(c echo.Context) error {
@@ -117,8 +119,9 @@ func (h *MailHandler) CreateFolder(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
-	var folderName struct{
-		FolderName string `json:"folderName"` }
+	var folderName struct {
+		FolderName string `json:"name"`
+	}
 	defer c.Request().Body.Close()
 
 	err := json.NewDecoder(c.Request().Body).Decode(&folderName)
@@ -142,7 +145,7 @@ func (h *MailHandler) UpdateFolder(c echo.Context) error {
 	}
 
 	var updateFolder struct {
-		FolderId int `json:"folderId"`
+		FolderId   int `json:"folderId"`
 		DialogueId int `json:"dialogueId"`
 	}
 	defer c.Request().Body.Close()
@@ -157,5 +160,5 @@ func (h *MailHandler) UpdateFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.String(http.StatusOK, "Dialogue added to folder")
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue was added to folder"})
 }

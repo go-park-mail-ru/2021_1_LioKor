@@ -1,5 +1,6 @@
 {
     "debug": false,
+
     "dbHost": "127.0.0.1",
     "dbPort": 5432,
     "dbUser": "liokor",
@@ -16,6 +17,7 @@
     "smtpHost": "127.0.0.1",
     "smtpPort": 25,
     "mailDomain": "liokor.ru",
+    "dkimPrivateKeyPath": "rsa.private",
 
     "authHost": "127.0.0.1",
     "authPort": 8081

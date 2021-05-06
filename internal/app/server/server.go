@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
@@ -16,9 +17,32 @@ import (
 	"os"
 	"time"
 
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
+
 	"liokor_mail/internal/app/server/middlewareHelpers"
 	session "liokor_mail/internal/pkg/common/protobuf_sessions"
 )
+
+func GetPrivateKey(path string) (*rsa.PrivateKey, error) {
+	keyString, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode([]byte(keyString))
+	if block == nil {
+		return nil, err
+	}
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKey, nil
+}
 
 func StartServer(config common.Config, quit chan os.Signal) {
 	dbInstance, err := common.NewPostgresDataBase(config)
@@ -31,11 +55,10 @@ func StartServer(config common.Config, quit chan os.Signal) {
 		log.Println("WARN: RUNNING IN THE DEBUG MODE! DON'T USE IN PRODUCTION!")
 	}
 
-
 	grpcConn, err := grpc.Dial(
 		fmt.Sprintf("%s:%d", config.AuthHost, config.AuthPort),
 		grpc.WithInsecure(),
-		)
+	)
 	if err != nil {
 		log.Fatalf("Unable to connect to grpc: %v\n", err)
 	}
@@ -48,9 +71,15 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
 	userHandler := userDelivery.UserHandler{userUc}
 
+	privateKey, err := GetPrivateKey(config.DkimPrivateKeyPath)
+	if err != nil {
+		log.Printf("WARN: Unable to load private key: %v", err)
+		privateKey = nil
+	} else {
+		log.Println("INFO: Private key for DKIM successfully loaded!")
+	}
 	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
-
-	mailUC := &mailUsecase.MailUseCase{mailRep, config}
+	mailUC := &mailUsecase.MailUseCase{mailRep, config, privateKey}
 	mailHander := mailDelivery.MailHandler{mailUC}
 
 	e := echo.New()
@@ -59,6 +88,9 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
+
+	p := prometheus.NewPrometheus("echo", nil)
+	p.Use(e)
 
 	e.Static("/media", "media")
 	e.Static("/swagger", "swagger")
