@@ -6,34 +6,30 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
-func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string) {
+func SetupCSRFAndCORS(e *echo.Echo, allowedOrigin string, debug bool) {
 	if len(allowedOrigin) > 0 {
 		url, err := url.Parse(allowedOrigin)
 		if err != nil {
 			log.Fatal(err)
-			return
 		}
 		csrfCookieDomain := url.Hostname()
 		if len(csrfCookieDomain) == 0 {
 			log.Fatal("Invalid domain specified in allowedOrigin")
-			return
 		}
 
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			Skipper: func(c echo.Context) bool {
+				return debug
+			},
 			AllowOrigins:     []string{allowedOrigin},
 			AllowCredentials: true,
 		}))
 
 		e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 			Skipper: func(c echo.Context) bool {
-				host := c.Request().Host
-				if strings.HasPrefix(host, "localhost:") || host == "localhost" {
-					return true
-				}
-				return false
+				return debug
 			},
 			CookieSameSite: http.SameSiteStrictMode,
 			CookieDomain:   csrfCookieDomain,

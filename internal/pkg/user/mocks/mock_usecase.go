@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	common "liokor_mail/internal/pkg/common"
 	user "liokor_mail/internal/pkg/user"
 	reflect "reflect"
 
@@ -49,10 +50,10 @@ func (mr *MockUseCaseMockRecorder) ChangePassword(arg0, arg1 interface{}) *gomoc
 }
 
 // CreateSession mocks base method.
-func (m *MockUseCase) CreateSession(arg0 string) (user.SessionToken, error) {
+func (m *MockUseCase) CreateSession(arg0 string) (common.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSession", arg0)
-	ret0, _ := ret[0].(user.SessionToken)
+	ret0, _ := ret[0].(common.Session)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -63,19 +64,19 @@ func (mr *MockUseCaseMockRecorder) CreateSession(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockUseCase)(nil).CreateSession), arg0)
 }
 
-// GetUserBySessionToken mocks base method.
-func (m *MockUseCase) GetUserBySessionToken(arg0 string) (user.User, error) {
+// GetUserById mocks base method.
+func (m *MockUseCase) GetUserById(arg0 int) (user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserBySessionToken", arg0)
+	ret := m.ctrl.Call(m, "GetUserById", arg0)
 	ret0, _ := ret[0].(user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserBySessionToken indicates an expected call of GetUserBySessionToken.
-func (mr *MockUseCaseMockRecorder) GetUserBySessionToken(arg0 interface{}) *gomock.Call {
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockUseCaseMockRecorder) GetUserById(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserBySessionToken", reflect.TypeOf((*MockUseCase)(nil).GetUserBySessionToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUseCase)(nil).GetUserById), arg0)
 }
 
 // GetUserByUsername mocks base method.
@@ -133,6 +134,21 @@ func (m *MockUseCase) SignUp(arg0 user.UserSignUp) error {
 func (mr *MockUseCaseMockRecorder) SignUp(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignUp", reflect.TypeOf((*MockUseCase)(nil).SignUp), arg0)
+}
+
+// UpdateAvatar mocks base method.
+func (m *MockUseCase) UpdateAvatar(arg0, arg1 string) (user.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAvatar", arg0, arg1)
+	ret0, _ := ret[0].(user.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAvatar indicates an expected call of UpdateAvatar.
+func (mr *MockUseCaseMockRecorder) UpdateAvatar(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAvatar", reflect.TypeOf((*MockUseCase)(nil).UpdateAvatar), arg0, arg1)
 }
 
 // UpdateUser mocks base method.

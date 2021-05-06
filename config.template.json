@@ -1,11 +1,24 @@
 {
-    "host": "127.0.0.1",
-    "port": 8000,
+    "debug": false,
+
+    "dbHost": "127.0.0.1",
+    "dbPort": 5432,
+    "dbUser": "liokor",
+    "dbPassword": "Qwerty123",
+    "dbName": "liokor_mail",
+    "dbTimeout": 10,
+
+    "apiHost": "127.0.0.1",
+    "apiPort": 8000,
     "allowedOrigin": "https://mail.liokor.ru",
     "avatarStoragePath": "media/avatars/",
-    "dbString": "host=localhost user=liokor password=Qwerty123 dbname=liokor_mail sslmode=disable",
-    "mailDomain": "liokor.ru",
     "apiLogPath": "lk_mail_api.log",
+
     "smtpHost": "127.0.0.1",
-    "smtpPort": 25
+    "smtpPort": 25,
+    "mailDomain": "liokor.ru",
+    "dkimPrivateKeyPath": "rsa.private",
+
+    "authHost": "127.0.0.1",
+    "authPort": 8081
 }

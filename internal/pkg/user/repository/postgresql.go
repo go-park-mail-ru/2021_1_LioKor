@@ -12,55 +12,6 @@ type PostgresUserRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
-func (ur *PostgresUserRepository) CreateSession(session user.Session) error {
-	u, err := ur.GetUserByUsername(session.Username)
-	if err != nil {
-		return err
-	}
-
-	_, err = ur.DBInstance.DBConn.Exec(
-		context.Background(),
-		"INSERT INTO sessions(user_id, token, expiration) VALUES ($1, $2, $3);",
-		u.Id,
-		session.SessionToken,
-		session.Expiration,
-	)
-	if err != nil {
-		if pgerr, ok := err.(*pgconn.PgError); ok {
-			if pgerr.ConstraintName == "sessions_user_id_fkey" {
-				return user.InvalidUserError{"user doesn't exist"}
-			}
-		}
-		return err
-	}
-	return nil
-}
-
-func (ur *PostgresUserRepository) GetSessionBySessionToken(token string) (user.Session, error) {
-	var session user.Session
-	err := ur.DBInstance.DBConn.QueryRow(
-		context.Background(),
-		"SELECT u.username, s.token, s.expiration FROM users AS u "+
-			"JOIN sessions AS s ON u.id=s.user_id "+
-			"WHERE token=$1 LIMIT 1;",
-		token,
-	).Scan(
-		&session.Username,
-		&session.SessionToken,
-		&session.Expiration,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return user.Session{}, user.InvalidSessionError{"session doesn't exist"}
-		} else {
-			return user.Session{}, err
-		}
-	}
-
-	return session, nil
-}
-
 func (ur *PostgresUserRepository) GetUserByUsername(username string) (user.User, error) {
 	var u user.User
 	err := ur.DBInstance.DBConn.QueryRow(
@@ -78,7 +29,32 @@ func (ur *PostgresUserRepository) GetUserByUsername(username string) (user.User,
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return user.User{}, user.InvalidUserError{"user doesn't exist"}
+			return user.User{}, common.InvalidUserError{"user doesn't exist"}
+		} else {
+			return user.User{}, err
+		}
+	}
+	return u, nil
+}
+
+func (ur *PostgresUserRepository) GetUserById(id int) (user.User, error) {
+	var u user.User
+	err := ur.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		"SELECT * FROM users WHERE id=$1 LIMIT 1;",
+		id,
+	).Scan(
+		&u.Id,
+		&u.Username,
+		&u.HashPassword,
+		&u.AvatarURL,
+		&u.FullName,
+		&u.ReserveEmail,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return user.User{}, common.InvalidUserError{"user doesn't exist"}
 		} else {
 			return user.User{}, err
 		}
@@ -100,7 +76,7 @@ func (ur *PostgresUserRepository) CreateUser(u user.User) error {
 	if err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "users_username_key" {
-				return user.InvalidUserError{"username exists"}
+				return common.InvalidUserError{"username exists"}
 			}
 		}
 		return err
@@ -112,10 +88,9 @@ func (ur *PostgresUserRepository) CreateUser(u user.User) error {
 func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
 	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
-		"UPDATE users SET avatar_url=$1, fullname=$2, reserve_email=$3 "+
-			"WHERE LOWER(username)=LOWER($4) "+
+		"UPDATE users SET fullname=$1, reserve_email=$2 "+
+			"WHERE LOWER(username)=LOWER($3) "+
 			"RETURNING *;",
-		newData.AvatarURL,
 		newData.FullName,
 		newData.ReserveEmail,
 		username,
@@ -130,10 +105,10 @@ func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return user.User{}, user.InvalidUserError{"user doesn't exist"}
+			return user.User{}, common.InvalidUserError{"user doesn't exist"}
 		} else if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "users_username_key" {
-				return user.User{}, user.InvalidUserError{"username"}
+				return user.User{}, common.InvalidUserError{"username"}
 			}
 		}
 		return user.User{}, err
@@ -151,7 +126,7 @@ func (ur *PostgresUserRepository) ChangePassword(username string, newPSWD string
 	)
 
 	if commandTag.RowsAffected() != 1 {
-		return user.InvalidUserError{"user doesn't exist"}
+		return common.InvalidUserError{"user doesn't exist"}
 	}
 	if err != nil {
 		return err
@@ -159,21 +134,33 @@ func (ur *PostgresUserRepository) ChangePassword(username string, newPSWD string
 	return nil
 }
 
-func (ur *PostgresUserRepository) RemoveSession(token string) error {
-	commandTag, err := ur.DBInstance.DBConn.Exec(
+func (ur *PostgresUserRepository) UpdateAvatar(username string, newAvatar common.NullString) (user.User, error) {
+	newData := user.User{}
+	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
-		"DELETE FROM sessions WHERE token=$1;",
-		token,
+		"UPDATE users SET avatar_url=$1 "+
+			"WHERE LOWER(username)=LOWER($2) "+
+			"RETURNING *;",
+		newAvatar,
+		username,
+	).Scan(
+		&newData.Id,
+		&newData.Username,
+		&newData.HashPassword,
+		&newData.AvatarURL,
+		&newData.FullName,
+		&newData.ReserveEmail,
 	)
 
 	if err != nil {
-		return err
-	}
-	if commandTag.RowsAffected() != 1 {
-		return user.InvalidSessionError{"session doesn't exist"}
+		if err == pgx.ErrNoRows {
+			return user.User{}, common.InvalidUserError{"user doesn't exist"}
+		}
+		return user.User{}, err
 	}
 
-	return nil
+	return newData, nil
+
 }
 
 func (ur *PostgresUserRepository) RemoveUser(username string) error {
@@ -189,7 +176,7 @@ func (ur *PostgresUserRepository) RemoveUser(username string) error {
 	}
 
 	if commandTag.RowsAffected() != 1 {
-		return user.InvalidUserError{"user doesn't exist"}
+		return common.InvalidUserError{"user doesn't exist"}
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"database/sql"
+	"liokor_mail/internal/pkg/common"
 	"time"
 )
 
@@ -19,15 +19,28 @@ type DialogueEmail struct {
 	Subject       string    `json:"title"`
 	Received_date time.Time `json:"time"`
 	Body          string    `json:"body"`
+	Unread        bool      `json:"new"`
+	Status        int       `json:"status"`
 }
 
 type Dialogue struct {
-	Id            int            `json:"id"`
-	Email         string         `json:"username"`
-	AvatarURLDB   sql.NullString `json:"-"`
-	AvatarURL     string         `json:"avatarUrl"`
-	Body          string         `json:"body"`
-	Received_date time.Time      `json:"time"`
+	Id            int               `json:"id"`
+	Email         string            `json:"username"`
+	AvatarURL     common.NullString `json:"avatarUrl"`
+	Body          string            `json:"body"`
+	Received_date time.Time         `json:"time"`
+	Unread        int               `json:"new"`
+	Owner         string
+}
+
+type Folder struct {
+	Id         int    `json:"id"`
+	FolderName string `json:"name"`
+	Owner      int    `json:"owner"`
+}
+
+type MessageResponse struct {
+	Message string `json:"message"`
 }
 
 type InvalidEmailError struct {

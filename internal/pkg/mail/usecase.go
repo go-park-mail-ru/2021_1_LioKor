@@ -1,7 +1,10 @@
 package mail
 
 type MailUseCase interface {
-	GetDialogues(username string, last int, amount int, find string) ([]Dialogue, error)
+	GetDialogues(username string, amount int, find string, folderId int) ([]Dialogue, error)
 	GetEmails(username string, email string, last int, amount int) ([]DialogueEmail, error)
-	SendEmail(mail Mail) error
+	SendEmail(mail Mail) (Mail, error)
+	GetFolders(owner int) ([]Folder, error)
+	CreateFolder(owner int, folderName string) (Folder, error)
+	UpdateFolder(owner string, folderId int, dialogueId int) error
 }

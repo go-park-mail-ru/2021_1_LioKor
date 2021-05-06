@@ -1,15 +1,12 @@
 package user
 
-import "time"
+import (
+	"liokor_mail/internal/pkg/common"
+)
 
 type Credentials struct {
 	Username string
 	Password string
-}
-
-type SessionToken struct {
-	Value      string
-	Expiration time.Time
 }
 
 type UserSignUp struct {
@@ -21,20 +18,14 @@ type UserSignUp struct {
 }
 
 type User struct {
-	Id           int    `json:"-"`
-	Username     string `json:"username"`
-	HashPassword string `json:"-"`
-	AvatarURL    string `json:"avatarUrl"`
-	FullName     string `json:"fullname"`
-	ReserveEmail string `json:"reserveEmail"`
-	RegisterDate string `json:"-"`
-	IsAdmin      bool   `json:"-"`
-}
-
-type Session struct {
-	Username     string
-	SessionToken string
-	Expiration   time.Time
+	Id           int               `json:"-"`
+	Username     string            `json:"username"`
+	HashPassword string            `json:"-"`
+	AvatarURL    common.NullString `json:"avatarUrl"`
+	FullName     string            `json:"fullname"`
+	ReserveEmail string            `json:"reserveEmail"`
+	RegisterDate string            `json:"-"`
+	IsAdmin      bool              `json:"-"`
 }
 
 type ChangePassword struct {
@@ -42,26 +33,18 @@ type ChangePassword struct {
 	NewPassword string `json:"newPassword"`
 }
 
-type InvalidSessionError struct {
+type InvalidUsernameError struct {
 	Message string
 }
 
-func (e InvalidSessionError) Error() string {
+func (e InvalidUsernameError) Error() string {
 	return e.Message
 }
 
-type InvalidUserError struct {
+type WeakPasswordError struct {
 	Message string
 }
 
-func (e InvalidUserError) Error() string {
-	return e.Message
-}
-
-type InvalidImageError struct {
-	Message string
-}
-
-func (e InvalidImageError) Error() string {
+func (e WeakPasswordError) Error() string {
 	return e.Message
 }

@@ -15,7 +15,10 @@ func ValidateUsername(username string) bool {
 	if matchedLen == 0 || matchedLen < len(username) {
 		return false
 	}
-	return !strings.Contains(username, "admin")
+	if strings.Contains(username, "admin") || strings.Contains(username, "postmaster") {
+		return false
+	}
+	return true
 }
 
 func ValidatePassword(password string) bool {

@@ -11,7 +11,7 @@ import (
 )
 
 func ParseSubject(subject string) string {
-	if strings.HasPrefix(subject, "=?UTF-8?B?") {
+	if strings.HasPrefix(strings.ToLower(subject), "=?utf-8?b?") {
 		subject = subject[10:]
 		subject = strings.Split(subject, "?")[0]
 		subjectByte, err := base64.StdEncoding.DecodeString(subject)

@@ -1,11 +1,18 @@
 package usecase
 
 import (
+	"database/sql"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"liokor_mail/internal/pkg/common"
+	session "liokor_mail/internal/pkg/common/protobuf_sessions"
+	sMocks "liokor_mail/internal/pkg/common/protobuf_sessions/mocks"
 	"liokor_mail/internal/pkg/user"
-	"liokor_mail/internal/pkg/user/mocks"
+	mocks "liokor_mail/internal/pkg/user/mocks"
 	"testing"
 	"time"
 )
@@ -21,9 +28,11 @@ func TestLogin(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
 
 	//Testing valid credentials
@@ -38,7 +47,7 @@ func TestLogin(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -58,7 +67,7 @@ func TestLogin(t *testing.T) {
 	mockRep.EXPECT().GetUserByUsername("test").Return(retUser, nil).Times(1)
 	err = userUc.Login(wrongPswdCreds)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid password: %v\n", err)
@@ -69,10 +78,10 @@ func TestLogin(t *testing.T) {
 		Username: "test",
 		Password: "password",
 	}
-	mockRep.EXPECT().GetUserByUsername("test").Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
+	mockRep.EXPECT().GetUserByUsername("test").Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
 	err = userUc.Login(wrongUsernameCreds)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid credentials: %v\n", err)
@@ -84,23 +93,25 @@ func TestLogout(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
 
 	sessionToken := "sessionToken"
 
-	mockRep.EXPECT().RemoveSession(sessionToken).Return(nil).Times(1)
+	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{SessionToken: sessionToken}).Return(&session.Empty{}, nil).Times(1)
 	err := userUc.Logout(sessionToken)
 	if err != nil {
 		t.Errorf("Didn't pass valid session token: %v\n", err)
 	}
 
-	mockRep.EXPECT().RemoveSession(sessionToken).Return(user.InvalidSessionError{"session doesn't exist"}).Times(1)
+	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{SessionToken: sessionToken}).Return(&session.Empty{}, status.Error(codes.NotFound, "Not found")).Times(1)
 	err = userUc.Logout(sessionToken)
 	switch err.(type) {
-	case user.InvalidSessionError:
+	case common.InvalidSessionError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid session token: %v\n", err)
@@ -112,94 +123,39 @@ func TestCreateSession(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
-	username := "test"
+	sessionUser := user.User{
+		Id:       1,
+		Username: "test",
+	}
 
-	mockRep.EXPECT().CreateSession(gomock.Any()).Return(nil).Times(1)
-	sessionToken, err := userUc.CreateSession(username)
-	if err != nil || sessionToken.Value == "" {
+	newSession := session.Session{
+		UserId:       int32(sessionUser.Id),
+		SessionToken: common.GenerateRandomString(),
+		Expiration:   timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
+	}
+
+	gomock.InOrder(
+		mockRep.EXPECT().GetUserByUsername(sessionUser.Username).Return(sessionUser, nil).Times(1),
+		mockSession.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&newSession, nil).Times(1),
+	)
+	s, err := userUc.CreateSession(sessionUser.Username)
+	if err != nil {
 		t.Errorf("Didn't create session: %v\n", err)
 	}
 
-	mockRep.EXPECT().CreateSession(gomock.Any()).Return(user.InvalidUserError{"user doesn't exist"}).Times(1)
-	_, err = userUc.CreateSession(username)
+	assert.Equal(t, s.UserId, int(newSession.UserId))
+	assert.Equal(t, s.SessionToken, newSession.SessionToken)
+
+	mockRep.EXPECT().GetUserByUsername(sessionUser.Username).Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
+	_, err = userUc.CreateSession(sessionUser.Username)
 	switch err.(type) {
-	case user.InvalidUserError:
-		break
-	default:
-		t.Errorf("Didn't pass invalid user: %v\n", err)
-	}
-}
-
-func TestGetUserBySessionToken(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	mockRep := mocks.NewMockUserRepository(mockCtrl)
-	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
-	}
-
-	sessionToken := "sessionToken"
-	retSession := user.Session{
-		Username:     "test",
-		SessionToken: sessionToken,
-		Expiration:   time.Now().Add(10 * 24 * time.Hour),
-	}
-	retUser := user.User{
-		Username:     "test",
-		HashPassword: "hash",
-		AvatarURL:    "/media/test",
-		FullName:     "Test test",
-		ReserveEmail: "test@test.test",
-		RegisterDate: "",
-		IsAdmin:      false,
-	}
-
-	gomock.InOrder(
-		mockRep.EXPECT().GetSessionBySessionToken(sessionToken).Return(retSession, nil).Times(1),
-		mockRep.EXPECT().GetUserByUsername(retSession.Username).Return(retUser, nil).Times(1),
-	)
-
-	u, err := userUc.GetUserBySessionToken(sessionToken)
-	if err != nil || u != retUser {
-		t.Errorf("Didn't pass valid session token: %v\n", err)
-	}
-
-	mockRep.EXPECT().GetSessionBySessionToken(sessionToken).Return(user.Session{}, user.InvalidSessionError{"session doesn't exist"}).Times(1)
-	_, err = userUc.GetUserBySessionToken(sessionToken)
-	switch err.(type) {
-	case user.InvalidSessionError:
-		break
-	default:
-		t.Errorf("Didn't pass invalid session token: %v\n", err)
-	}
-
-	expiredSession := user.Session{
-		Username:     "test",
-		SessionToken: sessionToken,
-		Expiration:   time.Now().AddDate(0, 0, -1),
-	}
-	mockRep.EXPECT().GetSessionBySessionToken(sessionToken).Return(expiredSession, nil).Times(1)
-	_, err = userUc.GetUserBySessionToken(sessionToken)
-	switch err.(type) {
-	case user.InvalidSessionError:
-		break
-	default:
-		t.Errorf("Didn't pass expired token: %v\n", err)
-	}
-
-	gomock.InOrder(
-		mockRep.EXPECT().GetSessionBySessionToken(sessionToken).Return(retSession, nil).Times(1),
-		mockRep.EXPECT().GetUserByUsername(retSession.Username).Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1),
-	)
-	_, err = userUc.GetUserBySessionToken(sessionToken)
-	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid user: %v\n", err)
@@ -211,9 +167,11 @@ func TestSignUp(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
 
 	u := user.UserSignUp{
@@ -239,7 +197,7 @@ func TestSignUp(t *testing.T) {
 	}
 	err = userUc.SignUp(incorrectUsername)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case user.InvalidUsernameError:
 		break
 	default:
 		t.Errorf("Didn't pass incorrect username: %v\n", err)
@@ -254,16 +212,16 @@ func TestSignUp(t *testing.T) {
 	}
 	err = userUc.SignUp(incorrectPassword)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case user.WeakPasswordError:
 		break
 	default:
 		t.Errorf("Didn't pass incorrect password: %v\n", err)
 	}
 
-	mockRep.EXPECT().CreateUser(gomock.Any()).Return(user.InvalidUserError{"username exists"}).Times(1)
+	mockRep.EXPECT().CreateUser(gomock.Any()).Return(common.InvalidUserError{"username exists"}).Times(1)
 	err = userUc.SignUp(u)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid user: %v\n", err)
@@ -275,16 +233,18 @@ func TestUpdateUser(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
 
 	username := "test"
 	newData := user.User{
 		Username:     "",
 		HashPassword: "",
-		AvatarURL:    avatarBase64,
+		AvatarURL:    common.NullString{sql.NullString{String: "", Valid: false}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -293,7 +253,7 @@ func TestUpdateUser(t *testing.T) {
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -302,7 +262,7 @@ func TestUpdateUser(t *testing.T) {
 	updUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/someRandomString",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "New Fullname",
 		ReserveEmail: "newtest@test.test",
 		RegisterDate: "",
@@ -311,36 +271,17 @@ func TestUpdateUser(t *testing.T) {
 
 	gomock.InOrder(
 		mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1),
-		mockRep.EXPECT().UpdateUser(username, gomock.Any()).Return(updUser, nil).Times(1),
+		mockRep.EXPECT().UpdateUser(username, updUser).Return(updUser, nil).Times(1),
 	)
 	_, err := userUc.UpdateUser(username, newData)
 	if err != nil {
 		t.Errorf("Didn't pass valid user: %v\n", err)
 	}
 
-	invalidNewData := user.User{
-		Username:     "",
-		HashPassword: "",
-		AvatarURL:    "invalidImage",
-		FullName:     "New Fullname",
-		ReserveEmail: "newtest@test.test",
-		RegisterDate: "",
-		IsAdmin:      false,
-	}
-
-	mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1)
-	_, err = userUc.UpdateUser(username, invalidNewData)
-	switch err.(type) {
-	case user.InvalidImageError:
-		break
-	default:
-		t.Errorf("Didn't pass invalid image: %v\n", err)
-	}
-
-	mockRep.EXPECT().GetUserByUsername(username).Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
+	mockRep.EXPECT().GetUserByUsername(username).Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
 	_, err = userUc.UpdateUser(username, newData)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid username: %v\n", err)
@@ -348,14 +289,67 @@ func TestUpdateUser(t *testing.T) {
 
 	gomock.InOrder(
 		mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1),
-		mockRep.EXPECT().UpdateUser(username, gomock.Any()).Return(user.User{}, user.InvalidUserError{"username"}).Times(1),
+		mockRep.EXPECT().UpdateUser(username, updUser).Return(user.User{}, common.InvalidUserError{"username"}).Times(1),
 	)
 	_, err = userUc.UpdateUser(username, newData)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid update: %v\n", err)
+	}
+
+}
+
+func TestUpdateAvatar(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
+	userUc := UserUseCase{
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
+	}
+
+	username := "test"
+	retUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+	updUser := user.User{
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/randomString", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	gomock.InOrder(
+		mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1),
+		mockRep.EXPECT().UpdateAvatar(username, gomock.Any()).Return(updUser, nil).Times(1),
+	)
+	_, err := userUc.UpdateAvatar(username, avatarBase64)
+	if err != nil {
+		t.Errorf("Didn't pass valid user: %v\n", err)
+	}
+
+	invalidAvatarURL := "invalidavatarurl"
+	mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1)
+	_, err = userUc.UpdateAvatar(username, invalidAvatarURL)
+	switch err.(type) {
+	case common.InvalidImageError:
+		break
+	default:
+		t.Errorf("Didn't pass invalid username: %v\n", err)
 	}
 
 }
@@ -365,15 +359,18 @@ func TestGetUserByUsername(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
+
 	username := "test"
 	retUser := user.User{
 		Username:     "test",
 		HashPassword: "hash",
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -386,24 +383,65 @@ func TestGetUserByUsername(t *testing.T) {
 		t.Errorf("Didn't pass valid user: %v\n", err)
 	}
 
-	mockRep.EXPECT().GetUserByUsername(username).Return(user.User{}, user.InvalidUserError{"user doesn't exist"}).Times(1)
+	mockRep.EXPECT().GetUserByUsername(username).Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
 	_, err = userUc.GetUserByUsername(username)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid user: %v\n", err)
 	}
 }
 
+func TestGetUserById(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
+	userUc := UserUseCase{
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
+	}
+
+	userId := 1
+	retUser := user.User{
+		Id:           1,
+		Username:     "test",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	mockRep.EXPECT().GetUserById(userId).Return(retUser, nil).Times(1)
+	u, err := userUc.GetUserById(userId)
+	if err != nil || u != retUser {
+		t.Errorf("Didn't pass valid user: %v\n", err)
+	}
+
+	mockRep.EXPECT().GetUserById(userId).Return(user.User{}, common.InvalidUserError{"user doesn't exist"}).Times(1)
+	_, err = userUc.GetUserById(userId)
+	switch err.(type) {
+	case common.InvalidUserError:
+		break
+	default:
+		t.Errorf("Didn't pass invalid user: %v\n", err)
+	}
+}
 func TestChangePassword(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
+	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
-		Config:     config,
+		Repository:     mockRep,
+		SessionManager: mockSession,
+		Config:         config,
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte("StrongPassword1"), bcrypt.DefaultCost)
@@ -413,7 +451,7 @@ func TestChangePassword(t *testing.T) {
 	sessionUser := user.User{
 		Username:     "test",
 		HashPassword: string(hashPSWD),
-		AvatarURL:    "/media/test",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
 		FullName:     "Test test",
 		ReserveEmail: "test@test.test",
 		RegisterDate: "",
@@ -430,10 +468,10 @@ func TestChangePassword(t *testing.T) {
 		t.Errorf("Didn't pass valid change: %v\n", err)
 	}
 
-	mockRep.EXPECT().ChangePassword(sessionUser.Username, gomock.Any()).Return(user.InvalidUserError{"user doesn't exist"}).Times(1)
+	mockRep.EXPECT().ChangePassword(sessionUser.Username, gomock.Any()).Return(common.InvalidUserError{"user doesn't exist"}).Times(1)
 	err = userUc.ChangePassword(sessionUser, newPSWD)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid user: %v\n", err)
@@ -445,7 +483,7 @@ func TestChangePassword(t *testing.T) {
 	}
 	err = userUc.ChangePassword(sessionUser, newInvalidPSWD)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid new password: %v\n", err)
@@ -457,7 +495,7 @@ func TestChangePassword(t *testing.T) {
 	}
 	err = userUc.ChangePassword(sessionUser, newPSWDInvalidOld)
 	switch err.(type) {
-	case user.InvalidUserError:
+	case common.InvalidUserError:
 		break
 	default:
 		t.Errorf("Didn't pass invalid old password: %v\n", err)

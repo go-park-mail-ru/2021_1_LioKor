@@ -1,8 +1,14 @@
 package usecase
 
 import (
+	"context"
+	"database/sql"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"liokor_mail/internal/pkg/common"
+	session "liokor_mail/internal/pkg/common/protobuf_sessions"
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/user/validators"
 	"log"
@@ -12,8 +18,9 @@ import (
 )
 
 type UserUseCase struct {
-	Repository user.UserRepository
-	Config     common.Config
+	Repository     user.UserRepository
+	SessionManager session.IsAuthClient
+	Config         common.Config
 }
 
 func (uc *UserUseCase) Login(credentials user.Credentials) error {
@@ -25,56 +32,67 @@ func (uc *UserUseCase) Login(credentials user.Credentials) error {
 	err = bcrypt.CompareHashAndPassword([]byte(loginUser.HashPassword), []byte(credentials.Password))
 
 	if err != nil {
-		return user.InvalidUserError{"Invalid credentials"}
+		return common.InvalidUserError{"Invalid credentials"}
 	}
 
 	return nil
 }
 
 func (uc *UserUseCase) Logout(sessionToken string) error {
-	return uc.Repository.RemoveSession(sessionToken)
+	_, err := uc.SessionManager.Delete(
+		context.Background(),
+		&session.SessionToken{
+			SessionToken: sessionToken,
+		},
+	)
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.NotFound:
+				return common.InvalidSessionError{Message: e.Message()}
+			}
+		}
+		return err
+	}
+
+	return nil
 }
 
-func (uc *UserUseCase) CreateSession(username string) (user.SessionToken, error) {
-	sessionToken := user.SessionToken{
-		common.GenerateRandomString(),
-		time.Now().Add(10 * 24 * time.Hour),
+func (uc *UserUseCase) CreateSession(username string) (common.Session, error) {
+	sessionUser, err := uc.Repository.GetUserByUsername(username)
+	if err != nil {
+		return common.Session{}, err
 	}
 
-	err := uc.Repository.CreateSession(user.Session{
-		username,
-		sessionToken.Value,
-		sessionToken.Expiration,
-	})
+	newSession := session.Session{
+		UserId:       int32(sessionUser.Id),
+		SessionToken: common.GenerateRandomString(),
+		Expiration:   timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
+	}
+
+	s, err := uc.SessionManager.Create(
+		context.Background(),
+		&newSession,
+	)
 
 	if err != nil {
-		return user.SessionToken{}, err
+		return common.Session{}, err
 	}
 
-	return sessionToken, nil
-}
-
-func (uc *UserUseCase) GetUserBySessionToken(sessionToken string) (user.User, error) {
-	session, err := uc.Repository.GetSessionBySessionToken(sessionToken)
-	if err != nil {
-		return user.User{}, err
-	}
-
-	if session.Expiration.Before(time.Now()) {
-		return user.User{}, user.InvalidSessionError{"session token expired"}
-	}
-
-	sessionUser, err := uc.Repository.GetUserByUsername(session.Username)
-	if err != nil {
-		return user.User{}, err
-	}
-
-	return sessionUser, nil
+	return common.Session{
+		UserId:       int(s.UserId),
+		SessionToken: s.SessionToken,
+		Expiration:   s.Expiration.AsTime(),
+	}, nil
 }
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
-	if !validators.ValidateUsername(newUser.Username) || !validators.ValidatePassword(newUser.Password) {
-		return user.InvalidUserError{"invalid username or password"}
+
+	if !validators.ValidateUsername(newUser.Username) {
+		return user.InvalidUsernameError{"invalid username"}
+	}
+	if !validators.ValidatePassword(newUser.Password) {
+		return user.WeakPasswordError{"password is too weak"}
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
@@ -86,7 +104,7 @@ func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 		0,
 		newUser.Username,
 		string(hashPSWD),
-		newUser.AvatarURL,
+		common.NullString{sql.NullString{String: newUser.AvatarURL, Valid: true}},
 		newUser.FullName,
 		newUser.ReserveEmail,
 		time.Now().String(),
@@ -104,22 +122,6 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 	if err != nil {
 		return user.User{}, err
 	}
-	if newData.AvatarURL != sessionUser.AvatarURL {
-		if strings.HasPrefix(newData.AvatarURL, "data:") {
-			avatarFileName := common.GenerateRandomString()
-			pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath+avatarFileName, newData.AvatarURL, 500)
-			if err != nil {
-				log.Println(err.Error())
-				return sessionUser, user.InvalidImageError{"invalid image"}
-			}
-			if len(sessionUser.AvatarURL) > 0 {
-				_ = os.Remove(sessionUser.AvatarURL)
-			}
-			sessionUser.AvatarURL = pathToAvatar
-		} else {
-			return sessionUser, user.InvalidImageError{"invalid image"}
-		}
-	}
 	if newData.FullName != sessionUser.FullName {
 		sessionUser.FullName = newData.FullName
 	}
@@ -128,6 +130,35 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 	}
 
 	sessionUser, err = uc.Repository.UpdateUser(username, sessionUser)
+	if err != nil {
+		return user.User{}, err
+	}
+	return sessionUser, nil
+}
+
+func (uc *UserUseCase) UpdateAvatar(username string, newAvatar string) (user.User, error) {
+	sessionUser, err := uc.Repository.GetUserByUsername(username)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	if strings.HasPrefix(newAvatar, "data:") {
+		avatarFileName := common.GenerateRandomString()
+		pathToAvatar, err := common.DataURLToFile(uc.Config.AvatarStoragePath+avatarFileName, newAvatar, 500)
+		if err != nil {
+			log.Println(err.Error())
+			return sessionUser, common.InvalidImageError{"invalid image"}
+		}
+		if len(sessionUser.AvatarURL.String) > 0 {
+			_ = os.Remove(sessionUser.AvatarURL.String)
+		}
+		sessionUser.AvatarURL.String = pathToAvatar
+		sessionUser.AvatarURL.Valid = true
+	} else {
+		return sessionUser, common.InvalidImageError{"invalid image"}
+	}
+
+	sessionUser, err = uc.Repository.UpdateAvatar(username, sessionUser.AvatarURL)
 	if err != nil {
 		return user.User{}, err
 	}
@@ -143,15 +174,24 @@ func (uc *UserUseCase) GetUserByUsername(username string) (user.User, error) {
 	return requestedUser, nil
 }
 
+func (uc *UserUseCase) GetUserById(id int) (user.User, error) {
+	requestedUser, err := uc.Repository.GetUserById(id)
+	if err != nil {
+		return user.User{}, err
+	}
+
+	return requestedUser, nil
+}
+
 func (uc *UserUseCase) ChangePassword(sessionUser user.User, changePSWD user.ChangePassword) error {
 	if !validators.ValidatePassword(changePSWD.NewPassword) {
-		return user.InvalidUserError{"invalid password"}
+		return common.InvalidUserError{"invalid password"}
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(sessionUser.HashPassword), []byte(changePSWD.OldPassword))
 
 	if err != nil {
-		return user.InvalidUserError{"Invalid password"}
+		return common.InvalidUserError{"Invalid password"}
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte(changePSWD.NewPassword), bcrypt.DefaultCost)
