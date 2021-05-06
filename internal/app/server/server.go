@@ -86,14 +86,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	e := echo.New()
 
-	var configMetrics = echoPrometheus.NewConfig()
-	configMetrics.Buckets = []float64{
-		0.01,   // 10ms
-		0.1,    // 100ms
-		0.5,    // 500ms
-		1,      // 1s
-	}
-	e.Use(echoPrometheus.MetricsMiddlewareWithConfig(configMetrics))
+	e.Use(echoPrometheus.MetricsMiddleware())
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	isAuth := middlewareHelpers.AuthMiddleware{userUc, sessManager}
