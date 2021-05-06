@@ -4,6 +4,7 @@ import (
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
 	"liokor_mail/internal/pkg/user"
+	userRep "liokor_mail/internal/pkg/user/repository"
 	"testing"
 	"time"
 )
@@ -17,13 +18,48 @@ var dbConfig = common.Config{
 	DBConnectTimeout: 10,
 }
 
-var owner = user.User{
-	Id:       1,
-	Username: "liokor@liokor.ru",
-}
-var other = user.User{
-	Id:       1,
-	Username: "newTestUser@liokor.ru",
+var owner user.User
+var other user.User
+var folder mail.Folder
+var dialogues []mail.Dialogue
+
+
+func TestCreateUsers(t *testing.T) {
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	defer dbInstance.Close()
+
+	ur := userRep.PostgresUserRepository{
+		dbInstance,
+	}
+
+	randomString := common.GenerateRandomString()
+
+	err = ur.CreateUser(user.User{
+			Username:     randomString[:8],
+			HashPassword: "hashPassword",
+	})
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	err = ur.CreateUser(user.User{
+		Username:     randomString[8:16],
+		HashPassword: "hashPassword",
+	})
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	owner, err = ur.GetUserByUsername(randomString[:8])
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	other, err = ur.GetUserByUsername(randomString[8:16])
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+
 }
 
 func TestAddMail(t *testing.T) {
@@ -96,7 +132,7 @@ func TestGetDialoguesForUser(t *testing.T) {
 		dbInstance,
 	}
 
-	dialogues, err := mailRep.GetDialoguesForUser(owner.Username, 10, "", 0, "@liokor.ru")
+	dialogues, err = mailRep.GetDialoguesForUser(owner.Username, 10, "", 0, "@liokor.ru")
 	if err != nil {
 		t.Errorf("Didn't pass valid get dialogues: %v\n", err)
 	}
@@ -149,7 +185,7 @@ func TestCreateFolder(t *testing.T) {
 		dbInstance,
 	}
 
-	_, err = mailRep.CreateFolder(owner.Id, common.GenerateRandomString())
+	folder, err = mailRep.CreateFolder(owner.Id, common.GenerateRandomString()[:8])
 
 	if err != nil {
 		t.Errorf("Didn't pass valid creating folder: %v\n", err)
@@ -175,7 +211,7 @@ func TestGetFolders(t *testing.T) {
 		dbInstance,
 	}
 
-	folders, err := mailRep.GetFolders(1)
+	folders, err := mailRep.GetFolders(owner.Id)
 	if err != nil {
 		t.Errorf("Error: %v\n", err)
 	}
@@ -193,22 +229,41 @@ func TestAddDialogueToFolder(t *testing.T) {
 		dbInstance,
 	}
 
-	err = mailRep.AddDialogueToFolder(owner.Username, 1, 1)
+	err = mailRep.AddDialogueToFolder(owner.Username, folder.Id, dialogues[0].Id)
 	if err != nil {
 		t.Errorf("Didn't pass valid adding dialogues to folder: %v\n", err)
 	}
 
-	err = mailRep.AddDialogueToFolder(owner.Username, 0, 1)
+	err = mailRep.AddDialogueToFolder(owner.Username, 0, dialogues[0].Id)
 	if err != nil {
 		t.Errorf("Didn't pass valid adding dialogues to global folder: %v\n", err)
 	}
 
-	err = mailRep.AddDialogueToFolder(owner.Username, -1, 1)
+	err = mailRep.AddDialogueToFolder(owner.Username, -1, dialogues[0].Id)
 	switch err.(type) {
 	case mail.InvalidEmailError:
 		break
 	default:
 		t.Errorf("Added dialogue to non existing folder: %v\n", err)
 	}
+}
 
+func TestRemoveUsers(t *testing.T) {
+	dbInstance, err := common.NewPostgresDataBase(dbConfig)
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	defer dbInstance.Close()
+
+	ur := userRep.PostgresUserRepository{
+		dbInstance,
+	}
+	err = ur.RemoveUser(owner.Username)
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
+	err = ur.RemoveUser(other.Username)
+	if err != nil {
+		t.Fatalf("Database error: %v\n", err)
+	}
 }

@@ -197,7 +197,7 @@ func TestSignUp(t *testing.T) {
 	}
 	err = userUc.SignUp(incorrectUsername)
 	switch err.(type) {
-	case common.InvalidUserError:
+	case user.InvalidUsernameError:
 		break
 	default:
 		t.Errorf("Didn't pass incorrect username: %v\n", err)
@@ -212,7 +212,7 @@ func TestSignUp(t *testing.T) {
 	}
 	err = userUc.SignUp(incorrectPassword)
 	switch err.(type) {
-	case common.InvalidUserError:
+	case user.WeakPasswordError:
 		break
 	default:
 		t.Errorf("Didn't pass incorrect password: %v\n", err)
