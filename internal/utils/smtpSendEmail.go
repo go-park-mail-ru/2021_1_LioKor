@@ -1,16 +1,16 @@
 package utils
 
 import (
-    "fmt"
-    "log"
-    "net"
-    "net/smtp"
-    "bytes"
-    "strings"
-    "crypto/rsa"
-    "errors"
+	"bytes"
+	"crypto/rsa"
+	"errors"
+	"fmt"
+	"log"
+	"net"
+	"net/smtp"
+	"strings"
 
-    "github.com/emersion/go-msgauth/dkim"
+	"github.com/emersion/go-msgauth/dkim"
 )
 
 func SMTPSendMail(from string, to string, subject string, data string, privateKey *rsa.PrivateKey) error {
@@ -37,9 +37,9 @@ func SMTPSendMail(from string, to string, subject string, data string, privateKe
 	} else {
 		r := strings.NewReader(mail)
 		options := &dkim.SignOptions{
-			Domain: "liokor.ru",
+			Domain:   "liokor.ru",
 			Selector: "wolf",
-			Signer: privateKey,
+			Signer:   privateKey,
 		}
 		err = dkim.Sign(&bodyBuffer, r, options)
 		if err != nil {

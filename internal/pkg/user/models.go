@@ -36,6 +36,7 @@ type ChangePassword struct {
 type InvalidUsernameError struct {
 	Message string
 }
+
 func (e InvalidUsernameError) Error() string {
 	return e.Message
 }
@@ -43,6 +44,7 @@ func (e InvalidUsernameError) Error() string {
 type WeakPasswordError struct {
 	Message string
 }
+
 func (e WeakPasswordError) Error() string {
 	return e.Message
 }

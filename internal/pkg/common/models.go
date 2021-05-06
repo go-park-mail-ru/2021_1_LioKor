@@ -37,7 +37,6 @@ type Session struct {
 	Expiration   time.Time
 }
 
-
 type InvalidSessionError struct {
 	Message string
 }

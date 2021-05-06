@@ -10,9 +10,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"liokor_mail/internal/pkg/common"
 	session "liokor_mail/internal/pkg/common/protobuf_sessions"
+	sMocks "liokor_mail/internal/pkg/common/protobuf_sessions/mocks"
 	"liokor_mail/internal/pkg/user"
 	mocks "liokor_mail/internal/pkg/user/mocks"
-	sMocks "liokor_mail/internal/pkg/common/protobuf_sessions/mocks"
 	"testing"
 	"time"
 )
@@ -30,9 +30,9 @@ func TestLogin(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	//Testing valid credentials
@@ -95,20 +95,20 @@ func TestLogout(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	sessionToken := "sessionToken"
 
-	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{ SessionToken: sessionToken }).Return(&session.Empty{}, nil).Times(1)
+	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{SessionToken: sessionToken}).Return(&session.Empty{}, nil).Times(1)
 	err := userUc.Logout(sessionToken)
 	if err != nil {
 		t.Errorf("Didn't pass valid session token: %v\n", err)
 	}
 
-	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{ SessionToken: sessionToken }).Return(&session.Empty{}, status.Error(codes.NotFound, "Not found")).Times(1)
+	mockSession.EXPECT().Delete(gomock.Any(), &session.SessionToken{SessionToken: sessionToken}).Return(&session.Empty{}, status.Error(codes.NotFound, "Not found")).Times(1)
 	err = userUc.Logout(sessionToken)
 	switch err.(type) {
 	case common.InvalidSessionError:
@@ -125,19 +125,19 @@ func TestCreateSession(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 	sessionUser := user.User{
-		Id : 1,
+		Id:       1,
 		Username: "test",
 	}
 
-	newSession:= session.Session{
-		UserId: int32(sessionUser.Id),
+	newSession := session.Session{
+		UserId:       int32(sessionUser.Id),
 		SessionToken: common.GenerateRandomString(),
-		Expiration: timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
+		Expiration:   timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
 	}
 
 	gomock.InOrder(
@@ -162,7 +162,6 @@ func TestCreateSession(t *testing.T) {
 	}
 }
 
-
 func TestSignUp(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -170,9 +169,9 @@ func TestSignUp(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	u := user.UserSignUp{
@@ -236,9 +235,9 @@ func TestUpdateUser(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	username := "test"
@@ -309,9 +308,9 @@ func TestUpdateAvatar(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	username := "test"
@@ -362,9 +361,9 @@ func TestGetUserByUsername(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	username := "test"
@@ -401,14 +400,14 @@ func TestGetUserById(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	userId := 1
 	retUser := user.User{
-		Id : 1,
+		Id:           1,
 		Username:     "test",
 		HashPassword: "hash",
 		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
@@ -440,9 +439,9 @@ func TestChangePassword(t *testing.T) {
 	mockRep := mocks.NewMockUserRepository(mockCtrl)
 	mockSession := sMocks.NewMockIsAuthClient(mockCtrl)
 	userUc := UserUseCase{
-		Repository: mockRep,
+		Repository:     mockRep,
 		SessionManager: mockSession,
-		Config:     config,
+		Config:         config,
 	}
 
 	hashPSWD, err := bcrypt.GenerateFromPassword([]byte("StrongPassword1"), bcrypt.DefaultCost)

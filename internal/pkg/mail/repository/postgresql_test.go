@@ -17,12 +17,12 @@ var dbConfig = common.Config{
 	DBConnectTimeout: 10,
 }
 
-var owner = user.User {
-	Id : 1,
+var owner = user.User{
+	Id:       1,
 	Username: "liokor@liokor.ru",
 }
-var other = user.User {
-	Id : 1,
+var other = user.User{
+	Id:       1,
 	Username: "newTestUser@liokor.ru",
 }
 

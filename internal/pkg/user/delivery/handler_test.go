@@ -37,9 +37,9 @@ func TestAuth(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	retSession := common.Session{
-		UserId: 1,
-		SessionToken:      "session token",
-		Expiration: time.Now().Add(10 * 24 * time.Hour),
+		UserId:       1,
+		SessionToken: "session token",
+		Expiration:   time.Now().Add(10 * 24 * time.Hour),
 	}
 	gomock.InOrder(
 		mockUC.EXPECT().Login(creds).Return(nil).Times(1),
@@ -236,9 +236,9 @@ func TestSignUp(t *testing.T) {
 	echoContext := e.NewContext(req, response)
 
 	retSession := common.Session{
-		UserId: 1,
-		SessionToken:      "sessionToken",
-		Expiration: time.Now().Add(10 * 24 * time.Hour),
+		UserId:       1,
+		SessionToken: "sessionToken",
+		Expiration:   time.Now().Add(10 * 24 * time.Hour),
 	}
 
 	gomock.InOrder(
@@ -414,7 +414,6 @@ func TestUpdateAvatar(t *testing.T) {
 		t.Errorf("Didn't pass username not equal session user: %v\n", err)
 	}
 }
-
 
 func TestChangePassword(t *testing.T) {
 

@@ -10,7 +10,7 @@ type SessionUsecase struct {
 	SessionRepository sessions.SessionRepository
 }
 
-func (uc * SessionUsecase) Create(session common.Session) (common.Session, error) {
+func (uc *SessionUsecase) Create(session common.Session) (common.Session, error) {
 	err := uc.SessionRepository.Create(session)
 
 	if err != nil {
@@ -20,7 +20,7 @@ func (uc * SessionUsecase) Create(session common.Session) (common.Session, error
 	return session, nil
 
 }
-func (uc * SessionUsecase) Get(token string) (common.Session, error) {
+func (uc *SessionUsecase) Get(token string) (common.Session, error) {
 	session, err := uc.SessionRepository.Get(token)
 	if err != nil {
 		return common.Session{}, err
@@ -33,6 +33,6 @@ func (uc * SessionUsecase) Get(token string) (common.Session, error) {
 	return session, nil
 }
 
-func (uc * SessionUsecase) Delete(token string) error {
+func (uc *SessionUsecase) Delete(token string) error {
 	return uc.SessionRepository.Delete(token)
 }

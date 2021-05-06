@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-
 var dbConfig = common.Config{
 	DBHost:           "127.0.0.1",
 	DBPort:           5432,
@@ -31,7 +30,7 @@ func TestCreateSessionSuccess(t *testing.T) {
 	expire, _ := time.Parse("2006-01-02T15:04:05Z", "2021-05-11T15:04:05Z")
 
 	session := common.Session{
-		UserId:     1,
+		UserId:       1,
 		SessionToken: "sessionToken",
 		Expiration:   expire,
 	}
@@ -54,7 +53,7 @@ func TestCreateSessionFail(t *testing.T) {
 	}
 
 	invalidSession := common.Session{
-		UserId:     1,
+		UserId:       1,
 		SessionToken: "sessionToken",
 		Expiration:   time.Now(),
 	}
@@ -67,7 +66,7 @@ func TestCreateSessionFail(t *testing.T) {
 	}
 
 	invalidSession = common.Session{
-		UserId:     0,
+		UserId:       0,
 		SessionToken: "uniqueSessionToken",
 		Expiration:   time.Now(),
 	}

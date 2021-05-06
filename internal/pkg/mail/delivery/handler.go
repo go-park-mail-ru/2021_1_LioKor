@@ -119,7 +119,7 @@ func (h *MailHandler) CreateFolder(c echo.Context) error {
 	if !ok {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
-	var folderName struct{
+	var folderName struct {
 		FolderName string `json:"name"`
 	}
 	defer c.Request().Body.Close()

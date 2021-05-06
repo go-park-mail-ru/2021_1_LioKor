@@ -178,7 +178,6 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, sessionUser)
 }
 
-
 func (h *UserHandler) UpdateAvatar(c echo.Context) error {
 	sUser := c.Get("sessionUser")
 	sessionUser, ok := sUser.(user.User)

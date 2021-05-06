@@ -16,14 +16,13 @@ type PostgresMailRepository struct {
 func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string) ([]mail.Dialogue, error) {
 	find = "%" + find + "%"
 
-
-	query := "SELECT d.id, "+
-		"d.other AS email, "+
-		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d "+
-		"JOIN mails m ON d.last_mail_id=m.id "+
-		"LEFT JOIN users u ON "+
-		"LOWER(SPLIT_PART(d.other, $4, 1))=LOWER(u.username) "+
-		"WHERE d.owner=$1 AND "+
+	query := "SELECT d.id, " +
+		"d.other AS email, " +
+		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d " +
+		"JOIN mails m ON d.last_mail_id=m.id " +
+		"LEFT JOIN users u ON " +
+		"LOWER(SPLIT_PART(d.other, $4, 1))=LOWER(u.username) " +
+		"WHERE d.owner=$1 AND " +
 		"d.other LIKE $3 AND d.folder"
 
 	if folderId == 0 {
@@ -130,7 +129,7 @@ func (mr *PostgresMailRepository) AddMail(mail mail.Mail) (int, error) {
 		mail.Body,
 	).Scan(
 		&mailId,
-		)
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -172,15 +171,15 @@ func (mr *PostgresMailRepository) CreateFolder(ownerId int, folderName string) (
 	var folder mail.Folder
 	err := mr.DBInstance.DBConn.QueryRow(
 		context.Background(),
-		"INSERT INTO folders(folder_name, owner) " +
+		"INSERT INTO folders(folder_name, owner) "+
 			"VALUES($2, $1) RETURNING *;",
-			ownerId,
-			folderName,
-		).Scan(
-			&folder.Id,
-			&folder.FolderName,
-			&folder.Owner,
-			)
+		ownerId,
+		folderName,
+	).Scan(
+		&folder.Id,
+		&folder.FolderName,
+		&folder.Owner,
+	)
 	if err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "folders_owner_fkey" {
@@ -192,13 +191,13 @@ func (mr *PostgresMailRepository) CreateFolder(ownerId int, folderName string) (
 	return folder, nil
 }
 
-func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error){
+func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
-		"SELECT * FROM folders " +
+		"SELECT * FROM folders "+
 			"WHERE owner=$1;",
-			ownerId,
-		)
+		ownerId,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +210,7 @@ func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error)
 			&folder.Id,
 			&folder.FolderName,
 			&folder.Owner,
-			)
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +219,7 @@ func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error)
 	return folders, nil
 }
 
-func (mr *PostgresMailRepository) AddDialogueToFolder(owner string, folderId, dialogueId int) error{
+func (mr *PostgresMailRepository) AddDialogueToFolder(owner string, folderId, dialogueId int) error {
 
 	query := "UPDATE dialogues SET folder="
 	if folderId == 0 {

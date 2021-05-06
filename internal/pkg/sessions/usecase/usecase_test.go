@@ -18,9 +18,9 @@ func TestCreate(t *testing.T) {
 	}
 
 	s := common.Session{
-		UserId: 1,
+		UserId:       1,
 		SessionToken: "sessionToken",
-		Expiration: time.Now().Add(10 * 24 * time.Hour),
+		Expiration:   time.Now().Add(10 * 24 * time.Hour),
 	}
 
 	sessionRep.EXPECT().Create(s).Return(nil).Times(1)
@@ -49,9 +49,9 @@ func TestGet(t *testing.T) {
 	}
 
 	s := common.Session{
-		UserId: 1,
+		UserId:       1,
 		SessionToken: "sessionToken",
-		Expiration: time.Now().Add(10 * 24 * time.Hour),
+		Expiration:   time.Now().Add(10 * 24 * time.Hour),
 	}
 
 	sessionRep.EXPECT().Get(s.SessionToken).Return(s, nil).Times(1)

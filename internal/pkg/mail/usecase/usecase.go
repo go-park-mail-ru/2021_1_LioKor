@@ -10,9 +10,9 @@ import (
 
 	"crypto/rsa"
 
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/parser"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type MailUseCase struct {
@@ -96,7 +96,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	return email, nil
 }
 
-func (uc *MailUseCase) GetFolders(owner int)([]mail.Folder, error) {
+func (uc *MailUseCase) GetFolders(owner int) ([]mail.Folder, error) {
 	folders, err := uc.Repository.GetFolders(owner)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (uc *MailUseCase) GetFolders(owner int)([]mail.Folder, error) {
 	return folders, nil
 }
 
-func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, error){
+func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, error) {
 	folder, err := uc.Repository.CreateFolder(owner, folderName)
 	if err != nil {
 		return mail.Folder{}, err
@@ -112,7 +112,7 @@ func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, 
 	return folder, nil
 }
 
-func (uc *MailUseCase) UpdateFolder(owner string, folderId int, dialogueId int) error{
+func (uc *MailUseCase) UpdateFolder(owner string, folderId int, dialogueId int) error {
 	owner += "@" + uc.Config.MailDomain
 
 	err := uc.Repository.AddDialogueToFolder(owner, folderId, dialogueId)

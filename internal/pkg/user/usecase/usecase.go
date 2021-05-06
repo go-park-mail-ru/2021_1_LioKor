@@ -44,7 +44,7 @@ func (uc *UserUseCase) Logout(sessionToken string) error {
 		&session.SessionToken{
 			SessionToken: sessionToken,
 		},
-		)
+	)
 	if err != nil {
 		if e, ok := status.FromError(err); ok {
 			switch e.Code() {
@@ -64,28 +64,27 @@ func (uc *UserUseCase) CreateSession(username string) (common.Session, error) {
 		return common.Session{}, err
 	}
 
-	newSession:= session.Session{
-		UserId: int32(sessionUser.Id),
+	newSession := session.Session{
+		UserId:       int32(sessionUser.Id),
 		SessionToken: common.GenerateRandomString(),
-		Expiration: timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
+		Expiration:   timestamppb.New(time.Now().Add(10 * 24 * time.Hour)),
 	}
 
 	s, err := uc.SessionManager.Create(
 		context.Background(),
 		&newSession,
-		)
+	)
 
 	if err != nil {
 		return common.Session{}, err
 	}
 
 	return common.Session{
-		UserId: int(s.UserId),
+		UserId:       int(s.UserId),
 		SessionToken: s.SessionToken,
-		Expiration: s.Expiration.AsTime(),
+		Expiration:   s.Expiration.AsTime(),
 	}, nil
 }
-
 
 func (uc *UserUseCase) SignUp(newUser user.UserSignUp) error {
 
@@ -156,9 +155,8 @@ func (uc *UserUseCase) UpdateAvatar(username string, newAvatar string) (user.Use
 		sessionUser.AvatarURL.String = pathToAvatar
 		sessionUser.AvatarURL.Valid = true
 	} else {
-			return sessionUser, common.InvalidImageError{"invalid image"}
+		return sessionUser, common.InvalidImageError{"invalid image"}
 	}
-
 
 	sessionUser, err = uc.Repository.UpdateAvatar(username, sessionUser.AvatarURL)
 	if err != nil {
