@@ -106,8 +106,10 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	//p := prometheus.NewPrometheus("echo", nil)
 	//p.Use(e)
 
-	e.Static("/media", "media")
-	e.Static("/swagger", "swagger")
+	if config.Debug {
+		e.Static("/media", "media")
+		e.Static("/swagger", "swagger")
+	}
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout, isAuth.IsAuth)
