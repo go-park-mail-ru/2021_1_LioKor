@@ -33,7 +33,9 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 		folder = 0
 	}
 
-	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder)
+	since := c.QueryParam("since")
+
+	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, since)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

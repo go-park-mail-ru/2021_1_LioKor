@@ -22,9 +22,9 @@ type MailUseCase struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int) ([]mail.Dialogue, error) {
+func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int, since string) ([]mail.Dialogue, error) {
 	username += "@" + uc.Config.MailDomain
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain))
+	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain), since)
 	if err != nil {
 		return nil, err
 	}

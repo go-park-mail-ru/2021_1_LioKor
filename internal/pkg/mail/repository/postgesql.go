@@ -13,7 +13,7 @@ type PostgresMailRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
-func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string) ([]mail.Dialogue, error) {
+func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]mail.Dialogue, error) {
 	find = "%" + find + "%"
 
 	query := "SELECT d.id, " +
@@ -23,12 +23,21 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 		"LEFT JOIN users u ON " +
 		"LOWER(SPLIT_PART(d.other, $4, 1))=LOWER(u.username) " +
 		"WHERE d.owner=$1 AND " +
-		"d.other LIKE $3 AND d.folder"
+		"d.other LIKE $3 AND "
 
+	if since != "" {
+		query += "d.received_date < $5 AND "
+	}
+
+	query += "d.folder"
 	if folderId == 0 {
 		query += " IS NULL "
 	} else {
-		query += "=$5 "
+		if since != "" {
+			query += "=$6 "
+		} else {
+			query += "=$5 "
+		}
 	}
 
 	query += "ORDER BY d.received_date DESC LIMIT $2;"
@@ -36,24 +45,49 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	var rows pgx.Rows
 	var err error
 	if folderId == 0 {
-		rows, err = mr.DBInstance.DBConn.Query(
-			context.Background(),
-			query,
-			username,
-			limit,
-			find,
-			domain,
-		)
+		if since != "" {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				find,
+				domain,
+				since,
+			)
+		} else {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				find,
+				domain,
+			)
+		}
 	} else {
-		rows, err = mr.DBInstance.DBConn.Query(
-			context.Background(),
-			query,
-			username,
-			limit,
-			find,
-			domain,
-			folderId,
-		)
+		if since != "" {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				find,
+				domain,
+				since,
+				folderId,
+			)
+		} else {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				find,
+				domain,
+				folderId,
+			)
+		}
 	}
 
 	if err != nil {
