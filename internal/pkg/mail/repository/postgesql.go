@@ -80,6 +80,20 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	return dialogues, nil
 }
+
+func (mr *PostgresMailRepository) DeleteDialogue(owner string, dialogueId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"DELETE FROM dialogues WHERE id=$1 AND owner=$2;",
+		dialogueId,
+		owner,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (mr *PostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
@@ -256,6 +270,38 @@ func (mr *PostgresMailRepository) AddDialogueToFolder(owner string, folderId, di
 	}
 	if commandTag.RowsAffected() == 0 {
 		return mail.InvalidEmailError{"Dialogue doesn't exist"}
+	}
+	return nil
+}
+
+func (mr *PostgresMailRepository) UpdateFolderName(owner, folderId int, folderName string) (mail.Folder, error) {
+	var folder mail.Folder
+	err := mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		"UPDATE folders SET folder_name=$1 WHERE id=$2 AND owner=$3 RETURNING *;",
+		folderName,
+		folderId,
+		owner,
+	).Scan(
+		&folder.Id,
+		&folder.FolderName,
+		&folder.Owner,
+	)
+	if err != nil {
+		return mail.Folder{}, err
+	}
+	return folder, nil
+}
+
+func (mr *PostgresMailRepository) DeleteFolder(owner, folderId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"DELETE FROM folders WHERE id=$1 AND owner=$2;",
+		folderId,
+		owner,
+	)
+	if err != nil {
+		return err
 	}
 	return nil
 }
