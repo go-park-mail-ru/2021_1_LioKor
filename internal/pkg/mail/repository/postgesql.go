@@ -293,6 +293,19 @@ func (mr *PostgresMailRepository) UpdateFolderName(owner, folderId int, folderNa
 	return folder, nil
 }
 
+func (mr *PostgresMailRepository) ShiftToMainFolderDialogues(owner string, folderId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"UPDATE dialogues SET folder=null WHERE folder=$1 AND owner=$2;",
+		folderId,
+		owner,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (mr *PostgresMailRepository) DeleteFolder(owner, folderId int) error {
 	_, err := mr.DBInstance.DBConn.Exec(
 		context.Background(),

@@ -9,5 +9,5 @@ type MailUseCase interface {
 	CreateFolder(owner int, folderName string) (Folder, error)
 	UpdateFolderPutDialogue(owner string, folderId int, dialogueId int) error
 	UpdateFolderName(owner, folderId int, folderName string) (Folder, error)
-	DeleteFolder(owner, folderId int) error
+	DeleteFolder(ownerName string, owner, folderId int) error
 }

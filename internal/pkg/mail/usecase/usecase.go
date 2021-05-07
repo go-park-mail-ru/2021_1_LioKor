@@ -145,8 +145,14 @@ func (uc *MailUseCase) UpdateFolderName(owner, folderId int, folderName string) 
 	return folder, nil
 }
 
-func (uc *MailUseCase) DeleteFolder(owner, folderId int) error {
-	err := uc.Repository.DeleteFolder(owner, folderId)
+func (uc *MailUseCase) DeleteFolder(ownerName string, owner, folderId int) error {
+	ownerName += "@" + uc.Config.MailDomain
+
+	err := uc.Repository.ShiftToMainFolderDialogues(ownerName, folderId)
+	if err != nil {
+		return err
+	}
+	err = uc.Repository.DeleteFolder(owner, folderId)
 	if err != nil {
 		return err
 	}

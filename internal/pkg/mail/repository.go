@@ -16,6 +16,7 @@ type MailRepository interface {
 	GetFolders(ownerId int) ([]Folder, error)
 	AddDialogueToFolder(owner string, folderId, dialogueId int) error
 	UpdateFolderName(owner, folderId int, folderName string) (Folder, error)
+	ShiftToMainFolderDialogues(owner string, folderId int) error
 	DeleteFolder(owner, folderId int) error
 	UpdateMailStatus(mailId, status int) error
 }

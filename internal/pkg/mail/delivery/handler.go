@@ -215,7 +215,7 @@ func (h *MailHandler) DeleteFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.MailUsecase.DeleteFolder(sessionUser.Id, deleteFolder.FolderId)
+	err = h.MailUsecase.DeleteFolder(sessionUser.Username, sessionUser.Id, deleteFolder.FolderId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
