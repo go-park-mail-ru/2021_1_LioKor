@@ -13,47 +13,107 @@ type PostgresMailRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
-func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string) ([]mail.Dialogue, error) {
-	find = "%" + find + "%"
-
+func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]mail.Dialogue, error) {
 	query := "SELECT d.id, " +
 		"d.other AS email, " +
 		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d " +
 		"JOIN mails m ON d.last_mail_id=m.id " +
 		"LEFT JOIN users u ON " +
-		"LOWER(SPLIT_PART(d.other, $4, 1))=LOWER(u.username) " +
-		"WHERE d.owner=$1 AND " +
-		"d.other LIKE $3 AND d.folder"
+		"LOWER(SPLIT_PART(d.other, $3, 1))=LOWER(u.username) " +
+		"WHERE d.owner=$1"
 
-	if folderId == 0 {
-		query += " IS NULL "
-	} else {
-		query += "=$5 "
+	if since != "" {
+		query += " AND d.received_date < $4"
 	}
 
-	query += "ORDER BY d.received_date DESC LIMIT $2;"
+	if find == "" {
+		query += " AND d.folder"
+		if folderId == 0 {
+			query += " IS NULL"
+		} else {
+			if since != "" {
+				query += "=$5"
+			} else {
+				query += "=$4"
+			}
+		}
+	} else {
+		query += " AND d.other LIKE "
+		if since != "" {
+			query += "$5"
+		} else {
+			query += "$4"
+		}
+	}
+
+	query += " ORDER BY d.received_date DESC LIMIT $2;"
 
 	var rows pgx.Rows
 	var err error
-	if folderId == 0 {
-		rows, err = mr.DBInstance.DBConn.Query(
-			context.Background(),
-			query,
-			username,
-			limit,
-			find,
-			domain,
-		)
+	if find == "" {
+		if folderId == 0 {
+			if since != "" {
+				rows, err = mr.DBInstance.DBConn.Query(
+					context.Background(),
+					query,
+					username,
+					limit,
+					domain,
+					since,
+				)
+			} else {
+				rows, err = mr.DBInstance.DBConn.Query(
+					context.Background(),
+					query,
+					username,
+					limit,
+					domain,
+				)
+			}
+		} else {
+			if since != "" {
+				rows, err = mr.DBInstance.DBConn.Query(
+					context.Background(),
+					query,
+					username,
+					limit,
+					domain,
+					since,
+					folderId,
+				)
+			} else {
+				rows, err = mr.DBInstance.DBConn.Query(
+					context.Background(),
+					query,
+					username,
+					limit,
+					domain,
+					folderId,
+				)
+			}
+		}
 	} else {
-		rows, err = mr.DBInstance.DBConn.Query(
-			context.Background(),
-			query,
-			username,
-			limit,
-			find,
-			domain,
-			folderId,
-		)
+		find = "%" + find + "%"
+		if since != "" {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				domain,
+				since,
+				find,
+			)
+		} else {
+			rows, err = mr.DBInstance.DBConn.Query(
+				context.Background(),
+				query,
+				username,
+				limit,
+				domain,
+				find,
+			)
+		}
 	}
 
 	if err != nil {
@@ -80,6 +140,20 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	return dialogues, nil
 }
+
+func (mr *PostgresMailRepository) DeleteDialogue(owner string, dialogueId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"DELETE FROM dialogues WHERE id=$1 AND owner=$2;",
+		dialogueId,
+		owner,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (mr *PostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
@@ -256,6 +330,51 @@ func (mr *PostgresMailRepository) AddDialogueToFolder(owner string, folderId, di
 	}
 	if commandTag.RowsAffected() == 0 {
 		return mail.InvalidEmailError{"Dialogue doesn't exist"}
+	}
+	return nil
+}
+
+func (mr *PostgresMailRepository) UpdateFolderName(owner, folderId int, folderName string) (mail.Folder, error) {
+	var folder mail.Folder
+	err := mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		"UPDATE folders SET folder_name=$1 WHERE id=$2 AND owner=$3 RETURNING *;",
+		folderName,
+		folderId,
+		owner,
+	).Scan(
+		&folder.Id,
+		&folder.FolderName,
+		&folder.Owner,
+	)
+	if err != nil {
+		return mail.Folder{}, err
+	}
+	return folder, nil
+}
+
+func (mr *PostgresMailRepository) ShiftToMainFolderDialogues(owner string, folderId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"UPDATE dialogues SET folder=null WHERE folder=$1 AND owner=$2;",
+		folderId,
+		owner,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (mr *PostgresMailRepository) DeleteFolder(owner, folderId int) error {
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		"DELETE FROM folders WHERE id=$1 AND owner=$2;",
+		folderId,
+		owner,
+	)
+	if err != nil {
+		return err
 	}
 	return nil
 }

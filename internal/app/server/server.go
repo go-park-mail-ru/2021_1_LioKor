@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
@@ -87,13 +87,13 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	var configMetrics = echoPrometheus.NewConfig()
 	configMetrics.Buckets = []float64{
-		0.001,  // 1ms
-		0.01,   // 10ms
-		0.05,   // 50ms
-		0.1,    // 100ms
-		0.25,   // 250ms
-		0.5,    // 500ms
-		1,      // 1s
+		0.001, // 1ms
+		0.01,  // 10ms
+		0.05,  // 50ms
+		0.1,   // 100ms
+		0.25,  // 250ms
+		0.5,   // 500ms
+		1,     // 1s
 	}
 	e.Use(echoPrometheus.MetricsMiddlewareWithConfig(configMetrics))
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
@@ -121,12 +121,14 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
+	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
 
 	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)
 	e.POST("/email/folder", mailHander.CreateFolder, isAuth.IsAuth)
 	e.PUT("/email/folder", mailHander.UpdateFolder, isAuth.IsAuth)
+	e.DELETE("/email/folder", mailHander.DeleteFolder, isAuth.IsAuth)
 
 	go func() {
 		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
