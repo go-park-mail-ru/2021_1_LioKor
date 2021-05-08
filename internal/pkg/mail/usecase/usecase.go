@@ -5,6 +5,7 @@ import (
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
 	"liokor_mail/internal/utils"
+	"log"
 	"strings"
 	"time"
 
@@ -21,13 +22,23 @@ type MailUseCase struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int) ([]mail.Dialogue, error) {
+func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int, since string) ([]mail.Dialogue, error) {
 	username += "@" + uc.Config.MailDomain
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain))
+	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain), since)
 	if err != nil {
 		return nil, err
 	}
 	return dialogues, nil
+}
+
+func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
+	owner += "@" + uc.Config.MailDomain
+
+	err := uc.Repository.DeleteDialogue(owner, dialogueId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (uc *MailUseCase) GetEmails(username string, email string, last int, amount int) ([]mail.DialogueEmail, error) {
@@ -88,7 +99,11 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
 		if err != nil {
-			err = uc.Repository.UpdateMailStatus(mailId, 0)
+			log.Printf("WARN: Unable to send email to %s\n", email.Recipient)
+			errDb := uc.Repository.UpdateMailStatus(mailId, 0)
+			if errDb != nil {
+				log.Printf("ERROR: Unable to change mail status!\n")
+			}
 			return email, err
 		}
 	}
@@ -112,7 +127,7 @@ func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, 
 	return folder, nil
 }
 
-func (uc *MailUseCase) UpdateFolder(owner string, folderId int, dialogueId int) error {
+func (uc *MailUseCase) UpdateFolderPutDialogue(owner string, folderId int, dialogueId int) error {
 	owner += "@" + uc.Config.MailDomain
 
 	err := uc.Repository.AddDialogueToFolder(owner, folderId, dialogueId)
@@ -120,5 +135,26 @@ func (uc *MailUseCase) UpdateFolder(owner string, folderId int, dialogueId int) 
 		return err
 	}
 	return nil
+}
 
+func (uc *MailUseCase) UpdateFolderName(owner, folderId int, folderName string) (mail.Folder, error) {
+	folder, err := uc.Repository.UpdateFolderName(owner, folderId, folderName)
+	if err != nil {
+		return mail.Folder{}, err
+	}
+	return folder, nil
+}
+
+func (uc *MailUseCase) DeleteFolder(ownerName string, owner, folderId int) error {
+	ownerName += "@" + uc.Config.MailDomain
+
+	err := uc.Repository.ShiftToMainFolderDialogues(ownerName, folderId)
+	if err != nil {
+		return err
+	}
+	err = uc.Repository.DeleteFolder(owner, folderId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

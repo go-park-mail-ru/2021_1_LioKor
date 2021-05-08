@@ -33,12 +33,39 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 		folder = 0
 	}
 
-	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder)
+	since := c.QueryParam("since")
+
+	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, since)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, dialogues)
+}
+
+func (h *MailHandler) DeleteDialogue(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	var deleteDialogue struct {
+		DialogueId int `json:"id"`
+	}
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&deleteDialogue)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.MailUsecase.DeleteDialogue(sessionUser.Username, deleteDialogue.DialogueId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue deleted"})
 }
 
 func (h *MailHandler) GetEmails(c echo.Context) error {
@@ -145,8 +172,9 @@ func (h *MailHandler) UpdateFolder(c echo.Context) error {
 	}
 
 	var updateFolder struct {
-		FolderId   int `json:"folderId"`
-		DialogueId int `json:"dialogueId"`
+		FolderId   int     `json:"folderId"`
+		DialogueId *int    `json:"dialogueId"`
+		FolderName *string `json:"name"`
 	}
 	defer c.Request().Body.Close()
 
@@ -155,10 +183,44 @@ func (h *MailHandler) UpdateFolder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.MailUsecase.UpdateFolder(sessionUser.Username, updateFolder.FolderId, updateFolder.DialogueId)
+	if updateFolder.FolderName != nil {
+		folder, err := h.MailUsecase.UpdateFolderName(sessionUser.Id, updateFolder.FolderId, *updateFolder.FolderName)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		return c.JSON(http.StatusOK, folder)
+	}
+
+	err = h.MailUsecase.UpdateFolderPutDialogue(sessionUser.Username, updateFolder.FolderId, *updateFolder.DialogueId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue was added to folder"})
+}
+
+func (h *MailHandler) DeleteFolder(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	var deleteFolder struct {
+		FolderId int `json:"id"`
+	}
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&deleteFolder)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.MailUsecase.DeleteFolder(sessionUser.Username, sessionUser.Id, deleteFolder.FolderId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Folder deleted"})
 }
