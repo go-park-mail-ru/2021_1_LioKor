@@ -50,7 +50,6 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	var rows pgx.Rows
 	var err error
-	println(query)
 	if find == "" {
 		if folderId == 0 {
 			if since != "" {
