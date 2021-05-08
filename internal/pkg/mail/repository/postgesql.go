@@ -28,7 +28,7 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	if since != "" {
 		query += " AND d.received_date < $5"
 	}
-	println(find)
+
 	if find == "" {
 		query += " AND d.folder"
 		if folderId == 0 {
@@ -46,7 +46,6 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	var rows pgx.Rows
 	var err error
-	println(query)
 	if find == "" {
 		if folderId == 0 {
 			if since != "" {
