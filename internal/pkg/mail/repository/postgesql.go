@@ -14,19 +14,16 @@ type PostgresMailRepository struct {
 }
 
 func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]mail.Dialogue, error) {
-	find = "%" + find + "%"
-
 	query := "SELECT d.id, " +
 		"d.other AS email, " +
 		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d " +
 		"JOIN mails m ON d.last_mail_id=m.id " +
 		"LEFT JOIN users u ON " +
-		"LOWER(SPLIT_PART(d.other, $4, 1))=LOWER(u.username) " +
-		"WHERE d.owner=$1 AND " +
-		"d.other LIKE $3"
+		"LOWER(SPLIT_PART(d.other, $3, 1))=LOWER(u.username) " +
+		"WHERE d.owner=$1"
 
 	if since != "" {
-		query += " AND d.received_date < $5"
+		query += " AND d.received_date < $4"
 	}
 
 	if find == "" {
@@ -35,10 +32,17 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 			query += " IS NULL"
 		} else {
 			if since != "" {
-				query += "=$6"
-			} else {
 				query += "=$5"
+			} else {
+				query += "=$4"
 			}
+		}
+	} else {
+		query += " AND d.other LIKE "
+		if since != "" {
+			query += "$5"
+		} else {
+			query += "$4"
 		}
 	}
 
@@ -46,6 +50,7 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 
 	var rows pgx.Rows
 	var err error
+	println(query)
 	if find == "" {
 		if folderId == 0 {
 			if since != "" {
@@ -54,7 +59,6 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 					query,
 					username,
 					limit,
-					find,
 					domain,
 					since,
 				)
@@ -64,7 +68,6 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 					query,
 					username,
 					limit,
-					find,
 					domain,
 				)
 			}
@@ -75,7 +78,6 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 					query,
 					username,
 					limit,
-					find,
 					domain,
 					since,
 					folderId,
@@ -86,22 +88,22 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 					query,
 					username,
 					limit,
-					find,
 					domain,
 					folderId,
 				)
 			}
 		}
 	} else {
+		find = "%" + find + "%"
 		if since != "" {
 			rows, err = mr.DBInstance.DBConn.Query(
 				context.Background(),
 				query,
 				username,
 				limit,
-				find,
 				domain,
 				since,
+				find,
 			)
 		} else {
 			rows, err = mr.DBInstance.DBConn.Query(
@@ -109,8 +111,8 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 				query,
 				username,
 				limit,
-				find,
 				domain,
+				find,
 			)
 		}
 	}
