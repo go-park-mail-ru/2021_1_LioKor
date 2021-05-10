@@ -121,6 +121,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
+	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)
 	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)

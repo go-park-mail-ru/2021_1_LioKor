@@ -6,6 +6,7 @@ import (
 
 type MailRepository interface {
 	GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]Dialogue, error)
+	CreateDialogue(owner, with string) (Dialogue, error)
 	DeleteDialogue(owner string, dialogueId int) error
 	GetMailsForUser(username string, email string, limit int, last int) ([]DialogueEmail, error)
 	AddMail(mail Mail) (int, error)

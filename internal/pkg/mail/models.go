@@ -27,7 +27,7 @@ type Dialogue struct {
 	Id            int               `json:"id"`
 	Email         string            `json:"username"`
 	AvatarURL     common.NullString `json:"avatarUrl"`
-	Body          string            `json:"body"`
+	Body          common.NullString `json:"body"`
 	Received_date time.Time         `json:"time"`
 	Unread        int               `json:"new"`
 	Owner         string

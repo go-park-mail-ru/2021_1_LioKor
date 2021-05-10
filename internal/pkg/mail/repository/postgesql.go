@@ -16,8 +16,8 @@ type PostgresMailRepository struct {
 func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]mail.Dialogue, error) {
 	query := "SELECT d.id, " +
 		"d.other AS email, " +
-		"u.avatar_url, m.body, m.received_date, d.unread FROM dialogues d " +
-		"JOIN mails m ON d.last_mail_id=m.id " +
+		"u.avatar_url, m.body, d.received_date, d.unread FROM dialogues d " +
+		"LEFT JOIN mails m ON d.last_mail_id=m.id " +
 		"LEFT JOIN users u ON " +
 		"LOWER(SPLIT_PART(d.other, $3, 1))=LOWER(u.username) " +
 		"WHERE d.owner=$1"
@@ -139,6 +139,27 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	}
 
 	return dialogues, nil
+}
+
+func (mr *PostgresMailRepository) CreateDialogue(owner, with string) (mail.Dialogue, error) {
+	var dialogue mail.Dialogue
+	err := mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		"INSERT INTO dialogues(owner, other) values ($1, $2) RETURNING id;",
+		owner,
+		with,
+	).Scan(
+		&dialogue.Id,
+	)
+	if err != nil {
+		if pgerr, ok := err.(*pgconn.PgError); ok {
+			if pgerr.ConstraintName == "folders_owner_fkey" {
+				return mail.Dialogue{}, common.InvalidUserError{"User doesn't exist"}
+			}
+		}
+		return mail.Dialogue{}, err
+	}
+	return dialogue, nil
 }
 
 func (mr *PostgresMailRepository) DeleteDialogue(owner string, dialogueId int) error {
