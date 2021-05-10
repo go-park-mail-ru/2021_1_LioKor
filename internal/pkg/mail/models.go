@@ -37,6 +37,7 @@ type Folder struct {
 	Id         int    `json:"id"`
 	FolderName string `json:"name"`
 	Owner      int    `json:"owner"`
+	Unread     int    `json:"new"`
 }
 
 type MessageResponse struct {
