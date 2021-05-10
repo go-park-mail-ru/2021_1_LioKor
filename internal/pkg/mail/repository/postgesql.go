@@ -289,8 +289,8 @@ func (mr *PostgresMailRepository) CreateFolder(ownerId int, folderName string) (
 func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
-		"SELECT folders.*, SUM(dialogues.unread) "+
-			"FROM folders JOIN dialogues ON dialogues.folder=folders.id "+
+		"SELECT folders.*, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) "+
+			"FROM folders LEFT JOIN dialogues ON dialogues.folder=folders.id "+
 			"WHERE folders.owner=$1 "+
 			"GROUP BY folders.id;",
 		ownerId,
