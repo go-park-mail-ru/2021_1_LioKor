@@ -27,7 +27,7 @@ type Dialogue struct {
 	Id            int               `json:"id"`
 	Email         string            `json:"username"`
 	AvatarURL     common.NullString `json:"avatarUrl"`
-	Body          string            `json:"body"`
+	Body          common.NullString `json:"body"`
 	Received_date time.Time         `json:"time"`
 	Unread        int               `json:"new"`
 	Owner         string
@@ -37,6 +37,7 @@ type Folder struct {
 	Id         int    `json:"id"`
 	FolderName string `json:"name"`
 	Owner      int    `json:"owner"`
+	Unread     int    `json:"new"`
 }
 
 type MessageResponse struct {

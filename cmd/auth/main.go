@@ -17,7 +17,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to read config: " + err.Error())
 	}
-	os.MkdirAll(config.AvatarStoragePath, 0755)
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
