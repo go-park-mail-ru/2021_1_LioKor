@@ -12,7 +12,7 @@ import (
 var dbConfig = common.Config{
 	DBHost:           "127.0.0.1",
 	DBPort:           5432,
-	DBUser:           "liokor",
+	DBUser:           "postgres",
 	DBPassword:       "Qwerty123",
 	DBDatabase:       "liokor_mail",
 	DBConnectTimeout: 10,
@@ -120,7 +120,7 @@ func TestReadMail(t *testing.T) {
 		t.Errorf("Didn't read emails: %v\n", err)
 	}
 }
-
+/*
 func TestGetDialoguesForUser(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
@@ -139,7 +139,7 @@ func TestGetDialoguesForUser(t *testing.T) {
 
 	t.Log(dialogues)
 }
-
+*/
 func TestCountMailsFromUser(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {

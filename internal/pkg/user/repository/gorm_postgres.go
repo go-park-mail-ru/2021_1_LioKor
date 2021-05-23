@@ -96,7 +96,7 @@ func (ur *GormPostgresUserRepository) RemoveUser(username string) error {
 		return err
 	}
 	ur.DBInstance.DB.Delete(&u)
-	if err = ur.DBInstance.DB.Error; err != nil{
+	if err = ur.DBInstance.DB.Error; err != nil || ur.DBInstance.DB.RowsAffected == 0{
 		return err
 	}
 	return nil

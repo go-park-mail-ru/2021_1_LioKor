@@ -33,9 +33,9 @@ func (ns *NullString) UnmarshalJSON(data []byte) error {
 
 
 type Session struct {
-	UserId       int
-	SessionToken string
-	Expiration   time.Time
+	UserId       int `gorm:"column:user_id"`
+	SessionToken string `gorm:"column:token"`
+	Expiration   time.Time `gorm:"column:expiration"`
 }
 
 type InvalidSessionError struct {

@@ -24,7 +24,13 @@ type MailUseCase struct {
 
 func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int, since string) ([]mail.Dialogue, error) {
 	username += "@" + uc.Config.MailDomain
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain), since)
+	dialogues := make([]mail.Dialogue, 0, 0)
+	var err error
+	if find == "" {
+		dialogues, err = uc.Repository.GetDialoguesInFolder(username, amount, folderId, ("@" + uc.Config.MailDomain), since)
+	} else {
+		dialogues, err = uc.Repository.FindDialogues(username, find, amount, ("@" + uc.Config.MailDomain), since)
+	}
 	if err != nil {
 		return nil, err
 	}

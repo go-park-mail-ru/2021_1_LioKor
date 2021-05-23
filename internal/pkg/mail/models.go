@@ -6,21 +6,22 @@ import (
 )
 
 type Mail struct {
-	Sender        string    `json:"-"`
-	Recipient     string    `json:"recipient"`
-	Subject       string    `json:"subject"`
-	Body          string    `json:"body"`
-	Received_date time.Time `json:"-"`
+	Id            int       `json:"-" gorm:"column:id"`
+	Sender        string    `json:"-" gorm:"column:sender"`
+	Recipient     string    `json:"recipient" gorm:"column:recipient"`
+	Subject       string    `json:"subject" gorm:"column:subject"`
+	Body          string    `json:"body" gorm:"column:body"`
+	Received_date time.Time `json:"-" gorm:"-"`
 }
 
 type DialogueEmail struct {
-	Id            int       `json:"id"`
-	Sender        string    `json:"sender"`
-	Subject       string    `json:"title"`
-	Received_date time.Time `json:"time"`
-	Body          string    `json:"body"`
-	Unread        bool      `json:"new"`
-	Status        int       `json:"status"`
+	Id            int       `json:"id" gorm:"column:id"`
+	Sender        string    `json:"sender" gorm:"column:sender"`
+	Subject       string    `json:"title" gorm:"column:subject"`
+	Received_date time.Time `json:"time" gorm:"column:received_date"`
+	Body          string    `json:"body" gorm:"column:body"`
+	Unread        bool      `json:"new" gorm:"column:unread"`
+	Status        int       `json:"status" gorm:"column:status"`
 }
 
 type Dialogue struct {
