@@ -31,6 +31,7 @@ func (ns *NullString) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+
 type Session struct {
 	UserId       int
 	SessionToken string

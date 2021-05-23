@@ -85,7 +85,7 @@ func (ur *PostgresUserRepository) CreateUser(u user.User) error {
 	return nil
 }
 
-func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User) (user.User, error) {
+func (ur *PostgresUserRepository) UpdateUser(newData user.User) (user.User, error) {
 	err := ur.DBInstance.DBConn.QueryRow(
 		context.Background(),
 		"UPDATE users SET fullname=$1, reserve_email=$2 "+
@@ -93,7 +93,7 @@ func (ur *PostgresUserRepository) UpdateUser(username string, newData user.User)
 			"RETURNING *;",
 		newData.FullName,
 		newData.ReserveEmail,
-		username,
+		newData.Username,
 	).Scan(
 		&newData.Id,
 		&newData.Username,
