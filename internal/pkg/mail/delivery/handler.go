@@ -43,6 +43,30 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	return c.JSON(http.StatusOK, dialogues)
 }
 
+func (h *MailHandler) CreateDialogue(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+	var dialogueWith struct {
+		With string `json:"username"`
+	}
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&dialogueWith)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	dialogue, err := h.MailUsecase.CreateDialogue(sessionUser.Username, dialogueWith.With)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, dialogue)
+}
+
 func (h *MailHandler) DeleteDialogue(c echo.Context) error {
 	sUser := c.Get("sessionUser")
 	sessionUser, ok := sUser.(user.User)

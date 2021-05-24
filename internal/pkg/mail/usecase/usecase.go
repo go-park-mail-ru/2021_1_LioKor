@@ -37,6 +37,16 @@ func (uc *MailUseCase) GetDialogues(username string, amount int, find string, fo
 	return dialogues, nil
 }
 
+func (uc *MailUseCase) CreateDialogue(owner, with string) (mail.Dialogue, error) {
+	owner += "@" + uc.Config.MailDomain
+
+	dialogue, err := uc.Repository.CreateDialogue(owner, with)
+	if err != nil {
+		return mail.Dialogue{}, err
+	}
+	return dialogue, nil
+}
+
 func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
 	owner += "@" + uc.Config.MailDomain
 
