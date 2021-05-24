@@ -10,8 +10,9 @@ type MailRepository interface {
 	UpdateMailStatus(mailId, status int) error
 	DeleteMail(owner string, mailIds []int) error
 
-	//CreateDialogue(owner string, other string) (int, error)
-	//UpdateDialogue(owner string, other string) error
+	CreateDialogue(owner string, other string) (Dialogue, error)
+	UpdateDialogueLastMail(owner string, other string) error
+	UpdateDialogueWithMailId(owner string, lastMailId int) error
 	GetDialoguesInFolder(username string, limit int, folderId int, domain string, since string) ([]Dialogue, error)
 	FindDialogues(username string, find string, limit int, domain string, since string) ([]Dialogue, error)
 	ReadDialogue(owner, other string) error

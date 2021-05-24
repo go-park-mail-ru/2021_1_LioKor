@@ -11,7 +11,7 @@ type Mail struct {
 	Recipient     string    `json:"recipient" gorm:"column:recipient"`
 	Subject       string    `json:"subject" gorm:"column:subject"`
 	Body          string    `json:"body" gorm:"column:body"`
-	Received_date time.Time `json:"-" gorm:"-"`
+	Received_date time.Time `json:"-" gorm:"received_date"`
 }
 
 type DialogueEmail struct {
@@ -25,13 +25,13 @@ type DialogueEmail struct {
 }
 
 type Dialogue struct {
-	Id            int               `json:"id"`
-	Email         string            `json:"username"`
-	AvatarURL     common.NullString `json:"avatarUrl"`
-	Body          string            `json:"body"`
-	Received_date time.Time         `json:"time"`
-	Unread        int               `json:"new"`
-	Owner         string
+	Id            int               `json:"id" gorm:"column:id"`
+	Email         string            `json:"username" gorm:"column:other"`
+	AvatarURL     common.NullString `json:"avatarUrl" gorm:"column:avatar_url"`
+	Body          string            `json:"body" gorm:"column:body"`
+	Received_date time.Time         `json:"time" gorm:"column:received_date"`
+	Unread        int               `json:"new" gorm:"column:unread"`
+	Owner         string			`gorm:"column:owner"`
 }
 
 type Folder struct {
