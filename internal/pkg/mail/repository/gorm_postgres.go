@@ -112,7 +112,8 @@ func (gmr *GormPostgresMailRepository) UpdateMailStatus(mailId, status int) erro
 	return nil
 }
 
-func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int) error {
+func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, domain string) error {
+	ownerMail := owner + "@" + domain
 	tx := gmr.DBInstance.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -132,10 +133,13 @@ func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int) e
 			Where("id=?", id).
 			Take(&m)
 		var deletedBy string
-		if m.Sender == owner {
+		var other string
+		if m.Sender == ownerMail {
 			deletedBy = "deleted_by_sender"
-		} else if m.Recipient == owner {
+			other = m.Recipient
+		} else if m.Recipient == ownerMail {
 			deletedBy = "deleted_by_recipient"
+			other = m.Sender
 		} else {
 			tx.Rollback()
 			return mail.InvalidEmailError{
@@ -145,6 +149,11 @@ func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int) e
 		err := tx.Table("mails").
 			Where("id=?", id).
 			Update(deletedBy, true).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		err = gmr.UpdateDialogueLastMail(owner, other)
 		if err != nil {
 			tx.Rollback()
 			return err

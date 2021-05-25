@@ -8,7 +8,7 @@ type MailRepository interface {
 	ReadMail(owner, other string) error
 	CountMailsFromUser(username string, interval time.Duration) (int, error)
 	UpdateMailStatus(mailId, status int) error
-	DeleteMail(owner string, mailIds []int) error
+	DeleteMail(owner string, mailIds []int, domain string) error
 
 	CreateDialogue(owner string, other string) (Dialogue, error)
 	UpdateDialogueLastMail(owner string, other string) error

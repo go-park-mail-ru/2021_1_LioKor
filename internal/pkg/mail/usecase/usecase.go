@@ -122,8 +122,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 }
 
 func (uc *MailUseCase) DeleteMails(owner string, mailIds []int) error{
-	owner += "@" + uc.Config.MailDomain
-	err := uc.Repository.DeleteMail(owner, mailIds)
+	err := uc.Repository.DeleteMail(owner, mailIds, uc.Config.MailDomain)
 	if err != nil {
 		return err
 	}
