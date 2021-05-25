@@ -62,10 +62,10 @@ func (mr *PostgresMailRepository) DeleteEmail(owner string, id int) error {
 		&lastId,
 	)
 	if err != nil {
-		return err
+		lastId = 0 // was last email
 	}
 
-	query = "UPDATE dialogues SET last_mail_id = $1 WHERE owner = $2 AND other = $3"
+	query = "UPDATE dialogues SET last_mail_id = CASE WHEN $1 > 0 THEN $1 ELSE NULL END WHERE owner = $2 AND other = $3"
 	_, err = mr.DBInstance.DBConn.Exec(
 		context.Background(),
 		query,
