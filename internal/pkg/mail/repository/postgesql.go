@@ -26,9 +26,57 @@ func (mr *PostgresMailRepository) DeleteEmail(owner string, id int) error {
 		id,
 	)
 
+	var lastId int
+	var sender string
+	var recipient string
+	query = "SELECT sender, recipient FROM mails " +
+		"WHERE (sender = $1 OR recipient = $1) AND (id = $2) " +
+		"LIMIT 1"
+	err = mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		query,
+		owner,
+		id,
+	).Scan(
+		&sender,
+		&recipient,
+	)
 	if err != nil {
 		return err
 	}
+
+	other := sender
+	if (other == owner) {
+		other = recipient
+	}
+
+	query = "SELECT id FROM mails " +
+		"WHERE (sender = $1 AND recipient = $2 AND deleted_by_sender = false) OR (sender = $2 AND recipient = $1 and deleted_by_recipient = false) " +
+		"ORDER BY id DESC LIMIT 1"
+	err = mr.DBInstance.DBConn.QueryRow(
+		context.Background(),
+		query,
+		owner,
+		other,
+	).Scan(
+		&lastId,
+	)
+	if err != nil {
+		return err
+	}
+
+	query = "UPDATE dialogues SET last_mail_id = $1 WHERE owner = $2 AND other = $3"
+	_, err = mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		query,
+		lastId,
+		owner,
+		other,
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
