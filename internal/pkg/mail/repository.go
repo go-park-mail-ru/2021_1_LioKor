@@ -5,6 +5,7 @@ import (
 )
 
 type MailRepository interface {
+	DeleteEmail(owner string, id int) error
 	GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]Dialogue, error)
 	CreateDialogue(owner, with string) (Dialogue, error)
 	DeleteDialogue(owner string, dialogueId int) error

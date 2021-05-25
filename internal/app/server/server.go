@@ -124,6 +124,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)
 	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
+	e.DELETE("/email/emails", mailHander.DeleteEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
 
 	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)

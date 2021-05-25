@@ -51,6 +51,19 @@ func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
 	return nil
 }
 
+func (uc *MailUseCase) DeleteEmails(owner string, emailIds []int) error {
+	owner += "@" + uc.Config.MailDomain
+
+	for _, id := range emailIds {
+		err := uc.Repository.DeleteEmail(owner, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (uc *MailUseCase) GetEmails(username string, email string, last int, amount int) ([]mail.DialogueEmail, error) {
 	username += "@" + uc.Config.MailDomain
 	emails, err := uc.Repository.GetMailsForUser(username, email, amount, last)
@@ -105,6 +118,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	if err != nil {
 		return email, err
 	}
+	email.Id = mailId
 
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)

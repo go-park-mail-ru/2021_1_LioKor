@@ -125,6 +125,30 @@ func (h *MailHandler) GetEmails(c echo.Context) error {
 	return c.JSON(http.StatusOK, emails)
 }
 
+func (h *MailHandler) DeleteEmails(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	defer c.Request().Body.Close()
+	var idsToDelete struct {
+		Ids []int `json:"ids"`
+	}
+	err := json.NewDecoder(c.Request().Body).Decode(&idsToDelete)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.MailUsecase.DeleteEmails(sessionUser.Username, idsToDelete.Ids)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "ok")
+}
+
 func (h *MailHandler) SendEmail(c echo.Context) error {
 	sUser := c.Get("sessionUser")
 	sessionUser, ok := sUser.(user.User)

@@ -13,6 +13,25 @@ type PostgresMailRepository struct {
 	DBInstance common.PostgresDataBase
 }
 
+func (mr *PostgresMailRepository) DeleteEmail(owner string, id int) error {
+	query := "UPDATE mails SET " +
+		"deleted_by_sender    = COALESCE(CASE WHEN $1 = sender THEN true ELSE NULL END, deleted_by_sender), " +
+		"deleted_by_recipient = COALESCE(CASE WHEN $1 = recipient THEN true ELSE NULL END, deleted_by_recipient) " +
+		"WHERE (sender = $1 OR recipient = $1) AND (id = $2)"
+
+	_, err := mr.DBInstance.DBConn.Exec(
+		context.Background(),
+		query,
+		owner,
+		id,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int, find string, folderId int, domain string, since string) ([]mail.Dialogue, error) {
 	query := "SELECT d.id, " +
 		"d.other AS email, " +
@@ -179,8 +198,8 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 	rows, err := mr.DBInstance.DBConn.Query(
 		context.Background(),
 		"SELECT id, sender, subject, received_date, body, unread, status FROM mails "+
-			"WHERE ((sender=$1 AND recipient=$2) OR (sender=$2 AND recipient=$1)) "+
-			"AND id > $4 "+
+			"WHERE ((sender=$1 AND recipient=$2 AND deleted_by_sender = false) OR (sender=$2 AND recipient=$1 AND deleted_by_recipient = false)) "+
+			"AND ((id < $4) OR ($4 <= 0)) "+
 			"ORDER BY id DESC LIMIT $3;",
 		username,
 		email,

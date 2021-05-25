@@ -1,6 +1,7 @@
 package mail
 
 type MailUseCase interface {
+	DeleteEmails(username string, ids []int) error
 	GetDialogues(username string, amount int, find string, folderId int, since string) ([]Dialogue, error)
 	CreateDialogue(owner, with string) (Dialogue, error)
 	DeleteDialogue(owner string, dialogueId int) error

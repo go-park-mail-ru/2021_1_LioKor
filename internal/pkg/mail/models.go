@@ -6,6 +6,7 @@ import (
 )
 
 type Mail struct {
+	Id            int       `json:"id"`
 	Sender        string    `json:"-"`
 	Recipient     string    `json:"recipient"`
 	Subject       string    `json:"subject"`
