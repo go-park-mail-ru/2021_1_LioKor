@@ -8,6 +8,7 @@ import (
 	"liokor_mail/internal/pkg/user"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type MailHandler struct {
@@ -34,8 +35,16 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	}
 
 	since := c.QueryParam("since")
-
-	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, since)
+	var sinceTime time.Time
+	if since == "" {
+		sinceTime = time.Now()
+	} else {
+		sinceTime, err = time.Parse(time.RFC3339, since)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, sinceTime)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -90,6 +99,29 @@ func (h *MailHandler) DeleteDialogue(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue deleted"})
+}
+
+func (h *MailHandler) DeleteMail(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	ids := make([]int, 0, 0)
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&ids)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.MailUsecase.DeleteMails(sessionUser.Username, ids)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Mails deleted"})
 }
 
 func (h *MailHandler) GetEmails(c echo.Context) error {

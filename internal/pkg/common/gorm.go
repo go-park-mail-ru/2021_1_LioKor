@@ -43,7 +43,11 @@ func NewGormPostgresDataBase(cfg Config)(GormPostgresDataBase, error) {
 	}, nil
 }
 
-func (db GormPostgresDataBase) Close() {
+func (db *GormPostgresDataBase) Close() {
 	sqlDb, _ := db.DB.DB()
 	sqlDb.Close()
+}
+
+func (db *GormPostgresDataBase) AddMail() {
+
 }

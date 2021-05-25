@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/mail"
+	"strings"
 	"time"
 )
 
@@ -15,15 +16,43 @@ type GormPostgresMailRepository struct {
 }
 
 
-func (gmr *GormPostgresMailRepository) AddMail(mail mail.Mail) (int, error) {
+func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (int, error) {
 	result := gmr.DBInstance.DB.
 		Table("mails").
 		Select("sender", "recipient", "subject", "body").
-		Create(&mail)
+		Create(&email)
 	if err := result.Error; err != nil {
 		return 0, err
 	}
-	return mail.Id, nil
+
+	sender := strings.Split(email.Sender, "@")
+	recipient := strings.Split(email.Recipient, "@")
+	if len(sender) == 2 && sender[1] == domain {
+		if !gmr.DialogueExists(sender[0], email.Recipient) {
+			_, err := gmr.CreateDialogue(sender[0], email.Recipient)
+			if err != nil {
+				return email.Id, err
+			}
+		}
+		err := gmr.UpdateDialogueLastMail(sender[0], email.Recipient)
+		if err != nil {
+			return email.Id, err
+		}
+	}
+	if len(recipient) == 2 && recipient[1] == domain {
+		if !gmr.DialogueExists(recipient[0], email.Sender) {
+			_, err := gmr.CreateDialogue(recipient[0], email.Sender)
+			if err != nil {
+				return email.Id, err
+			}
+		}
+		err := gmr.UpdateDialogueLastMail(recipient[0], email.Sender)
+		if err != nil {
+			return email.Id, err
+		}
+
+	}
+	return email.Id, nil
 }
 
 func (gmr *GormPostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
@@ -141,6 +170,14 @@ func (gmr *GormPostgresMailRepository) CountMailsFromUser(username string, inter
 	return int(count), nil
 }
 
+func (gmr *GormPostgresMailRepository) DialogueExists(owner string, other string) bool {
+	result := gmr.DBInstance.DB.Table("dialogues").
+		Select("id").
+		Where("owner=? AND other=?", owner, other).
+		Take(&mail.Dialogue{})
+	return result.RowsAffected != 0
+}
+
 func (gmr *GormPostgresMailRepository) CreateDialogue(owner string, other string) (mail.Dialogue, error) {
 	dialogue := mail.Dialogue {
 		Owner: owner,
@@ -163,49 +200,6 @@ func (gmr *GormPostgresMailRepository) CreateDialogue(owner string, other string
 	return dialogue, nil
 }
 
-
-func (gmr *GormPostgresMailRepository) UpdateDialogueWithMailId(owner string, lastMailId int) error {
-	lastMail := mail.Mail {
-		Id : lastMailId,
-	}
-	err := gmr.DBInstance.DB.Table("mails").Take(&lastMail).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return mail.InvalidEmailError{"Mail doesn't exist"}
-		}
-		return err
-	}
-	var other string
-	switch owner {
-	case lastMail.Sender:
-		other = lastMail.Recipient
-	case lastMail.Recipient:
-		other = lastMail.Sender
-	default:
-		return common.InvalidUserError{"Access denied"}
-	}
-	result := gmr.DBInstance.DB.
-		Table("dialogues").
-		Where(
-			"owner=? AND other=?",
-			owner,
-			other,
-			).
-		Updates(map[string]interface{}{
-		"last_mail_id" : lastMailId,
-		"received_date" : lastMail.Received_date,
-		"unread": gorm.Expr("unread + 1"),
-		"body" : lastMail.Body,
-	})
-	if err = result.Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return mail.InvalidEmailError{"Dialogue doesn't exist"}
-		}
-		return err
-	}
-	return nil
-}
-
 func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, other string) error {
 	var lastMail mail.DialogueEmail
 	err := gmr.DBInstance.DB.
@@ -222,10 +216,10 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 			)).
 		Last(&lastMail).Error
 	if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return mail.InvalidEmailError{"Mail doesn't exist"}
-			}
-			return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return mail.InvalidEmailError{"Mail doesn't exist"}
+		}
+		return err
 	}
 	updates := map[string]interface{}{
 		"last_mail_id" : lastMail.Id,
@@ -254,17 +248,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 	return nil
 }
 
-func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, limit int, folderId int, domain string, since string) ([]mail.Dialogue, error) {
-	var sinceTime time.Time
-	var err error
-	if since == "" {
-		sinceTime = time.Now().Add(time.Second)
-	} else {
-		sinceTime, err = time.Parse(time.RFC3339, since)
-		if err != nil {
-			return nil, mail.InvalidEmailError{"Invalid parameters"}
-		}
-	}
+func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, limit int, folderId int, domain string, since time.Time) ([]mail.Dialogue, error) {
 	dialogues := make([]mail.Dialogue, 0, 0)
 	var folderCond string
 	if folderId == 0 {
@@ -272,13 +256,13 @@ func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, lim
 	} else {
 		folderCond = fmt.Sprintf("dialogues.folder=%d", folderId)
 	}
-	err = gmr.DBInstance.DB.
+	err := gmr.DBInstance.DB.
 		Table("dialogues").
 		Limit(limit).
 		Order("dialogues.received_date desc").
 		Where("dialogues.owner=?", username).
 		Where(folderCond).
-		Where("dialogues.received_date<?", sinceTime).
+		Where("dialogues.received_date<?", since).
 		Select(
 			"dialogues.id",
 			"dialogues.other",
@@ -296,24 +280,14 @@ func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, lim
 	return dialogues, nil
 }
 
-func (gmr *GormPostgresMailRepository) FindDialogues(username string, find string, limit int, domain string, since string) ([]mail.Dialogue, error) {
-	var sinceTime time.Time
-	var err error
-	if since == "" {
-		sinceTime = time.Now().Add(time.Second)
-	} else {
-		sinceTime, err = time.Parse(time.RFC3339, since)
-		if err != nil {
-			return nil, mail.InvalidEmailError{"Invalid parameters"}
-		}
-	}
+func (gmr *GormPostgresMailRepository) FindDialogues(username string, find string, limit int, domain string, since time.Time) ([]mail.Dialogue, error) {
 	dialogues := make([]mail.Dialogue, 0, 0)
-	err = gmr.DBInstance.DB.
+	err := gmr.DBInstance.DB.
 		Table("dialogues").
 		Limit(limit).
 		Order("dialogues.received_date desc").
 		Where("dialogues.owner=?", username).
-		Where("dialogues.received_date<?", sinceTime).
+		Where("dialogues.received_date<?", since).
 		Where("dialogues.other LIKE ?", "%" + find + "%").
 		Select(
 			"dialogues.id",
@@ -347,11 +321,37 @@ func (gmr *GormPostgresMailRepository) ReadDialogue(owner, other string) error {
 		return nil
 }
 func (gmr *GormPostgresMailRepository) DeleteDialogue(owner string, dialogueId int) error {
+	var dialogue mail.Dialogue
+	err := gmr.DBInstance.DB.Table("dialogue").
+		Where("id=? AND owner=?", dialogueId, owner).
+		Take(&dialogue).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return mail.InvalidEmailError{"Mail doesn't exist"}
+		}
+		return err
+	}
 	gmr.DBInstance.DB.
 		Table("dialogues").
 		Where("id=? AND owner=?", dialogueId, owner).
-		Delete(&mail.Dialogue{})
-	if err := gmr.DBInstance.DB.Error; err != nil || gmr.DBInstance.DB.RowsAffected == 0{
+		Delete(&dialogue)
+	if err = gmr.DBInstance.DB.Error; err != nil{
+		return err
+	}
+	return gmr.DeleteDialogueMails(owner, dialogue.Email)
+}
+
+func (gmr *GormPostgresMailRepository) DeleteDialogueMails(owner string, other string) error {
+	err := gmr.DBInstance.DB.Table("mails").
+		Where("sender=? AND recipient=?", owner, other).
+		Update("deleted_by_sender", true).Error
+	if err != nil {
+		return err
+	}
+	err =gmr.DBInstance.DB.Table("mails").
+		Where(" recipient=? AND sender=?", owner, other).
+		Update("deleted_by_recipient", true).Error
+	if err != nil {
 		return err
 	}
 	return nil
@@ -378,8 +378,13 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 
 func (gmr *GormPostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
 	folders := make([]mail.Folder, 0, 0)
-	err := gmr.DBInstance.DB.Table("folders").
-		Where("owner=?", ownerId).
+	err := gmr.DBInstance.DB.Raw(
+		"SELECT folders.*, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) "+
+			"FROM folders LEFT JOIN dialogues ON dialogues.folder=folders.id "+
+			"WHERE folders.owner=? "+
+			"GROUP BY folders.id",
+			ownerId,
+		).
 		Scan(&folders).Error
 	if err != nil {
 		return nil, err

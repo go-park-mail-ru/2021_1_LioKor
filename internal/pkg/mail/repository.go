@@ -3,7 +3,7 @@ package mail
 import "time"
 
 type MailRepository interface {
-	AddMail(mail Mail) (int, error)
+	AddMail(mail Mail, domain string) (int, error)
 	GetMailsForUser(username string, email string, limit int, last int) ([]DialogueEmail, error)
 	ReadMail(owner, other string) error
 	CountMailsFromUser(username string, interval time.Duration) (int, error)
@@ -12,9 +12,8 @@ type MailRepository interface {
 
 	CreateDialogue(owner string, other string) (Dialogue, error)
 	UpdateDialogueLastMail(owner string, other string) error
-	UpdateDialogueWithMailId(owner string, lastMailId int) error
-	GetDialoguesInFolder(username string, limit int, folderId int, domain string, since string) ([]Dialogue, error)
-	FindDialogues(username string, find string, limit int, domain string, since string) ([]Dialogue, error)
+	GetDialoguesInFolder(username string, limit int, folderId int, domain string, since time.Time) ([]Dialogue, error)
+	FindDialogues(username string, find string, limit int, domain string, since time.Time) ([]Dialogue, error)
 	ReadDialogue(owner, other string) error
 	DeleteDialogue(owner string, dialogueId int) error
 
