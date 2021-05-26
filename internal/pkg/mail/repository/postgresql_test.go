@@ -2,11 +2,6 @@ package repository
 
 import (
 	"liokor_mail/internal/pkg/common"
-	"liokor_mail/internal/pkg/mail"
-	"liokor_mail/internal/pkg/user"
-	userRep "liokor_mail/internal/pkg/user/repository"
-	"testing"
-	"time"
 )
 
 var dbConfig = common.Config{
@@ -18,11 +13,11 @@ var dbConfig = common.Config{
 	DBConnectTimeout: 10,
 }
 
+/*
 var owner user.User
 var other user.User
 var folder mail.Folder
 var dialogues []mail.Dialogue
-
 
 func TestCreateUsers(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
@@ -139,7 +134,7 @@ func TestGetDialoguesForUser(t *testing.T) {
 
 	t.Log(dialogues)
 }
-*/
+
 func TestCountMailsFromUser(t *testing.T) {
 	dbInstance, err := common.NewPostgresDataBase(dbConfig)
 	if err != nil {
@@ -267,3 +262,4 @@ func TestRemoveUsers(t *testing.T) {
 		t.Fatalf("Database error: %v\n", err)
 	}
 }
+*/

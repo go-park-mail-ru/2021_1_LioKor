@@ -11,11 +11,11 @@ type MailRepository interface {
 	DeleteMail(owner string, mailIds []int, domain string) error
 
 	CreateDialogue(owner string, other string) (Dialogue, error)
-	UpdateDialogueLastMail(owner string, other string) error
+	UpdateDialogueLastMail(owner string, other string, domain string) error
 	GetDialoguesInFolder(username string, limit int, folderId int, domain string, since time.Time) ([]Dialogue, error)
 	FindDialogues(username string, find string, limit int, domain string, since time.Time) ([]Dialogue, error)
 	ReadDialogue(owner, other string) error
-	DeleteDialogue(owner string, dialogueId int) error
+	DeleteDialogue(owner string, dialogueId int, domain string) error
 
 	CreateFolder(ownerId int, folderName string) (Folder, error)
 	GetFolders(ownerId int) ([]Folder, error)

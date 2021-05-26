@@ -63,7 +63,7 @@ func TestGetDialogues(t *testing.T) {
 	}
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 5, "a", 1).Return(dialogues, nil).Times(1)
+	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 5, "a", 1, gomock.Any()).Return(dialogues, nil).Times(1)
 	err := mailHandler.GetDialogues(echoContext)
 	if err != nil {
 		t.Errorf("Didn't pass valid data: %v\n", err)
@@ -81,7 +81,7 @@ func TestGetDialogues(t *testing.T) {
 	echoContext = e.NewContext(req, response)
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 5, "a", 1).Return(nil, mail.InvalidEmailError{"Error"}).Times(1)
+	mockMailUC.EXPECT().GetDialogues(sessionUser.Username, 5, "a", 1, gomock.Any()).Return(nil, mail.InvalidEmailError{"Error"}).Times(1)
 	err = mailHandler.GetDialogues(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {
@@ -382,7 +382,7 @@ func TestUpdateFolder(t *testing.T) {
 	}
 	echoContext.Set("sessionUser", sessionUser)
 
-	mockMailUC.EXPECT().UpdateFolder(sessionUser.Username, updateFolder.FolderId, updateFolder.DialogueId).Return(nil).Times(1)
+	mockMailUC.EXPECT().UpdateFolderPutDialogue(sessionUser.Username, updateFolder.FolderId, updateFolder.DialogueId).Return(nil).Times(1)
 	err := mailHandler.UpdateFolder(echoContext)
 	if err != nil {
 		t.Errorf("Didn't add valid dialogue to folder: %v\n", err.Error())
@@ -393,7 +393,7 @@ func TestUpdateFolder(t *testing.T) {
 	response = httptest.NewRecorder()
 	echoContext = e.NewContext(req, response)
 	echoContext.Set("sessionUser", sessionUser)
-	mockMailUC.EXPECT().UpdateFolder(sessionUser.Username, updateFolder.FolderId, updateFolder.DialogueId).Return(mail.InvalidEmailError{"Folder doesn't exist"}).Times(1)
+	mockMailUC.EXPECT().UpdateFolderPutDialogue(sessionUser.Username, updateFolder.FolderId, updateFolder.DialogueId).Return(mail.InvalidEmailError{"Folder doesn't exist"}).Times(1)
 	err = mailHandler.UpdateFolder(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
 		if httperr.Code != http.StatusInternalServerError {

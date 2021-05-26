@@ -34,7 +34,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 				return email.Id, err
 			}
 		}
-		err := gmr.UpdateDialogueLastMail(sender[0], email.Recipient)
+		err := gmr.UpdateDialogueLastMail(sender[0], email.Recipient, domain)
 		if err != nil {
 			return email.Id, err
 		}
@@ -46,7 +46,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 				return email.Id, err
 			}
 		}
-		err := gmr.UpdateDialogueLastMail(recipient[0], email.Sender)
+		err := gmr.UpdateDialogueLastMail(recipient[0], email.Sender, domain)
 		if err != nil {
 			return email.Id, err
 		}
@@ -153,7 +153,7 @@ func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, d
 			tx.Rollback()
 			return err
 		}
-		err = gmr.UpdateDialogueLastMail(owner, other)
+		err = gmr.UpdateDialogueLastMail(owner, other, domain)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -209,19 +209,19 @@ func (gmr *GormPostgresMailRepository) CreateDialogue(owner string, other string
 	return dialogue, nil
 }
 
-func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, other string) error {
+func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, other string, domain string) error {
 	var lastMail mail.DialogueEmail
 	err := gmr.DBInstance.DB.
 		Table("mails").
 		Where(
 			gmr.DBInstance.DB.Where(
 				"sender=? AND recipient=? AND deleted_by_sender=FALSE",
-				owner,
+				owner + "@" + domain,
 				other,
 			).Or(
 				"sender=? AND recipient=? AND deleted_by_recipient=FALSE",
 				other,
-				owner,
+				owner + "@" + domain,
 			)).
 		Last(&lastMail).Error
 	if err != nil {
@@ -329,14 +329,14 @@ func (gmr *GormPostgresMailRepository) ReadDialogue(owner, other string) error {
 	}
 		return nil
 }
-func (gmr *GormPostgresMailRepository) DeleteDialogue(owner string, dialogueId int) error {
+func (gmr *GormPostgresMailRepository) DeleteDialogue(owner string, dialogueId int, domain string) error {
 	var dialogue mail.Dialogue
 	err := gmr.DBInstance.DB.Table("dialogue").
 		Where("id=? AND owner=?", dialogueId, owner).
 		Take(&dialogue).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return mail.InvalidEmailError{"Mail doesn't exist"}
+			return mail.InvalidEmailError{"Dialogue doesn't exist"}
 		}
 		return err
 	}
@@ -347,10 +347,11 @@ func (gmr *GormPostgresMailRepository) DeleteDialogue(owner string, dialogueId i
 	if err = gmr.DBInstance.DB.Error; err != nil{
 		return err
 	}
-	return gmr.DeleteDialogueMails(owner, dialogue.Email)
+	return gmr.DeleteDialogueMails(owner, dialogue.Email, domain)
 }
 
-func (gmr *GormPostgresMailRepository) DeleteDialogueMails(owner string, other string) error {
+func (gmr *GormPostgresMailRepository) DeleteDialogueMails(owner string, other string, domain string) error {
+	owner += "@" + domain
 	err := gmr.DBInstance.DB.Table("mails").
 		Where("sender=? AND recipient=?", owner, other).
 		Update("deleted_by_sender", true).Error

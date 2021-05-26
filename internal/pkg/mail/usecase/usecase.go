@@ -45,7 +45,7 @@ func (uc *MailUseCase) CreateDialogue(owner, with string) (mail.Dialogue, error)
 }
 
 func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
-	err := uc.Repository.DeleteDialogue(owner, dialogueId)
+	err := uc.Repository.DeleteDialogue(owner, dialogueId, uc.Config.MailDomain)
 	if err != nil {
 		return err
 	}

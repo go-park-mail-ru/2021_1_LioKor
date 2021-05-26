@@ -50,18 +50,18 @@ func (mr *MockMailRepositoryMockRecorder) AddDialogueToFolder(arg0, arg1, arg2 i
 }
 
 // AddMail mocks base method.
-func (m *MockMailRepository) AddMail(arg0 mail.Mail) (int, error) {
+func (m *MockMailRepository) AddMail(arg0 mail.Mail, arg1 string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddMail", arg0)
+	ret := m.ctrl.Call(m, "AddMail", arg0, arg1)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddMail indicates an expected call of AddMail.
-func (mr *MockMailRepositoryMockRecorder) AddMail(arg0 interface{}) *gomock.Call {
+func (mr *MockMailRepositoryMockRecorder) AddMail(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMail", reflect.TypeOf((*MockMailRepository)(nil).AddMail), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMail", reflect.TypeOf((*MockMailRepository)(nil).AddMail), arg0, arg1)
 }
 
 // CountMailsFromUser mocks base method.
@@ -79,6 +79,21 @@ func (mr *MockMailRepositoryMockRecorder) CountMailsFromUser(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountMailsFromUser", reflect.TypeOf((*MockMailRepository)(nil).CountMailsFromUser), arg0, arg1)
 }
 
+// CreateDialogue mocks base method.
+func (m *MockMailRepository) CreateDialogue(arg0, arg1 string) (mail.Dialogue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDialogue", arg0, arg1)
+	ret0, _ := ret[0].(mail.Dialogue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDialogue indicates an expected call of CreateDialogue.
+func (mr *MockMailRepositoryMockRecorder) CreateDialogue(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDialogue", reflect.TypeOf((*MockMailRepository)(nil).CreateDialogue), arg0, arg1)
+}
+
 // CreateFolder mocks base method.
 func (m *MockMailRepository) CreateFolder(arg0 int, arg1 string) (mail.Folder, error) {
 	m.ctrl.T.Helper()
@@ -94,19 +109,76 @@ func (mr *MockMailRepositoryMockRecorder) CreateFolder(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFolder", reflect.TypeOf((*MockMailRepository)(nil).CreateFolder), arg0, arg1)
 }
 
-// GetDialoguesForUser mocks base method.
-func (m *MockMailRepository) GetDialoguesForUser(arg0 string, arg1 int, arg2 string, arg3 int, arg4 string) ([]mail.Dialogue, error) {
+// DeleteDialogue mocks base method.
+func (m *MockMailRepository) DeleteDialogue(arg0 string, arg1 int, arg2 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDialoguesForUser", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "DeleteDialogue", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDialogue indicates an expected call of DeleteDialogue.
+func (mr *MockMailRepositoryMockRecorder) DeleteDialogue(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDialogue", reflect.TypeOf((*MockMailRepository)(nil).DeleteDialogue), arg0, arg1, arg2)
+}
+
+// DeleteFolder mocks base method.
+func (m *MockMailRepository) DeleteFolder(arg0, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFolder", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFolder indicates an expected call of DeleteFolder.
+func (mr *MockMailRepositoryMockRecorder) DeleteFolder(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFolder", reflect.TypeOf((*MockMailRepository)(nil).DeleteFolder), arg0, arg1)
+}
+
+// DeleteMail mocks base method.
+func (m *MockMailRepository) DeleteMail(arg0 string, arg1 []int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteMail", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteMail indicates an expected call of DeleteMail.
+func (mr *MockMailRepositoryMockRecorder) DeleteMail(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMail", reflect.TypeOf((*MockMailRepository)(nil).DeleteMail), arg0, arg1, arg2)
+}
+
+// FindDialogues mocks base method.
+func (m *MockMailRepository) FindDialogues(arg0, arg1 string, arg2 int, arg3 string, arg4 time.Time) ([]mail.Dialogue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindDialogues", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]mail.Dialogue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDialoguesForUser indicates an expected call of GetDialoguesForUser.
-func (mr *MockMailRepositoryMockRecorder) GetDialoguesForUser(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+// FindDialogues indicates an expected call of FindDialogues.
+func (mr *MockMailRepositoryMockRecorder) FindDialogues(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDialoguesForUser", reflect.TypeOf((*MockMailRepository)(nil).GetDialoguesForUser), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindDialogues", reflect.TypeOf((*MockMailRepository)(nil).FindDialogues), arg0, arg1, arg2, arg3, arg4)
+}
+
+// GetDialoguesInFolder mocks base method.
+func (m *MockMailRepository) GetDialoguesInFolder(arg0 string, arg1, arg2 int, arg3 string, arg4 time.Time) ([]mail.Dialogue, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDialoguesInFolder", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].([]mail.Dialogue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDialoguesInFolder indicates an expected call of GetDialoguesInFolder.
+func (mr *MockMailRepositoryMockRecorder) GetDialoguesInFolder(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDialoguesInFolder", reflect.TypeOf((*MockMailRepository)(nil).GetDialoguesInFolder), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetFolders mocks base method.
@@ -165,6 +237,49 @@ func (m *MockMailRepository) ReadMail(arg0, arg1 string) error {
 func (mr *MockMailRepositoryMockRecorder) ReadMail(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadMail", reflect.TypeOf((*MockMailRepository)(nil).ReadMail), arg0, arg1)
+}
+
+// ShiftToMainFolderDialogues mocks base method.
+func (m *MockMailRepository) ShiftToMainFolderDialogues(arg0 string, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShiftToMainFolderDialogues", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ShiftToMainFolderDialogues indicates an expected call of ShiftToMainFolderDialogues.
+func (mr *MockMailRepositoryMockRecorder) ShiftToMainFolderDialogues(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShiftToMainFolderDialogues", reflect.TypeOf((*MockMailRepository)(nil).ShiftToMainFolderDialogues), arg0, arg1)
+}
+
+// UpdateDialogueLastMail mocks base method.
+func (m *MockMailRepository) UpdateDialogueLastMail(arg0, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDialogueLastMail", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDialogueLastMail indicates an expected call of UpdateDialogueLastMail.
+func (mr *MockMailRepositoryMockRecorder) UpdateDialogueLastMail(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDialogueLastMail", reflect.TypeOf((*MockMailRepository)(nil).UpdateDialogueLastMail), arg0, arg1, arg2)
+}
+
+// UpdateFolderName mocks base method.
+func (m *MockMailRepository) UpdateFolderName(arg0, arg1 int, arg2 string) (mail.Folder, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateFolderName", arg0, arg1, arg2)
+	ret0, _ := ret[0].(mail.Folder)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateFolderName indicates an expected call of UpdateFolderName.
+func (mr *MockMailRepositoryMockRecorder) UpdateFolderName(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFolderName", reflect.TypeOf((*MockMailRepository)(nil).UpdateFolderName), arg0, arg1, arg2)
 }
 
 // UpdateMailStatus mocks base method.
