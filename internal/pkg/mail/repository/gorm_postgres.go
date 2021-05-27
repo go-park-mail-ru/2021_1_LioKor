@@ -56,7 +56,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 }
 
 func (gmr *GormPostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
-	mails := make([]mail.DialogueEmail, 0, 0)
+	mails := make([]mail.DialogueEmail, 0)
 	gmr.DBInstance.DB.
 		Table("mails").
 		Select("id, sender, subject, received_date, body, unread, status").
@@ -118,7 +118,7 @@ func (gmr *GormPostgresMailRepository) UpdateMailStatus(mailId, status int) erro
 
 func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, domain string) error {
 	ownerMail := owner + "@" + domain
-	others := make([]string, 0, 0)
+	others := make([]string, 0)
 	tx := gmr.DBInstance.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -226,7 +226,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 	var lastMail mail.DialogueEmail
 	err := gmr.DBInstance.DB.
 		Table("mails").
-		Select("id, recieved_date, body, sender, recipient, unread, status").
+		Select("id, received_date, body, sender, recipient, unread, status").
 		Where(
 			gmr.DBInstance.DB.Where(
 				"sender=? AND recipient=? AND deleted_by_sender=FALSE",
@@ -238,24 +238,24 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 				owner + "@" + domain,
 			)).
 		Last(&lastMail).Error
-	var updates map[string]interface{}
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			updates = map[string]interface{}{
-				"last_mail_id" : nil,
-				"received_date" : nil,
-				"body" : nil,
-			}
 
-		} else {
+	updates := map[string]interface{}{
+		"last_mail_id" : nil,
+		"received_date" : nil,
+		"body" : nil,
+	}
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
+	} else {
+		updates = map[string]interface{}{
+			"last_mail_id" : lastMail.Id,
+			"received_date" : lastMail.Received_date,
+			"body" : lastMail.Body,
+		}
 	}
-	updates = map[string]interface{}{
-		"last_mail_id" : lastMail.Id,
-		"received_date" : lastMail.Received_date,
-		"body" : lastMail.Body,
-	}
+
 	if lastMail.Sender == other && lastMail.Unread && lastMail.Status == 1{
 		updates["unread"] = gorm.Expr("unread + 1")
 	} else {
@@ -279,7 +279,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 }
 
 func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, limit int, folderId int, domain string, since time.Time) ([]mail.Dialogue, error) {
-	dialogues := make([]mail.Dialogue, 0, 0)
+	dialogues := make([]mail.Dialogue, 0)
 	var folderCond string
 	if folderId == 0 {
 		folderCond = "dialogues.folder IS NULL"
@@ -311,7 +311,7 @@ func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, lim
 }
 
 func (gmr *GormPostgresMailRepository) FindDialogues(username string, find string, limit int, domain string, since time.Time) ([]mail.Dialogue, error) {
-	dialogues := make([]mail.Dialogue, 0, 0)
+	dialogues := make([]mail.Dialogue, 0)
 	err := gmr.DBInstance.DB.
 		Table("dialogues").
 		Limit(limit).
@@ -408,7 +408,7 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 }
 
 func (gmr *GormPostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
-	folders := make([]mail.Folder, 0, 0)
+	folders := make([]mail.Folder, 0)
 	err := gmr.DBInstance.DB.Raw(
 		"SELECT folders.id, folders.folder_name, folders.owner, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) unread "+
 			"FROM folders " +

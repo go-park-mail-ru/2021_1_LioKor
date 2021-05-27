@@ -202,13 +202,13 @@ func (s *Suite) TestAddMail() {
 	newEmail := s.email
 	newEmail.Sender = s.email.Recipient
 	newEmail.Recipient = s.email.Sender
-	id, err = s.gmr.AddMail(newEmail, s.domain)
+	_, err = s.gmr.AddMail(newEmail, s.domain)
 	require.Error(s.T(), err)
 }
 
 func (s *Suite) TestGetMailsForUser() {
 	s.mock.ExpectQuery(regexp.QuoteMeta(
-		`SELECT "id", "sender", "subject", "received_date", "body", "unread", "status" FROM "dialogues" 
+		`SELECT "id", "sender", "subject", "received_date", "body", "unread", "status" FROM "dialogues"
 			WHERE ((sender=$1 AND recipient=$2 AND deleted_by_sender=FALSE) OR
 			(sender=$3 AND recipient=$4 AND deleted_by_recipient=FALSE)) AND
 			(id > $5) ORDER BY "id" DESC LIMIT $6`)).

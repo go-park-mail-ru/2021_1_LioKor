@@ -144,7 +144,7 @@ func main() {
 	s.MaxRecipients = 50
 	s.AuthDisabled = true
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Printf("Starting SMTP server at %s for @%s", s.Addr, config.MailDomain)
