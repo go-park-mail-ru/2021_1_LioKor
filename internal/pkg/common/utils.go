@@ -38,12 +38,7 @@ func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 	}
 
 	meta := splittedURL[0]
-	var ext string
-	if strings.Index(meta, "image/jpeg") != -1 {
-		ext = "jpg"
-	} else if strings.Index(meta, "image/png") != -1 {
-		ext = "png"
-	} else {
+	if !strings.Contains(meta, "image/jpeg") && !strings.Contains(meta, "image/png") {
 		return "", errors.New("forbidden data format")
 	}
 
@@ -62,6 +57,7 @@ func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 		return "", err
 	}
 
+	var ext string
 	if (format == "jpeg") || (format == "png") {
 		ext = "jpg" // because we convert both jpg and png to jpg
 	} else {
@@ -74,7 +70,10 @@ func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 		return "", errors.New("unable to save file")
 	}
 	defer f.Close()
-	jpeg.Encode(f, img, nil)
+	err = jpeg.Encode(f, img, nil)
+	if err != nil {
+		return "", errors.New("unable to encode jpeg")
+	}
 
 	return path, nil
 }
