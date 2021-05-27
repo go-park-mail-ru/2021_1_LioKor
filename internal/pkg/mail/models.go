@@ -12,6 +12,7 @@ type Mail struct {
 	Subject       string    `json:"subject" gorm:"column:subject"`
 	Body          string    `json:"body" gorm:"column:body"`
 	Received_date time.Time `json:"-" gorm:"received_date"`
+	Status        int       `json:"status"`
 }
 
 type DialogueEmail struct {

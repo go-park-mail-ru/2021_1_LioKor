@@ -106,16 +106,18 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 		return email, err
 	}
 	email.Id = mailId
+	email.Status = 1
 
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
 		if err != nil {
 			log.Printf("WARN: Unable to send email to %s\n", email.Recipient)
+			email.Status = 0
 			errDb := uc.Repository.UpdateMailStatus(mailId, 0)
 			if errDb != nil {
 				log.Printf("ERROR: Unable to change mail status!\n")
+				return email, err
 			}
-			return email, err
 		}
 	}
 
