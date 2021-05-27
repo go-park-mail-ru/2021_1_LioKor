@@ -6,6 +6,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
       - name: Install go
         uses: actions/setup-go@v2
         with:
