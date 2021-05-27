@@ -1,6 +1,6 @@
 package repository
 
-import (
+/*import (
 	"liokor_mail/internal/pkg/common"
 )
 
@@ -13,7 +13,6 @@ var dbConfig = common.Config{
 	DBConnectTimeout: 10,
 }
 
-/*
 var owner user.User
 var other user.User
 var folder mail.Folder

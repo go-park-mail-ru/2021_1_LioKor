@@ -230,24 +230,24 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 				owner + "@" + domain,
 			)).
 		Last(&lastMail).Error
-	var updates map[string]interface{}
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			updates = map[string]interface{}{
-				"last_mail_id" : nil,
-				"received_date" : nil,
-				"body" : nil,
-			}
 
-		} else {
+	updates := map[string]interface{}{
+		"last_mail_id" : nil,
+		"received_date" : nil,
+		"body" : nil,
+	}
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
+	} else {
+		updates = map[string]interface{}{
+			"last_mail_id" : lastMail.Id,
+			"received_date" : lastMail.Received_date,
+			"body" : lastMail.Body,
+		}
 	}
-	updates = map[string]interface{}{
-		"last_mail_id" : lastMail.Id,
-		"received_date" : lastMail.Received_date,
-		"body" : lastMail.Body,
-	}
+
 	if lastMail.Sender == other && lastMail.Unread && lastMail.Status == 1{
 		updates["unread"] = gorm.Expr("unread + 1")
 	} else {
