@@ -403,3 +403,243 @@ func TestUpdateFolder(t *testing.T) {
 		t.Errorf("Didn't pass invalid data: %v\n", err)
 	}
 }
+
+func TestCreateDialogue(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
+
+	mailHandler := MailHandler{
+		mockMailUC,
+	}
+
+	e := echo.New()
+	dialogueWith := struct {
+		With string `json:"username"`
+	} {
+		"liokor@liokor.ru",
+	}
+	body, _ := json.Marshal(dialogueWith)
+	url := "/email/dialogue"
+	req := httptest.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+
+	sessionUser := user.User{
+		Id:           1,
+		Username:     "alt",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	echoContext.Set("sessionUser", sessionUser)
+
+	dialogue := mail.Dialogue{
+		Id:1,
+		Owner: "alt",
+		Email: dialogueWith.With,
+	}
+	mockMailUC.EXPECT().CreateDialogue(sessionUser.Username, dialogueWith.With).Return(dialogue, nil).Times(1)
+	err := mailHandler.CreateDialogue(echoContext)
+	if err != nil {
+		t.Errorf("Didn't create dialogue: %v\n", err.Error())
+	}
+
+	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
+	mockMailUC.EXPECT().CreateDialogue(sessionUser.Username, dialogueWith.With).Return(mail.Dialogue{}, common.InvalidUserError{"User doesn't exist"}).Times(1)
+	err = mailHandler.CreateDialogue(echoContext)
+	if httperr, ok := err.(*echo.HTTPError); ok {
+		if httperr.Code != http.StatusInternalServerError {
+			t.Errorf("Didn't pass invalid data: %v\n", err)
+		}
+	} else {
+		t.Errorf("Didn't pass invalid data: %v\n", err)
+	}
+}
+
+func TestDeleteDialogue(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
+
+	mailHandler := MailHandler{
+		mockMailUC,
+	}
+
+	e := echo.New()
+	dialogueToDelete := struct {
+		DialogueId int `json:"id"`
+	} {
+		1,
+	}
+	body, _ := json.Marshal(dialogueToDelete)
+	url := "/email/dialogue"
+	req := httptest.NewRequest("DELETE", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+
+	sessionUser := user.User{
+		Id:           1,
+		Username:     "alt",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().DeleteDialogue(sessionUser.Username, dialogueToDelete.DialogueId).Return(nil).Times(1)
+	err := mailHandler.DeleteDialogue(echoContext)
+	if err != nil {
+		t.Errorf("Didn't get valid dialogues: %v\n", err.Error())
+	}
+
+	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
+	mockMailUC.EXPECT().DeleteDialogue(sessionUser.Username, dialogueToDelete.DialogueId).Return(common.InvalidUserError{"User doesn't exist"}).Times(1)
+	err = mailHandler.DeleteDialogue(echoContext)
+	if httperr, ok := err.(*echo.HTTPError); ok {
+		if httperr.Code != http.StatusInternalServerError {
+			t.Errorf("Didn't pass invalid data: %v\n", err)
+		}
+	} else {
+		t.Errorf("Didn't pass invalid data: %v\n", err)
+	}
+
+}
+
+func TestDeleteMail(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
+
+	mailHandler := MailHandler{
+		mockMailUC,
+	}
+
+	e := echo.New()
+	idsToDelete := struct {
+		Ids []int `json:"ids"`
+	} {
+		[]int{1, 2, 3},
+	}
+	body, _ := json.Marshal(idsToDelete)
+	url := "/email/dialogue"
+	req := httptest.NewRequest("DELETE", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+
+	sessionUser := user.User{
+		Id:           1,
+		Username:     "alt",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().DeleteMails(sessionUser.Username, idsToDelete.Ids).Return(nil).Times(1)
+	err := mailHandler.DeleteMail(echoContext)
+	if err != nil {
+		t.Errorf("Didn't get valid mails: %v\n", err.Error())
+	}
+
+	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
+	mockMailUC.EXPECT().DeleteMails(sessionUser.Username, idsToDelete.Ids).Return(common.InvalidUserError{"User doesn't exist"}).Times(1)
+	err = mailHandler.DeleteMail(echoContext)
+	if httperr, ok := err.(*echo.HTTPError); ok {
+		if httperr.Code != http.StatusInternalServerError {
+			t.Errorf("Didn't pass invalid data: %v\n", err)
+		}
+	} else {
+		t.Errorf("Didn't pass invalid data: %v\n", err)
+	}
+
+}
+
+func TestDeleteFolder(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockMailUC := mailMocks.NewMockMailUseCase(mockCtrl)
+
+	mailHandler := MailHandler{
+		mockMailUC,
+	}
+
+	e := echo.New()
+	deleteFolder := struct {
+		FolderId int `json:"id"`
+	}{
+		1,
+	}
+	body, _ := json.Marshal(deleteFolder)
+	url := "/email/folder"
+	req := httptest.NewRequest("DELETE", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response := httptest.NewRecorder()
+	echoContext := e.NewContext(req, response)
+
+	sessionUser := user.User{
+		Id:           1,
+		Username:     "alt",
+		HashPassword: "hash",
+		AvatarURL:    common.NullString{sql.NullString{String: "/media/test", Valid: true}},
+		FullName:     "Test test",
+		ReserveEmail: "test@test.test",
+		RegisterDate: "",
+		IsAdmin:      false,
+	}
+
+	echoContext.Set("sessionUser", sessionUser)
+
+	mockMailUC.EXPECT().DeleteFolder(sessionUser.Username, sessionUser.Id, deleteFolder.FolderId).Return(nil).Times(1)
+	err := mailHandler.DeleteFolder(echoContext)
+	if err != nil {
+		t.Errorf("Didn't get valid mails: %v\n", err.Error())
+	}
+
+	req = httptest.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Add("Cookie", "session_token=sessionToken; Expires=Wed, 03 Jun 2021 03:30:48 GMT; HttpOnly")
+	response = httptest.NewRecorder()
+	echoContext = e.NewContext(req, response)
+	echoContext.Set("sessionUser", sessionUser)
+	mockMailUC.EXPECT().DeleteFolder(sessionUser.Username, sessionUser.Id, deleteFolder.FolderId).Return(common.InvalidUserError{"User doesn't exist"}).Times(1)
+	err = mailHandler.DeleteFolder(echoContext)
+	if httperr, ok := err.(*echo.HTTPError); ok {
+		if httperr.Code != http.StatusInternalServerError {
+			t.Errorf("Didn't pass invalid data: %v\n", err)
+		}
+	} else {
+		t.Errorf("Didn't pass invalid data: %v\n", err)
+	}
+
+}
