@@ -118,7 +118,7 @@ func (gmr *GormPostgresMailRepository) UpdateMailStatus(mailId, status int) erro
 
 func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, domain string) error {
 	ownerMail := owner + "@" + domain
-	others := make([]string, 0, 0)
+	others := make([]string, 0)
 	tx := gmr.DBInstance.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
