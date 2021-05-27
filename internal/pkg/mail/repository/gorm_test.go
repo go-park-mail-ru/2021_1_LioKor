@@ -154,6 +154,56 @@ func (s *Suite) TestAddMail() {
 	s.mock.ExpectRollback()
 	_, err = s.gmr.AddMail(s.email, s.domain)
 	require.Error(s.T(), err)
+
+
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WithArgs(
+			s.email.Recipient,
+			s.email.Sender,
+			s.email.Subject,
+			s.email.Body,
+		).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(1))
+	s.mock.ExpectCommit()
+	s.mock.ExpectQuery("SELECT").
+		WillReturnError(gorm.ErrRecordNotFound)
+
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(1))
+	s.mock.ExpectCommit()
+	s.mock.ExpectQuery("SELECT").
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id",
+			"sender",
+			"subject",
+			"received_date",
+			"body",
+			"unread",
+			"status",
+		}).AddRow(
+			s.dialogueEmail.Id,
+			s.dialogueEmail.Sender,
+			s.dialogueEmail.Subject,
+			s.dialogueEmail.Received_date,
+			s.dialogueEmail.Body,
+			s.dialogueEmail.Unread,
+			s.dialogueEmail.Status,
+		))
+
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").WillReturnError(gorm.ErrRecordNotFound)
+	s.mock.ExpectRollback()
+
+	newEmail := s.email
+	newEmail.Sender = s.email.Recipient
+	newEmail.Recipient = s.email.Sender
+	id, err = s.gmr.AddMail(newEmail, s.domain)
+	require.Error(s.T(), err)
 }
 
 func (s *Suite) TestGetMailsForUser() {
@@ -515,6 +565,18 @@ func (s *Suite) TestCreateFolder() {
 	f, err := s.gmr.CreateFolder(s.folder.Owner, s.folder.FolderName)
 	require.NoError(s.T(), err)
 	require.Equal(s.T(), 1, f.Id)
+
+
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WithArgs(
+			s.folder.FolderName,
+			s.folder.Owner,
+		).
+		WillReturnError(&pgconn.PgError{ConstraintName: "folders_owner_fkey"})
+	s.mock.ExpectRollback()
+	_, err = s.gmr.CreateFolder(s.folder.Owner, s.folder.FolderName)
+	require.Error(s.T(), common.InvalidUserError{"user doesn't exist"}, err)
 }
 
 func (s *Suite) TestGetFolders() {
