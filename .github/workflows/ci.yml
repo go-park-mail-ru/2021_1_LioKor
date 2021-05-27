@@ -29,7 +29,7 @@ jobs:
       - name: Copy swagger
         run: mkdir build/swagger && cp swagger/swagger.yaml build/swagger/ && cp swagger/index.html build/swagger/
       - name: Copy migrations
-        run: cp -T migrations build/migrations
+        run: cp -TRv migrations build/migrations
       - name: Check build
         run: ls build
       - name: Deploy (Conditional)
