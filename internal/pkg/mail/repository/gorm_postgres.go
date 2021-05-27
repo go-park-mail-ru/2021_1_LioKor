@@ -218,7 +218,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 	var lastMail mail.DialogueEmail
 	err := gmr.DBInstance.DB.
 		Table("mails").
-		Select("id, recieved_date, body, sender, recipient, unread, status").
+		Select("id, received_date, body, sender, recipient, unread, status").
 		Where(
 			gmr.DBInstance.DB.Where(
 				"sender=? AND recipient=? AND deleted_by_sender=FALSE",
