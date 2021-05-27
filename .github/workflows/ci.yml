@@ -1,7 +1,7 @@
 name: CI/CD
 on: [push]
 jobs:
-  eslint_build_and_deploy:
+  lint_test_build_and_copy_to_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -18,14 +18,16 @@ jobs:
         run: go get liokor_mail/cmd/auth        && go build -o build/auth_service liokor_mail/cmd/auth
       - name: (smtp_server) get and build
         run: go get liokor_mail/cmd/smtp_server && go build -o build/smtp_server liokor_mail/cmd/smtp_server
+      - name: Copy swagger
+        run: mkdir build/swagger && cp swagger/swagger.yaml build/swagger/ && cp swagger/index.html build/swagger/
       - name: Check build
         run: ls build
       - name: Deploy (Conditional)
         uses: easingthemes/ssh-deploy@v2
-        if: ${{ github.ref == 'refs/heads/korolion/dev' }}
+        # if: ${{ github.ref == 'refs/heads/korolion/dev' }}
         env:
             SSH_PRIVATE_KEY: ${{ secrets.DEPLOYER_SSH_PRIVATE }}
-            SOURCE: dist/
+            SOURCE: build/
             REMOTE_HOST: 89.208.197.127
             REMOTE_USER: deployer
             TARGET: /home/deployer/go_backend/
