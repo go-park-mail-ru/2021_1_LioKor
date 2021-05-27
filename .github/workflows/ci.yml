@@ -28,11 +28,13 @@ jobs:
         run: go get liokor_mail/cmd/smtp_server && go build -o build/smtp_server liokor_mail/cmd/smtp_server
       - name: Copy swagger
         run: mkdir build/swagger && cp swagger/swagger.yaml build/swagger/ && cp swagger/index.html build/swagger/
+      - name: Copy migrations
+        run: cp migrations build/migrations
       - name: Check build
         run: ls build
       - name: Deploy (Conditional)
         uses: easingthemes/ssh-deploy@v2
-        if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ github.ref == 'refs/heads/ci_cd_and_license' }}
         env:
             SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             SOURCE: build/
