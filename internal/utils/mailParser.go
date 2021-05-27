@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+const PREFERRED_CONTENT_TYPE = "text/html"
+
 func ParseSubject(subject string) string {
 	if strings.HasPrefix(strings.ToLower(subject), "=?utf-8?b?") {
 		subject = subject[10:]
@@ -27,7 +29,7 @@ func ParseSubject(subject string) string {
 func ParseBodyText(message *mail.Message) (string, error) {
 	contentType, params, err := mime.ParseMediaType(message.Header.Get("Content-Type"))
 	if err != nil {
-		contentType = "text/plain"
+		contentType = PREFERRED_CONTENT_TYPE
 		params = nil
 	}
 
@@ -56,7 +58,7 @@ func ParseBodyText(message *mail.Message) (string, error) {
 				content = string(contentByte)
 			}
 
-			if strings.HasPrefix(p.Header.Get("Content-Type"), "text/plain") {
+			if strings.HasPrefix(p.Header.Get("Content-Type"), PREFERRED_CONTENT_TYPE) {
 				body = content
 			} else if len(body) == 0 {
 				body = content
