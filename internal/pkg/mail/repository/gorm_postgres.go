@@ -241,7 +241,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 
 	updates := map[string]interface{}{
 		"last_mail_id" : nil,
-		"received_date" : nil,
+		"received_date" : time.Now(),
 		"body" : nil,
 	}
 	if err != nil {
