@@ -4,6 +4,7 @@ import (
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/sessions"
 	"time"
+	"log"
 )
 
 type SessionUsecase struct {
@@ -27,7 +28,10 @@ func (uc *SessionUsecase) Get(token string) (common.Session, error) {
 	}
 
 	if session.Expiration.Before(time.Now()) {
-		uc.SessionRepository.Delete(token)
+		err := uc.SessionRepository.Delete(token)
+		if err != nil {
+			log.Println("WARN: Unable to delete session token")
+		}
 		return common.Session{}, common.InvalidSessionError{"session token expired"}
 	}
 	return session, nil

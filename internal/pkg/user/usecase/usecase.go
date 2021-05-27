@@ -129,7 +129,7 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 		sessionUser.ReserveEmail = newData.ReserveEmail
 	}
 
-	sessionUser, err = uc.Repository.UpdateUser(username, sessionUser)
+	sessionUser, err = uc.Repository.UpdateUser(sessionUser)
 	if err != nil {
 		return user.User{}, err
 	}

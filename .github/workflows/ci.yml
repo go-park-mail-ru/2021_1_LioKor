@@ -1,0 +1,43 @@
+name: CI/CD
+on: [push]
+jobs:
+  lint_test_build_and_copy_to_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          args: --disable=govet
+      - name: Install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.4'
+      - name: Check go and version
+        run: go version
+      - name: Test
+        run: go test -coverpkg=./... -cover ./... -coverprofile=test_cover
+      - name: Coverage
+        run: go tool cover -func=test_cover
+      - name: (main) get and build
+        run: go get liokor_mail/cmd/main        && go build -o build/main liokor_mail/cmd/main
+      - name: (auth) get and build
+        run: go get liokor_mail/cmd/auth        && go build -o build/auth_service liokor_mail/cmd/auth
+      - name: (smtp_server) get and build
+        run: go get liokor_mail/cmd/smtp_server && go build -o build/smtp_server liokor_mail/cmd/smtp_server
+      - name: Copy swagger
+        run: mkdir build/swagger && cp swagger/swagger.yaml build/swagger/ && cp swagger/index.html build/swagger/
+      - name: Copy migrations
+        run: cp -TRv migrations build/migrations
+      - name: Check build
+        run: ls build
+      - name: Deploy (Conditional)
+        uses: easingthemes/ssh-deploy@v2
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            SOURCE: build/
+            REMOTE_HOST: 89.208.197.127
+            REMOTE_USER: backender
+            TARGET: /home/backender/go_backend/

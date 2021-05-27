@@ -6,37 +6,39 @@ import (
 )
 
 type Mail struct {
-	Sender        string    `json:"-"`
-	Recipient     string    `json:"recipient"`
-	Subject       string    `json:"subject"`
-	Body          string    `json:"body"`
-	Received_date time.Time `json:"-"`
+	Id            int       `json:"id" gorm:"column:id"`
+	Sender        string    `json:"-" gorm:"column:sender"`
+	Recipient     string    `json:"recipient" gorm:"column:recipient"`
+	Subject       string    `json:"subject" gorm:"column:subject"`
+	Body          string    `json:"body" gorm:"column:body"`
+	Received_date time.Time `json:"-" gorm:"received_date"`
 }
 
 type DialogueEmail struct {
-	Id            int       `json:"id"`
-	Sender        string    `json:"sender"`
-	Subject       string    `json:"title"`
-	Received_date time.Time `json:"time"`
-	Body          string    `json:"body"`
-	Unread        bool      `json:"new"`
-	Status        int       `json:"status"`
+	Id            int       `json:"id" gorm:"column:id"`
+	Sender        string    `json:"sender" gorm:"column:sender"`
+	Subject       string    `json:"title" gorm:"column:subject"`
+	Received_date time.Time `json:"time" gorm:"column:received_date"`
+	Body          string    `json:"body" gorm:"column:body"`
+	Unread        bool      `json:"new" gorm:"column:unread"`
+	Status        int       `json:"status" gorm:"column:status"`
 }
 
 type Dialogue struct {
-	Id            int               `json:"id"`
-	Email         string            `json:"username"`
-	AvatarURL     common.NullString `json:"avatarUrl"`
-	Body          string            `json:"body"`
-	Received_date time.Time         `json:"time"`
-	Unread        int               `json:"new"`
-	Owner         string
+	Id            int               `json:"id" gorm:"column:id"`
+	Email         string            `json:"username" gorm:"column:other"`
+	AvatarURL     common.NullString `json:"avatarUrl" gorm:"column:avatar_url"`
+	Body          string            `json:"body" gorm:"column:body"`
+	Received_date time.Time         `json:"time" gorm:"column:received_date"`
+	Unread        int               `json:"new" gorm:"column:unread"`
+	Owner         string			`gorm:"column:owner"`
 }
 
 type Folder struct {
-	Id         int    `json:"id"`
-	FolderName string `json:"name"`
-	Owner      int    `json:"owner"`
+	Id         int    `json:"id" gorm:"column:id"`
+	FolderName string `json:"name" gorm:"column:folder_name"`
+	Owner      int    `json:"owner" gorm:"column:owner"`
+	Unread     int    `json:"new" gorm:"column:unread"`
 }
 
 type MessageResponse struct {

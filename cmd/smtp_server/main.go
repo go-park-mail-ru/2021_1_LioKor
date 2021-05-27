@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -16,13 +15,15 @@ import (
 	"github.com/emersion/go-smtp"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/utils"
+	"liokor_mail/internal/pkg/mail/repository"
+	liokorMail "liokor_mail/internal/pkg/mail"
 
 	"github.com/microcosm-cc/bluemonday"
 )
 
 const CONFIG_PATH = "config.json"
 
-var db common.PostgresDataBase
+var dbConn repository.GormPostgresMailRepository
 
 type Backend struct{
 	Config common.Config
@@ -91,14 +92,13 @@ func (s *Session) HandleMail() error {
 
 	for _, recipient := range s.Recipients {
 		if strings.HasSuffix(recipient, "@" + s.Config.MailDomain) {
-			_, err := db.DBConn.Exec(
-				context.Background(),
-				"INSERT INTO mails(sender, recipient, subject, body) VALUES($1, $2, $3, $4);",
-				s.From,
-				recipient,
-				subject,
-				body,
-			)
+			newMail := liokorMail.Mail{
+				Sender : s.From,
+				Recipient: recipient,
+				Subject: subject,
+				Body: body,
+			}
+			_, err := dbConn.AddMail(newMail, s.Config.MailDomain)
 			if err != nil {
 				log.Println(err)
 			}
@@ -126,11 +126,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err = common.NewPostgresDataBase(config)
+	db, err := common.NewGormPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer db.Close()
+	dbConn.DBInstance = db
 
 	b := &Backend{ Config: config }
 	s := smtp.NewServer(b)
@@ -143,7 +144,7 @@ func main() {
 	s.MaxRecipients = 50
 	s.AuthDisabled = true
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		log.Printf("Starting SMTP server at %s for @%s", s.Addr, config.MailDomain)

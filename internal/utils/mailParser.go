@@ -42,7 +42,7 @@ func ParseBodyText(message *mail.Message) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			contentByte, err := io.ReadAll(p)
+			contentByte, err := ioutil.ReadAll(p)
 			if err != nil {
 				return "", err
 			}

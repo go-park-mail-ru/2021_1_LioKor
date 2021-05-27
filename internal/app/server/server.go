@@ -3,8 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/labstack/echo-contrib/prometheus"
+	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"liokor_mail/internal/pkg/common"
 	mailDelivery "liokor_mail/internal/pkg/mail/delivery"
@@ -45,7 +46,7 @@ func GetPrivateKey(path string) (*rsa.PrivateKey, error) {
 }
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	dbInstance, err := common.NewPostgresDataBase(config)
+	dbInstance, err := common.NewGormPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -67,7 +68,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	sessManager := session.NewIsAuthClient(grpcConn)
 
-	userRep := &userRepository.PostgresUserRepository{dbInstance}
+	userRep := &userRepository.GormPostgresUserRepository{dbInstance}
 	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
 	userHandler := userDelivery.UserHandler{userUc}
 
@@ -78,22 +79,37 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	} else {
 		log.Println("INFO: Private key for DKIM successfully loaded!")
 	}
-	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
+	mailRep := &mailRepository.GormPostgresMailRepository{dbInstance}
 	mailUC := &mailUsecase.MailUseCase{mailRep, config, privateKey}
 	mailHander := mailDelivery.MailHandler{mailUC}
 
 	e := echo.New()
+
+	var configMetrics = echoPrometheus.NewConfig()
+	configMetrics.Buckets = []float64{
+		0.001, // 1ms
+		0.01,  // 10ms
+		0.05,  // 50ms
+		0.1,   // 100ms
+		0.25,  // 250ms
+		0.5,   // 500ms
+		1,     // 1s
+	}
+	e.Use(echoPrometheus.MetricsMiddlewareWithConfig(configMetrics))
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	isAuth := middlewareHelpers.AuthMiddleware{userUc, sessManager}
 
 	middlewareHelpers.SetupLogger(e, config.ApiLogPath)
 	middlewareHelpers.SetupCSRFAndCORS(e, config.AllowedOrigin, config.Debug)
 
-	p := prometheus.NewPrometheus("echo", nil)
-	p.Use(e)
+	//p := prometheus.NewPrometheus("echo", nil)
+	//p.Use(e)
 
-	e.Static("/media", "media")
-	e.Static("/swagger", "swagger")
+	if config.Debug {
+		e.Static("/media", "media")
+		e.Static("/swagger", "swagger")
+	}
 
 	e.POST("/user/auth", userHandler.Auth)
 	e.DELETE("/user/session", userHandler.Logout, isAuth.IsAuth)
@@ -105,12 +121,16 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
+	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)
+	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
+	e.DELETE("/email/emails", mailHander.DeleteMail, isAuth.IsAuth)
 
 	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)
 	e.POST("/email/folder", mailHander.CreateFolder, isAuth.IsAuth)
 	e.PUT("/email/folder", mailHander.UpdateFolder, isAuth.IsAuth)
+	e.DELETE("/email/folder", mailHander.DeleteFolder, isAuth.IsAuth)
 
 	go func() {
 		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
