@@ -63,19 +63,23 @@ func (gmr *GormPostgresMailRepository) GetMailsForUser(username string, email st
 		Limit(limit).
 		Order("id desc").
 		Where(
-		gmr.DBInstance.DB.Where(
-		"sender=? AND recipient=? AND deleted_by_sender=FALSE",
-			username,
-			email,
+			gmr.DBInstance.DB.Where(
+				"sender=? AND recipient=? AND deleted_by_sender=FALSE",
+				username,
+				email,
 			).Or(
-			"sender=? AND recipient=? AND deleted_by_recipient=FALSE",
-			email,
-			username,
-		)).
+				"sender=? AND recipient=? AND deleted_by_recipient=FALSE",
+				email,
+				username,
+			)).
 		Where(
-			"id > ?",
-			last,
-			).
+			gmr.DBInstance.DB.Where(
+				"id < ?",
+				last, // last is actually before
+			).Or(
+				"? <= 0",
+				last,
+			)).
 		Scan(&mails)
 	if err := gmr.DBInstance.DB.Error; err != nil {
 		return nil, err
@@ -331,7 +335,7 @@ func (gmr *GormPostgresMailRepository) ReadDialogue(owner, other string) error {
 }
 func (gmr *GormPostgresMailRepository) DeleteDialogue(owner string, dialogueId int, domain string) error {
 	var dialogue mail.Dialogue
-	err := gmr.DBInstance.DB.Table("dialogue").
+	err := gmr.DBInstance.DB.Table("dialogues").
 		Where("id=? AND owner=?", dialogueId, owner).
 		Take(&dialogue).Error
 	if err != nil {
@@ -358,7 +362,7 @@ func (gmr *GormPostgresMailRepository) DeleteDialogueMails(owner string, other s
 	if err != nil {
 		return err
 	}
-	err =gmr.DBInstance.DB.Table("mails").
+	err = gmr.DBInstance.DB.Table("mails").
 		Where(" recipient=? AND sender=?", owner, other).
 		Update("deleted_by_recipient", true).Error
 	if err != nil {
@@ -372,7 +376,7 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 		FolderName: folderName,
 		Owner: ownerId,
 	}
-	result := gmr.DBInstance.DB.Table("folders").Create(&folder)
+	result := gmr.DBInstance.DB.Table("folders").Select("folder_name", "owner").Create(&folder)
 	if err := result.Error; err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "folders_owner_fkey" {
@@ -389,8 +393,9 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 func (gmr *GormPostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
 	folders := make([]mail.Folder, 0, 0)
 	err := gmr.DBInstance.DB.Raw(
-		"SELECT folders.*, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) "+
-			"FROM folders LEFT JOIN dialogues ON dialogues.folder=folders.id "+
+		"SELECT folders.id, folders.folder_name, folders.owner, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) unread "+
+			"FROM folders " +
+			"LEFT JOIN dialogues ON dialogues.folder=folders.id "+
 			"WHERE folders.owner=? "+
 			"GROUP BY folders.id",
 			ownerId,

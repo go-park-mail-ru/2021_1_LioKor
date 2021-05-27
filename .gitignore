@@ -1,7 +1,6 @@
 .idea/
 media/
 
-swagger/*
 !swagger/swagger.yaml
 !swagger/index.html
 
