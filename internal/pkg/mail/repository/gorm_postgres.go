@@ -134,13 +134,14 @@ func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, d
 			Take(&m)
 		var deletedBy string
 		var other string
-		if m.Sender == ownerMail {
+		switch ownerMail {
+		case m.Sender:
 			deletedBy = "deleted_by_sender"
 			other = m.Recipient
-		} else if m.Recipient == ownerMail {
+		case m.Recipient:
 			deletedBy = "deleted_by_recipient"
 			other = m.Sender
-		} else {
+		default:
 			tx.Rollback()
 			return mail.InvalidEmailError{
 				"Access denied",
