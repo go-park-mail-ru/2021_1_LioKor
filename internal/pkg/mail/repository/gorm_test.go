@@ -351,6 +351,17 @@ func (s *Suite) TestUpdateDialogueLastMail() {
 	s.mock.ExpectCommit()
 	err := s.gmr.UpdateDialogueLastMail(s.owner, s.other, "liokor.ru")
 	require.NoError(s.T(), err)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(s.email.Sender, s.email.Recipient, s.email.Recipient, s.email.Sender).
+		WillReturnError(gorm.ErrRecordNotFound)
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err = s.gmr.UpdateDialogueLastMail(s.owner, s.other, "liokor.ru")
+	require.NoError(s.T(), err)
 }
 
 func (s *Suite) TestGetDialoguesInFolder() {
@@ -372,5 +383,216 @@ func (s *Suite) TestGetDialoguesInFolder() {
 			s.dialogue.Unread,
 	))
 	_, err := s.gmr.GetDialoguesInFolder(s.owner, 10, 0, s.domain, since)
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) TestFindDialogues() {
+	since := time.Now()
+	s.mock.ExpectQuery("SELECT").
+		WillReturnRows(sqlmock.NewRows([]string{
+			"dialogues.id",
+			"dialogues.other",
+			"users.avatar_url",
+			"dialogues.body",
+			"dialogues.received_date",
+			"dialogues.unread",
+		}).AddRow(
+			s.dialogue.Id,
+			s.dialogue.Email,
+			s.dialogue.AvatarURL.String,
+			s.dialogue.Body,
+			s.dialogue.Received_date,
+			s.dialogue.Unread,
+		))
+	_, err := s.gmr.FindDialogues(s.owner, "o", 10, s.domain, since)
+	require.NoError(s.T(), err)
+
+}
+
+func (s *Suite) TestReadDialogue() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			0,
+			s.owner,
+			s.other,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.ReadDialogue(s.owner, s.other)
+	require.NoError(s.T(), err)
+
+}
+
+func (s *Suite) TestDeleteDialogue() {
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(s.dialogue.Id, s.owner).
+		WillReturnRows(sqlmock.NewRows([]string{
+		"id",
+		"owner",
+		"other",
+		"last_mail_id",
+		"received_date",
+		"unread",
+		"folder",
+		"dialogues.body",
+	}).AddRow(
+		s.dialogue.Id,
+		s.dialogue.Owner,
+		s.dialogue.Email,
+		1,
+		s.dialogue.Received_date,
+		s.dialogue.Unread,
+		1,
+		s.dialogue.Body,
+	))
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("DELETE").
+		WithArgs(
+		s.dialogue.Id,
+		s.owner,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+
+
+	err := s.gmr.DeleteDialogue(s.owner, s.dialogue.Id, s.domain)
+	require.NoError(s.T(), err)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(s.dialogue.Id, s.owner).
+		WillReturnError(gorm.ErrRecordNotFound)
+	err = s.gmr.DeleteDialogue(s.owner, s.dialogue.Id, s.domain)
+	require.Error(s.T(), err)
+}
+
+func (s *Suite) TestDeleteDialogueMails() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			true,
+			s.email.Sender,
+			s.email.Recipient,
+			).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			true,
+			s.email.Recipient,
+			s.email.Sender,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.DeleteDialogueMails(s.owner, s.other, s.domain)
+	require.Error(s.T(), err)
+}
+
+func (s *Suite) TestCreateFolder() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WithArgs(
+			s.folder.FolderName,
+			s.folder.Owner,
+		).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(1))
+	s.mock.ExpectCommit()
+	f, err := s.gmr.CreateFolder(s.folder.Owner, s.folder.FolderName)
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), 1, f.Id)
+}
+
+func (s *Suite) TestGetFolders() {
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(s.folder.Id).
+		WillReturnRows(sqlmock.NewRows([]string{
+		"id",
+		"fodler_name",
+		"owner",
+		"unread",
+	}).AddRow(
+		s.folder.Id,
+		s.folder.FolderName,
+		s.folder.Owner,
+		0,
+		))
+   _, err := s.gmr.GetFolders(s.folder.Owner)
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) TestAddDialogueToFolder() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			s.folder.Id,
+			s.dialogue.Id,
+			s.owner,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.AddDialogueToFolder(s.owner, s.folder.Id, s.dialogue.Id)
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) TestUpdateFolderName() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			"New folder name",
+			s.folder.Id,
+			s.folder.Owner,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	_, err := s.gmr.UpdateFolderName(s.folder.Owner, s.folder.Id, "New folder name")
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) TestShiftToMainFolderDialogues() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectCommit()
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			nil,
+			s.owner,
+			s.folder.Id,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.ShiftToMainFolderDialogues(s.owner, s.folder.Id)
+	require.NoError(s.T(), err)
+}
+
+func (s *Suite) TestDeleteFolder() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("DELETE").
+		WithArgs(
+			s.folder.Id,
+			s.folder.Owner,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.DeleteFolder(s.folder.Owner, s.folder.Id)
 	require.NoError(s.T(), err)
 }
