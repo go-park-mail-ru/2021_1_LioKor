@@ -8,6 +8,7 @@ import (
 	"liokor_mail/internal/pkg/user"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type MailHandler struct {
@@ -34,13 +35,45 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	}
 
 	since := c.QueryParam("since")
-
-	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, since)
+	var sinceTime time.Time
+	if since == "" {
+		sinceTime = time.Now()
+	} else {
+		sinceTime, err = time.Parse(time.RFC3339, since)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, sinceTime)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, dialogues)
+}
+
+func (h *MailHandler) CreateDialogue(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+	var dialogueWith struct {
+		With string `json:"username"`
+	}
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&dialogueWith)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	dialogue, err := h.MailUsecase.CreateDialogue(sessionUser.Username, dialogueWith.With)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, dialogue)
 }
 
 func (h *MailHandler) DeleteDialogue(c echo.Context) error {
@@ -66,6 +99,31 @@ func (h *MailHandler) DeleteDialogue(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Dialogue deleted"})
+}
+
+func (h *MailHandler) DeleteMail(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	var idsToDelete struct {
+		Ids []int `json:"ids"`
+	}
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&idsToDelete)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = h.MailUsecase.DeleteMails(sessionUser.Username, idsToDelete.Ids)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, mail.MessageResponse{Message: "Mails deleted"})
 }
 
 func (h *MailHandler) GetEmails(c echo.Context) error {

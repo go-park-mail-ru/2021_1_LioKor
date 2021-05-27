@@ -191,6 +191,45 @@ paths:
           description: "Access denied"
         "404":
           description: "User not found"
+  /email/dialogue:
+      post:
+        tags:
+        - "email"
+        operationId: "createDialogue"
+        parameters:
+        - in: "body"
+          name: "body"
+          description: "New dialogue data"
+          required: true
+          schema:
+            $ref: "#/definitions/createDialogue"
+        responses:
+          "200":
+            description: "Dialogue created"
+          "401":
+            description: "Not authorized"
+          "404":
+            description: "Dialogue already exists"
+      delete:
+        tags:
+        - "email"
+        summary: "Removes dialogue with all messages"
+        description: "Must be authenticated"
+        operationId: "deleteDialogue"
+        parameters:
+        - in: "body"
+          name: "body"
+          description: "dialogue id to delete"
+          required: true
+          schema:
+            $ref: "#/definitions/deleteFolder"
+        responses:
+          "200":
+            description: "Dialogue was deleted"
+          "400":
+            description: "Invalid data provided"
+          "401":
+            description: "Not authenticated"
   /email/dialogues:
       get:
         tags:
@@ -206,7 +245,7 @@ paths:
           description: "amount of dialogues to receive"
           required: false
           type: "integer"
-        - name: "last"
+        - name: "since"
           in: "query"
           description: "end list with that id, not including it"
           required: false
@@ -215,13 +254,17 @@ paths:
           in: "query"
           description: "filter for email addresses to return"
           required: false
+          type: "string"
         - name: "folder"
           in: "query"
           description: "Folder id to return dialogues from"
           required: false
+          type: "integer"
         responses:
           "200":
             description: "Returns list of dialogues"
+          "400":
+            description: "Invalid data provided"
           "401":
             description: "Not authenticated"
   /email/emails:
@@ -244,7 +287,7 @@ paths:
           description: "amount of emails to receive"
           required: false
           type: "integer"
-        - name: "last"
+        - name: "since"
           in: "query"
           description: "end list with that id, not including it"
           required: false
@@ -252,6 +295,27 @@ paths:
         responses:
           "200":
             description: "Returns list of emails"
+          "400":
+            description: "Invalid data provided"
+          "401":
+            description: "Not authenticated"
+      delete:
+        tags:
+        - "email"
+        summary: "Deletes list of emails"
+        operationId: "deleteEmails"
+        parameters:
+        - in: "body"
+          name: "body"
+          description: "Emails ids to remove"
+          required: true
+          schema:
+            $ref: "#/definitions/deleteEmails"
+        responses:
+          "200":
+            description: "Emails were deleted"
+          "400":
+            description: "Invalid data provided"
           "401":
             description: "Not authenticated"
   /email:
@@ -271,6 +335,8 @@ paths:
       responses:
         "200":
           description: "Email was sent"
+        "400":
+          description: "Invalid data provided"
         "401":
           description: "Not authenticated"
   /email/folders:
@@ -324,6 +390,26 @@ paths:
       responses:
         "200":
           description: "Dialogue was added to folder"
+        "400":
+          description: "Invalid data provided"
+        "401":
+          description: "Not authenticated"
+    delete:
+      tags:
+      - "email"
+      summary: "Removes folder, moves all emails to 0 folder"
+      description: "Must be authenticated"
+      operationId: "deleteFolder"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "folder id to delete"
+        required: true
+        schema:
+          $ref: "#/definitions/deleteFolder"
+      responses:
+        "200":
+          description: "Folder was deleted"
         "400":
           description: "Invalid data provided"
         "401":
@@ -399,6 +485,24 @@ definitions:
         type: "string"
       body:
         type: "string"
+  createDialogue:
+    type: "object"
+    required:
+    - "name"
+    properties:
+      username:
+        type: "string"
+        example: "korolion@liokor.ru"
+  deleteEmails:
+    type: "object"
+    required:
+    - "ids"
+    properties:
+      ids:
+        type: "array"
+        items:
+          type: integer
+        example: [1, 2, 3]
   newFolder:
     type: "object"
     required:
@@ -409,7 +513,7 @@ definitions:
         example: "important"
   putToFolder:
     type: "object"
-    require:
+    required:
     - "folderId"
     - "dialogueId"
     properties:
@@ -417,6 +521,14 @@ definitions:
         type: "integer"
       dialogueId:
         type: "integer"
+  deleteFolder:
+    type: "object"
+    required:
+    - "id"
+    properties:
+      id:
+        type: "integer"
+        example: 0
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"

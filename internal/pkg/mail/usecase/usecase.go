@@ -22,19 +22,30 @@ type MailUseCase struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int, since string) ([]mail.Dialogue, error) {
-	username += "@" + uc.Config.MailDomain
-	dialogues, err := uc.Repository.GetDialoguesForUser(username, amount, find, folderId, ("@" + uc.Config.MailDomain), since)
+func (uc *MailUseCase) GetDialogues(username string, amount int, find string, folderId int, since time.Time) ([]mail.Dialogue, error) {
+	var dialogues []mail.Dialogue
+	var err error
+	if find == "" {
+		dialogues, err = uc.Repository.GetDialoguesInFolder(username, amount, folderId, ("@" + uc.Config.MailDomain), since)
+	} else {
+		dialogues, err = uc.Repository.FindDialogues(username, find, amount, ("@" + uc.Config.MailDomain), since)
+	}
 	if err != nil {
 		return nil, err
 	}
 	return dialogues, nil
 }
 
-func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
-	owner += "@" + uc.Config.MailDomain
+func (uc *MailUseCase) CreateDialogue(owner, with string) (mail.Dialogue, error) {
+	dialogue, err := uc.Repository.CreateDialogue(owner, with)
+	if err != nil {
+		return mail.Dialogue{}, err
+	}
+	return dialogue, nil
+}
 
-	err := uc.Repository.DeleteDialogue(owner, dialogueId)
+func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
+	err := uc.Repository.DeleteDialogue(owner, dialogueId, uc.Config.MailDomain)
 	if err != nil {
 		return err
 	}
@@ -42,12 +53,11 @@ func (uc *MailUseCase) DeleteDialogue(owner string, dialogueId int) error {
 }
 
 func (uc *MailUseCase) GetEmails(username string, email string, last int, amount int) ([]mail.DialogueEmail, error) {
-	username += "@" + uc.Config.MailDomain
-	emails, err := uc.Repository.GetMailsForUser(username, email, amount, last)
+	emails, err := uc.Repository.GetMailsForUser(username + "@" + uc.Config.MailDomain, email, amount, last)
 	if err != nil {
 		return nil, err
 	}
-	err = uc.Repository.ReadMail(username, email)
+	err = uc.Repository.ReadMail(username + "@" + uc.Config.MailDomain, email)
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +101,11 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 		return email, errors.New("Empty subject or body after sanitizing!")
 	}
 
-	mailId, err := uc.Repository.AddMail(email)
+	mailId, err := uc.Repository.AddMail(email, uc.Config.MailDomain)
 	if err != nil {
 		return email, err
 	}
+	email.Id = mailId
 
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
@@ -109,6 +120,14 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	}
 
 	return email, nil
+}
+
+func (uc *MailUseCase) DeleteMails(owner string, mailIds []int) error{
+	err := uc.Repository.DeleteMail(owner, mailIds, uc.Config.MailDomain)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (uc *MailUseCase) GetFolders(owner int) ([]mail.Folder, error) {
@@ -128,8 +147,6 @@ func (uc *MailUseCase) CreateFolder(owner int, folderName string) (mail.Folder, 
 }
 
 func (uc *MailUseCase) UpdateFolderPutDialogue(owner string, folderId int, dialogueId int) error {
-	owner += "@" + uc.Config.MailDomain
-
 	err := uc.Repository.AddDialogueToFolder(owner, folderId, dialogueId)
 	if err != nil {
 		return err
@@ -146,8 +163,6 @@ func (uc *MailUseCase) UpdateFolderName(owner, folderId int, folderName string) 
 }
 
 func (uc *MailUseCase) DeleteFolder(ownerName string, owner, folderId int) error {
-	ownerName += "@" + uc.Config.MailDomain
-
 	err := uc.Repository.ShiftToMainFolderDialogues(ownerName, folderId)
 	if err != nil {
 		return err

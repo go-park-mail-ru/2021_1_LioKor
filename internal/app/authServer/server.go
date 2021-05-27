@@ -18,7 +18,7 @@ import (
 )
 
 func StartAuthServer(config common.Config, quit chan os.Signal) {
-	dbInstance, err := common.NewPostgresDataBase(config)
+	dbInstance, err := common.NewGormPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -28,7 +28,7 @@ func StartAuthServer(config common.Config, quit chan os.Signal) {
 		log.Println("WARN: RUNNING IN THE DEBUG MODE! DON'T USE IN PRODUCTION!")
 	}
 
-	sessionRep := &sessionRepository.PostgresSessionsRepository{dbInstance}
+	sessionRep := &sessionRepository.GormPostgresSessionRepository{dbInstance}
 	sessionUC := &sessionUsecase.SessionUsecase{sessionRep}
 	sessionDel := &sessionDelivery.SessionsDelivery{sessionUC}
 

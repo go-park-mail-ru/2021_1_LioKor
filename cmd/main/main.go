@@ -17,9 +17,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to read config: " + err.Error())
 	}
-	os.MkdirAll(config.AvatarStoragePath, 0755)
 
-	quit := make(chan os.Signal)
+	err = os.MkdirAll(config.AvatarStoragePath, 0755)
+	if err != nil {
+		log.Fatal("Unable to create avatar storage dir: " + err.Error())
+	}
+
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	server.StartServer(config, quit)

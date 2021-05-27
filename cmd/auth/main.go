@@ -18,7 +18,7 @@ func main() {
 		log.Fatal("Unable to read config: " + err.Error())
 	}
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	authServer.StartAuthServer(config, quit)

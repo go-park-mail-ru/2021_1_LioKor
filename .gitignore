@@ -1,7 +1,7 @@
 .idea/
 media/
+internal/pkg/user/usecase/*.jpg
 
-swagger/*
 !swagger/swagger.yaml
 !swagger/index.html
 

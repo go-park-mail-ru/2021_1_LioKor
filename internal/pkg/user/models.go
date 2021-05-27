@@ -18,14 +18,14 @@ type UserSignUp struct {
 }
 
 type User struct {
-	Id           int               `json:"-"`
-	Username     string            `json:"username"`
-	HashPassword string            `json:"-"`
-	AvatarURL    common.NullString `json:"avatarUrl"`
-	FullName     string            `json:"fullname"`
-	ReserveEmail string            `json:"reserveEmail"`
-	RegisterDate string            `json:"-"`
-	IsAdmin      bool              `json:"-"`
+	Id           int               `json:"-" gorm:"column:id"`
+	Username     string            `json:"username" gorm:"column:username"`
+	HashPassword string            `json:"-" gorm:"column:password_hash"`
+	AvatarURL    common.NullString `json:"avatarUrl" gorm:"column:avatar_url"`
+	FullName     string            `json:"fullname" gorm:"column:fullname"`
+	ReserveEmail string            `json:"reserveEmail" gorm:"column:reserve_email"`
+	RegisterDate string            `json:"-" gorm:"-"`
+	IsAdmin      bool              `json:"-" gorm:"-"`
 }
 
 type ChangePassword struct {
@@ -48,3 +48,4 @@ type WeakPasswordError struct {
 func (e WeakPasswordError) Error() string {
 	return e.Message
 }
+

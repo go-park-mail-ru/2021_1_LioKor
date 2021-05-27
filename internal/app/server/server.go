@@ -46,7 +46,7 @@ func GetPrivateKey(path string) (*rsa.PrivateKey, error) {
 }
 
 func StartServer(config common.Config, quit chan os.Signal) {
-	dbInstance, err := common.NewPostgresDataBase(config)
+	dbInstance, err := common.NewGormPostgresDataBase(config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -68,7 +68,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	sessManager := session.NewIsAuthClient(grpcConn)
 
-	userRep := &userRepository.PostgresUserRepository{dbInstance}
+	userRep := &userRepository.GormPostgresUserRepository{dbInstance}
 	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
 	userHandler := userDelivery.UserHandler{userUc}
 
@@ -79,7 +79,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	} else {
 		log.Println("INFO: Private key for DKIM successfully loaded!")
 	}
-	mailRep := &mailRepository.PostgresMailRepository{dbInstance}
+	mailRep := &mailRepository.GormPostgresMailRepository{dbInstance}
 	mailUC := &mailUsecase.MailUseCase{mailRep, config, privateKey}
 	mailHander := mailDelivery.MailHandler{mailUC}
 
@@ -121,9 +121,11 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
+	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)
 	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
 	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
 	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
+	e.DELETE("/email/emails", mailHander.DeleteMail, isAuth.IsAuth)
 
 	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)
 	e.POST("/email/folder", mailHander.CreateFolder, isAuth.IsAuth)

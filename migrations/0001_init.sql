@@ -44,27 +44,3 @@ CREATE TABLE IF NOT EXISTS dialogues (
     UNIQUE (owner, other)
 );
 
-
-CREATE OR REPLACE FUNCTION add_dialogue()
-    RETURNS TRIGGER
-    AS $add_dialogue$
-DECLARE
-BEGIN
-    IF EXISTS (
-        SELECT * FROM dialogues WHERE (owner=NEW.sender AND other=NEW.recipient) OR (other=NEW.sender AND owner=NEW.recipient) LIMIT 1
-    ) THEN
-        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date WHERE owner=NEW.sender AND other=NEW.recipient;
-        UPDATE dialogues SET last_mail_id=NEW.id, received_date=NEW.received_date, unread=(unread + 1) WHERE other=NEW.sender AND owner=NEW.recipient;
-    ELSE
-        INSERT INTO dialogues(owner, other, last_mail_id, received_date) values (NEW.sender, NEW.recipient, NEW.id, NEW.received_date);
-        INSERT INTO dialogues(owner, other, last_mail_id, received_date, unread) values (NEW.recipient, NEW.sender, NEW.id, NEW.received_date, 1);
-    END IF;
-RETURN NEW;
-END;
-$add_dialogue$ LANGUAGE plpgsql;
-
-CREATE TRIGGER add_dialogue
-    AFTER INSERT
-    ON mails
-    FOR EACH ROW
-    EXECUTE PROCEDURE add_dialogue();
