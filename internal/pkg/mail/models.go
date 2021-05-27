@@ -35,10 +35,10 @@ type Dialogue struct {
 }
 
 type Folder struct {
-	Id         int    `json:"id"`
-	FolderName string `json:"name"`
-	Owner      int    `json:"owner"`
-	Unread     int    `json:"new"`
+	Id         int    `json:"id" gorm:"column:id"`
+	FolderName string `json:"name" gorm:"column:folder_name"`
+	Owner      int    `json:"owner" gorm:"column:owner"`
+	Unread     int    `json:"new" gorm:"column:unread"`
 }
 
 type MessageResponse struct {
