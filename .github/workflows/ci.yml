@@ -24,10 +24,10 @@ jobs:
         run: ls build
       - name: Deploy (Conditional)
         uses: easingthemes/ssh-deploy@v2
-        # if: ${{ github.ref == 'refs/heads/korolion/dev' }}
+        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
-            SSH_PRIVATE_KEY: ${{ secrets.DEPLOYER_SSH_PRIVATE }}
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             SOURCE: build/
             REMOTE_HOST: 89.208.197.127
-            REMOTE_USER: deployer
-            TARGET: /home/deployer/go_backend/
+            REMOTE_USER: backender
+            TARGET: /home/backender/go_backend/
