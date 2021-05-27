@@ -376,7 +376,7 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 		FolderName: folderName,
 		Owner: ownerId,
 	}
-	result := gmr.DBInstance.DB.Table("folders").Create(&folder)
+	result := gmr.DBInstance.DB.Table("folders").Select("folder_name", "owner").Create(&folder)
 	if err := result.Error; err != nil {
 		if pgerr, ok := err.(*pgconn.PgError); ok {
 			if pgerr.ConstraintName == "folders_owner_fkey" {

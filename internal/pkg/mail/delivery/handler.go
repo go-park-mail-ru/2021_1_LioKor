@@ -108,15 +108,17 @@ func (h *MailHandler) DeleteMail(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
-	ids := make([]int, 0, 0)
+	var idsToDelete struct {
+		Ids []int `json:"ids"`
+	}
 	defer c.Request().Body.Close()
 
-	err := json.NewDecoder(c.Request().Body).Decode(&ids)
+	err := json.NewDecoder(c.Request().Body).Decode(&idsToDelete)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.MailUsecase.DeleteMails(sessionUser.Username, ids)
+	err = h.MailUsecase.DeleteMails(sessionUser.Username, idsToDelete.Ids)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
