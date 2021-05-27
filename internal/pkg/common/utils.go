@@ -15,6 +15,7 @@ import (
 	"image"
 	"image/jpeg"
 	_ "image/png" // to allow png uploading and converting to jpg
+	"log"
 )
 
 /* Converts dataURL to file and saves it. Returns file path. Only jpg and png supported
@@ -65,6 +66,7 @@ func DataURLToFile(path string, dataURL string, maxSizeKB int) (string, error) {
 	}
 
 	path += "." + ext
+	log.Println("Saving to path: " + path)
 	f, err := os.Create(path)
 	if err != nil {
 		return "", errors.New("unable to save file")
