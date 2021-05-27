@@ -218,6 +218,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 	var lastMail mail.DialogueEmail
 	err := gmr.DBInstance.DB.
 		Table("mails").
+		Order("id").
 		Where(
 			gmr.DBInstance.DB.Where(
 				"sender=? AND recipient=? AND deleted_by_sender=FALSE",
@@ -240,7 +241,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 		"received_date" : lastMail.Received_date,
 		"body" : lastMail.Body,
 	}
-	if lastMail.Unread {
+	if lastMail.Sender == other && lastMail.Unread {
 		updates["unread"] = gorm.Expr("unread + 1")
 	} else {
 		updates["unread"] = 0
