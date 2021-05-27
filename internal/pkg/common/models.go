@@ -61,3 +61,11 @@ type InvalidImageError struct {
 func (e InvalidImageError) Error() string {
 	return e.Message
 }
+
+type TooManyFilesError struct {
+	Message string
+}
+
+func (e TooManyFilesError) Error() string {
+	return e.Message
+}

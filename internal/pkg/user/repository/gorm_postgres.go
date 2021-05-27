@@ -8,6 +8,7 @@ import (
 	"liokor_mail/internal/pkg/user"
 )
 
+const MAX_FILES = 75
 
 type GormPostgresUserRepository struct {
 	DBInstance common.GormPostgresDataBase
@@ -64,6 +65,45 @@ func (ur *GormPostgresUserRepository) UpdateUser(newData user.User) (user.User, 
 		return user.User{}, common.InvalidUserError{"Cannot update user"}
 	}
 	return newData, nil
+}
+
+func (ur *GormPostgresUserRepository) AddUploadedFile(username string, filePath string) error {
+	u, err := ur.GetUserByUsername(username)
+	if err != nil {
+		return err
+	}
+
+	var filesAmount int64
+	result := ur.DBInstance.DB.
+		Table("files").
+		Where("user_id = ?", u.Id).
+		Count(&filesAmount)
+	if err := result.Error; err != nil {
+		return err
+	}
+
+	if filesAmount >= MAX_FILES {
+		return common.TooManyFilesError{"too many files"}
+	}
+
+	var file struct {
+		Owner int    `gorm:"column:user_id"`
+		Path  string `gorm:"column:file_path"`
+	}
+	file.Owner = u.Id
+	file.Path = filePath
+
+	result = ur.DBInstance.DB.
+		Table("files").
+		Create(&file)
+	if err := result.Error; err != nil {
+		return err
+	}
+
+	if err = ur.DBInstance.DB.Error; err != nil{
+		return err
+	}
+	return nil
 }
 
 func (ur *GormPostgresUserRepository) UpdateAvatar(username string, newAvatar common.NullString) (user.User, error) {

@@ -35,6 +35,13 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+func (m *MockUserRepository) AddUploadedFile(arg0 string, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUploadedFile", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
 // ChangePassword mocks base method.
 func (m *MockUserRepository) ChangePassword(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
