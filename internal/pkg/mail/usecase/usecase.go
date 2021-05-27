@@ -105,6 +105,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	if err != nil {
 		return email, err
 	}
+	email.Id = mailId
 
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
