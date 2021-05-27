@@ -69,7 +69,7 @@ func TestGetDialogues(t *testing.T) {
 		t.Errorf("Didn't pass valid data: %v\n", err)
 	}
 
-	dEmails := make([]mail.Dialogue, 0, 0)
+	dEmails := make([]mail.Dialogue, 0)
 	err = json.Unmarshal(response.Body.Bytes(), &dEmails)
 	if err != nil {
 		t.Errorf("Json error: %v\n", err.Error())

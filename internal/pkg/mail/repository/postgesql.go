@@ -121,7 +121,7 @@ func (mr *PostgresMailRepository) GetDialoguesForUser(username string, limit int
 	}
 	defer rows.Close()
 
-	dialogues := make([]mail.Dialogue, 0, 0)
+	dialogues := make([]mail.Dialogue, 0)
 	for rows.Next() {
 		dialogue := mail.Dialogue{}
 		err = rows.Scan(
@@ -193,7 +193,7 @@ func (mr *PostgresMailRepository) GetMailsForUser(username string, email string,
 
 	defer rows.Close()
 
-	mails := make([]mail.DialogueEmail, 0, 0)
+	mails := make([]mail.DialogueEmail, 0)
 	for rows.Next() {
 		mail := mail.DialogueEmail{}
 		err = rows.Scan(
@@ -300,7 +300,7 @@ func (mr *PostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error)
 	}
 
 	defer rows.Close()
-	folders := make([]mail.Folder, 0, 0)
+	folders := make([]mail.Folder, 0)
 	for rows.Next() {
 		var folder mail.Folder
 		err = rows.Scan(

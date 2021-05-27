@@ -56,7 +56,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 }
 
 func (gmr *GormPostgresMailRepository) GetMailsForUser(username string, email string, limit int, last int) ([]mail.DialogueEmail, error) {
-	mails := make([]mail.DialogueEmail, 0, 0)
+	mails := make([]mail.DialogueEmail, 0)
 	gmr.DBInstance.DB.
 		Table("mails").
 		Select("id, sender, subject, received_date, body, unread, status").
@@ -271,7 +271,7 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 }
 
 func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, limit int, folderId int, domain string, since time.Time) ([]mail.Dialogue, error) {
-	dialogues := make([]mail.Dialogue, 0, 0)
+	dialogues := make([]mail.Dialogue, 0)
 	var folderCond string
 	if folderId == 0 {
 		folderCond = "dialogues.folder IS NULL"
@@ -303,7 +303,7 @@ func (gmr *GormPostgresMailRepository) GetDialoguesInFolder(username string, lim
 }
 
 func (gmr *GormPostgresMailRepository) FindDialogues(username string, find string, limit int, domain string, since time.Time) ([]mail.Dialogue, error) {
-	dialogues := make([]mail.Dialogue, 0, 0)
+	dialogues := make([]mail.Dialogue, 0)
 	err := gmr.DBInstance.DB.
 		Table("dialogues").
 		Limit(limit).
@@ -400,7 +400,7 @@ func (gmr *GormPostgresMailRepository) CreateFolder(ownerId int, folderName stri
 }
 
 func (gmr *GormPostgresMailRepository) GetFolders(ownerId int) ([]mail.Folder, error) {
-	folders := make([]mail.Folder, 0, 0)
+	folders := make([]mail.Folder, 0)
 	err := gmr.DBInstance.DB.Raw(
 		"SELECT folders.id, folders.folder_name, folders.owner, COUNT(CASE WHEN dialogues.unread > 0 THEN 1 END) unread "+
 			"FROM folders " +
