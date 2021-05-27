@@ -6,7 +6,7 @@ import (
 )
 
 type Mail struct {
-	Id            int       `json:"-" gorm:"column:id"`
+	Id            int       `json:"id" gorm:"column:id"`
 	Sender        string    `json:"-" gorm:"column:sender"`
 	Recipient     string    `json:"recipient" gorm:"column:recipient"`
 	Subject       string    `json:"subject" gorm:"column:subject"`
