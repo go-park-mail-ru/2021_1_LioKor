@@ -178,6 +178,35 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, sessionUser)
 }
 
+func (h *UserHandler) UploadImage(c echo.Context) error {
+	sUser := c.Get("sessionUser")
+	sessionUser, ok := sUser.(user.User)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	var uploadImage struct {
+		DataUrl string `json:"dataUrl"`
+	}
+
+	defer c.Request().Body.Close()
+	err := json.NewDecoder(c.Request().Body).Decode(&uploadImage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	imagePath, err := h.UserUsecase.UploadImage(sessionUser.Username, uploadImage.DataUrl)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+
+	var uploadedImage struct {
+		Url string `json:"url"`
+	}
+	uploadedImage.Url = imagePath
+	return c.JSON(http.StatusOK, uploadedImage)
+}
+
 func (h *UserHandler) UpdateAvatar(c echo.Context) error {
 	sUser := c.Get("sessionUser")
 	sessionUser, ok := sUser.(user.User)

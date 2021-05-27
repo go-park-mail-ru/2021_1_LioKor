@@ -12,6 +12,7 @@
     "apiPort": 8000,
     "allowedOrigin": "https://mail.liokor.ru",
     "avatarStoragePath": "media/avatars/",
+    "fileStoragePath": "media/files/",
     "apiLogPath": "lk_mail_api.log",
 
     "smtpHost": "127.0.0.1",

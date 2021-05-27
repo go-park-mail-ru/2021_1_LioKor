@@ -119,6 +119,7 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	e.PUT("/user/:username/avatar", userHandler.UpdateAvatar, isAuth.IsAuth)
 	e.PUT("/user/:username/password", userHandler.ChangePassword, isAuth.IsAuth)
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
+	e.POST("/image", userHandler.UploadImage, isAuth.IsAuth)
 
 	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
 	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)

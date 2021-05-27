@@ -19,6 +19,7 @@ type Config struct {
 	Port              int    `json:"apiPort"`
 	AllowedOrigin     string `json:"allowedOrigin"`
 	AvatarStoragePath string `json:"avatarStoragePath"`
+	FileStoragePath   string `json:"fileStoragePath"`
 	ApiLogPath        string `json:"apiLogPath"`
 
 	SmtpHost           string `json:"smtpHost"`
