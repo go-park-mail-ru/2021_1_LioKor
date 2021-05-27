@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jackc/pgconn"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
@@ -267,4 +268,87 @@ func (s *Suite) TestCountMailFromUser() {
 	c, err := s.gmr.CountMailsFromUser(s.owner, time.Minute)
 	require.NoError(s.T(), err)
 	require.Equal(s.T(), 1, c)
+}
+
+func (s *Suite) TestDialogueExists() {
+	s.mock.ExpectQuery(regexp.QuoteMeta(
+		`SELECT "id" FROM "dialogues" WHERE owner=$1 AND other=$2 LIMIT 1`)).
+		WithArgs(s.owner, s.other).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	exists := s.gmr.DialogueExists(s.owner, s.other)
+	require.Equal(s.T(), true, exists)
+
+
+	s.mock.ExpectQuery(regexp.QuoteMeta(
+		`SELECT "id" FROM "dialogues" WHERE owner=$1 AND other=$2 LIMIT 1`)).
+		WithArgs(s.owner, s.other).
+		WillReturnError(gorm.ErrRecordNotFound)
+	exists = s.gmr.DialogueExists(s.owner, s.other)
+	require.Equal(s.T(), false, exists)
+}
+
+func (s *Suite) TestCreateDialogue() {
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WithArgs(
+		s.other,
+		s.owner,
+		).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(1))
+	s.mock.ExpectCommit()
+	d, err := s.gmr.CreateDialogue(s.owner, s.other)
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), 1, d.Id)
+
+
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery("INSERT INTO").
+		WithArgs(
+			s.other,
+			s.owner,
+		).
+		WillReturnError(&pgconn.PgError{ConstraintName: "dialogues_owner_fkey"})
+	s.mock.ExpectRollback()
+	_, err = s.gmr.CreateDialogue(s.owner, s.other)
+	require.Error(s.T(), common.InvalidUserError{"username doesn't exist"}, err)
+}
+
+func (s *Suite) TestUpdateDialogueLastMail() {
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(s.email.Sender, s.email.Recipient, s.email.Recipient, s.email.Sender).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id",
+			"sender",
+			"recipient",
+			"received_date",
+			"body",
+			"unread",
+			"status",
+		}).AddRow(
+			s.email.Id,
+			s.email.Sender,
+			s.email.Recipient,
+			s.dialogueEmail.Received_date,
+			s.dialogueEmail.Body,
+			s.dialogueEmail.Unread,
+			s.dialogueEmail.Status,
+		))
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(
+			s.email.Body,
+			s.email.Id,
+			s.dialogueEmail.Received_date,
+			0,
+			s.owner,
+			s.other,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	s.mock.ExpectCommit()
+	err := s.gmr.UpdateDialogueLastMail(s.owner, s.other, "liokor.ru")
+	require.NoError(s.T(), err)
 }

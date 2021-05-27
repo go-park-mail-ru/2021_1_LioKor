@@ -271,7 +271,7 @@ func TestUpdateUser(t *testing.T) {
 
 	gomock.InOrder(
 		mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1),
-		mockRep.EXPECT().UpdateUser(username, updUser).Return(updUser, nil).Times(1),
+		mockRep.EXPECT().UpdateUser(updUser).Return(updUser, nil).Times(1),
 	)
 	_, err := userUc.UpdateUser(username, newData)
 	if err != nil {
@@ -289,7 +289,7 @@ func TestUpdateUser(t *testing.T) {
 
 	gomock.InOrder(
 		mockRep.EXPECT().GetUserByUsername(username).Return(retUser, nil).Times(1),
-		mockRep.EXPECT().UpdateUser(username, updUser).Return(user.User{}, common.InvalidUserError{"username"}).Times(1),
+		mockRep.EXPECT().UpdateUser(updUser).Return(user.User{}, common.InvalidUserError{"username"}).Times(1),
 	)
 	_, err = userUc.UpdateUser(username, newData)
 	switch err.(type) {
