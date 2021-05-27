@@ -352,3 +352,25 @@ func (s *Suite) TestUpdateDialogueLastMail() {
 	err := s.gmr.UpdateDialogueLastMail(s.owner, s.other, "liokor.ru")
 	require.NoError(s.T(), err)
 }
+
+func (s *Suite) TestGetDialoguesInFolder() {
+	since := time.Now()
+	s.mock.ExpectQuery("SELECT").
+		WillReturnRows(sqlmock.NewRows([]string{
+		"dialogues.id",
+		"dialogues.other",
+		"users.avatar_url",
+		"dialogues.body",
+		"dialogues.received_date",
+		"dialogues.unread",
+		}).AddRow(
+			s.dialogue.Id,
+			s.dialogue.Email,
+			s.dialogue.AvatarURL.String,
+			s.dialogue.Body,
+			s.dialogue.Received_date,
+			s.dialogue.Unread,
+	))
+	_, err := s.gmr.GetDialoguesInFolder(s.owner, 10, 0, s.domain, since)
+	require.NoError(s.T(), err)
+}
