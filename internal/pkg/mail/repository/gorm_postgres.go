@@ -118,6 +118,7 @@ func (gmr *GormPostgresMailRepository) UpdateMailStatus(mailId, status int) erro
 
 func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, domain string) error {
 	ownerMail := owner + "@" + domain
+	others := make([]string, 0, 0)
 	tx := gmr.DBInstance.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -158,13 +159,20 @@ func (gmr *GormPostgresMailRepository) DeleteMail(owner string, mailIds []int, d
 			tx.Rollback()
 			return err
 		}
+		others = append(others, other)
+	}
+	err := tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	for _, other := range others {
 		err = gmr.UpdateDialogueLastMail(owner, other, domain)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
-	return tx.Commit().Error
+	return nil
 }
 
 func (gmr *GormPostgresMailRepository) CountMailsFromUser(username string, interval time.Duration) (int, error) {
