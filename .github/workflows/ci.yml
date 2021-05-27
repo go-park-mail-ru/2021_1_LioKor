@@ -17,7 +17,7 @@ jobs:
       - name: Check go and version
         run: go version
       - name: Test
-        run: go test liokor_mail... -cover -coverprofile=test_cover
+        run: go test -coverpkg=./... -cover ./... -coverprofile=test_cover
       - name: Coverage
         run: go tool cover -func=test_cover
       - name: (main) get and build
