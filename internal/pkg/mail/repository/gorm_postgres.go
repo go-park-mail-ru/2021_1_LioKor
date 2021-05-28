@@ -249,10 +249,17 @@ func (gmr *GormPostgresMailRepository) UpdateDialogueLastMail(owner string, othe
 			return err
 		}
 	} else {
+		body := lastMail.Body
+		// saving only first line to body
+		splitted := strings.Split(body, "\n")
+		if len(splitted) > 0 {
+			body = splitted[0]
+		}
+
 		updates = map[string]interface{}{
 			"last_mail_id" : lastMail.Id,
 			"received_date" : lastMail.Received_date,
-			"body" : lastMail.Body,
+			"body" : body,
 		}
 	}
 
