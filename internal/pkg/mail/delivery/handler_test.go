@@ -224,7 +224,7 @@ func TestSendEmail(t *testing.T) {
 	mockMailUC.EXPECT().SendEmail(emailSent).Return(emailSent, mail.InvalidEmailError{"error"}).Times(1)
 	err = mailHandler.SendEmail(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
-		if httperr.Code != http.StatusInternalServerError {
+		if httperr.Code != http.StatusNotFound {
 			t.Errorf("Didn't pass invalid data: %v\n", err)
 		}
 	} else {
