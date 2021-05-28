@@ -17,6 +17,20 @@ type GormPostgresMailRepository struct {
 
 
 func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (int, error) {
+	sender := strings.Split(email.Sender, "@")
+	recipient := strings.Split(email.Recipient, "@")
+	if len(recipient) == 2 && recipient[1] == domain {
+		var id int
+		result := gmr.DBInstance.DB.
+			Table("users").
+			Select("id").
+			Where("username=?", recipient[0]).
+			Take(&id)
+		if result.Error != nil || result.RowsAffected == 0 {
+			return 0, common.InvalidUserError{"recipient doesn't exist"}
+		}
+	}
+
 	result := gmr.DBInstance.DB.
 		Table("mails").
 		Select("sender", "recipient", "subject", "body").
@@ -25,8 +39,6 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 		return 0, err
 	}
 
-	sender := strings.Split(email.Sender, "@")
-	recipient := strings.Split(email.Recipient, "@")
 	if len(sender) == 2 && sender[1] == domain {
 		if !gmr.DialogueExists(sender[0], email.Recipient) {
 			_, err := gmr.CreateDialogue(sender[0], email.Recipient)

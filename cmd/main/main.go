@@ -22,10 +22,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to create avatar storage dir: " + err.Error())
 	}
-	err = os.MkdirAll(config.FileStoragePath, 0755)
-	if err != nil {
-		log.Fatal("Unable to create file storage dir: " + err.Error())
-	}
+	//err = os.MkdirAll(config.FileStoragePath, 0755)
+	//if err != nil {
+	//	log.Fatal("Unable to create file storage dir: " + err.Error())
+	//}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
