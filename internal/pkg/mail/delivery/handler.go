@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/mail"
 	"liokor_mail/internal/pkg/user"
@@ -41,7 +40,7 @@ func (h *MailHandler) GetDialogues(c echo.Context) error {
 	} else {
 		sinceTime, err = time.Parse(time.RFC3339, since)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "неверный формат времени параметра since"))
+			return echo.NewHTTPError(http.StatusBadRequest, "неверный формат времени параметра since")
 		}
 	}
 	dialogues, err := h.MailUsecase.GetDialogues(sessionUser.Username, amount, find, folder, sinceTime)
@@ -65,7 +64,7 @@ func (h *MailHandler) CreateDialogue(c echo.Context) error {
 
 	err := json.NewDecoder(c.Request().Body).Decode(&dialogueWith)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "неверный формат json"))
+		return echo.NewHTTPError(http.StatusBadRequest, "неверный формат json")
 	}
 
 	dialogue, err := h.MailUsecase.CreateDialogue(sessionUser.Username, dialogueWith.With)

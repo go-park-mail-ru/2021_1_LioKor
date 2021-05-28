@@ -39,7 +39,7 @@ func (uc *MailUseCase) GetDialogues(username string, amount int, find string, fo
 }
 
 func (uc *MailUseCase) CreateDialogue(owner, with string) (mail.Dialogue, error) {
-	dialogue, err := uc.Repository.CreateDialogue(owner, with)
+	dialogue, err := uc.Repository.CreateDialogue(owner, with, uc.Config.MailDomain)
 	if err != nil {
 		return mail.Dialogue{}, err
 	}

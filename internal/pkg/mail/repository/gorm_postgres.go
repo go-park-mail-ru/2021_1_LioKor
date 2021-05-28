@@ -15,17 +15,21 @@ type GormPostgresMailRepository struct {
 	DBInstance common.GormPostgresDataBase
 }
 
+func IsUserExists(gmr *GormPostgresMailRepository, username string) bool {
+	var amount int64
+	result := gmr.DBInstance.DB.
+		Table("users").
+		Where("username=?", username).
+		Count(&amount)
+	return result.Error == nil && amount > 0
+}
 
 func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (int, error) {
-	sender := strings.Split(email.Sender, "@")
-	recipient := strings.Split(email.Recipient, "@")
+	sender := strings.Split(strings.ToLower(email.Sender), "@")
+	recipient := strings.Split(strings.ToLower(email.Recipient), "@")
 	if len(recipient) == 2 && recipient[1] == domain {
-		var amount int64
-		result := gmr.DBInstance.DB.
-			Table("users").
-			Where("username=?", recipient[0]).
-			Count(&amount)
-		if result.Error != nil || amount == 0 {
+		username := recipient[0]
+		if !IsUserExists(gmr, username) {
 			return 0, common.InvalidUserError{"recipient doesn't exist"}
 		}
 	}
@@ -40,7 +44,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 
 	if len(sender) == 2 && sender[1] == domain {
 		if !gmr.DialogueExists(sender[0], email.Recipient) {
-			_, err := gmr.CreateDialogue(sender[0], email.Recipient)
+			_, err := gmr.CreateDialogue(sender[0], email.Recipient, domain)
 			if err != nil {
 				return email.Id, err
 			}
@@ -52,7 +56,7 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 	}
 	if len(recipient) == 2 && recipient[1] == domain {
 		if !gmr.DialogueExists(recipient[0], email.Sender) {
-			_, err := gmr.CreateDialogue(recipient[0], email.Sender)
+			_, err := gmr.CreateDialogue(recipient[0], email.Sender, domain)
 			if err != nil {
 				return email.Id, err
 			}
@@ -204,14 +208,22 @@ func (gmr *GormPostgresMailRepository) CountMailsFromUser(username string, inter
 }
 
 func (gmr *GormPostgresMailRepository) DialogueExists(owner string, other string) bool {
+	var amount int64
 	result := gmr.DBInstance.DB.Table("dialogues").
-		Select("id").
 		Where("owner=? AND other=?", owner, other).
-		Take(&mail.Dialogue{})
-	return result.RowsAffected != 0
+		Count(&amount)
+	return result.Error == nil && amount != 0
 }
 
-func (gmr *GormPostgresMailRepository) CreateDialogue(owner string, other string) (mail.Dialogue, error) {
+func (gmr *GormPostgresMailRepository) CreateDialogue(owner string, other string, domain string) (mail.Dialogue, error) {
+	recipient := strings.Split(strings.ToLower(other), "@")
+	if len(recipient) == 2 && recipient[1] == domain {
+		username := recipient[0]
+		if !IsUserExists(gmr, username) {
+			return mail.Dialogue{}, common.InvalidUserError{"recipient doesn't exist"}
+		}
+	}
+
 	dialogue := mail.Dialogue {
 		Owner: owner,
 		Email: other,
