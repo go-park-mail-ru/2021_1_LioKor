@@ -69,7 +69,7 @@ func (h *MailHandler) CreateDialogue(c echo.Context) error {
 
 	dialogue, err := h.MailUsecase.CreateDialogue(sessionUser.Username, dialogueWith.With)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "не получилось создать диалог сорре")
+		return echo.NewHTTPError(http.StatusNotFound, "вероятно, пользователя не существует")
 	}
 
 	return c.JSON(http.StatusCreated, dialogue)

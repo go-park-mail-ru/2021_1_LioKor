@@ -459,7 +459,7 @@ func TestCreateDialogue(t *testing.T) {
 	mockMailUC.EXPECT().CreateDialogue(sessionUser.Username, dialogueWith.With).Return(mail.Dialogue{}, common.InvalidUserError{"User doesn't exist"}).Times(1)
 	err = mailHandler.CreateDialogue(echoContext)
 	if httperr, ok := err.(*echo.HTTPError); ok {
-		if httperr.Code != http.StatusInternalServerError {
+		if httperr.Code != http.StatusNotFound {
 			t.Errorf("Didn't pass invalid data: %v\n", err)
 		}
 	} else {
