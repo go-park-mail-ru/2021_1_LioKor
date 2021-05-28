@@ -80,9 +80,9 @@ func (mr *MockMailRepositoryMockRecorder) CountMailsFromUser(arg0, arg1 interfac
 }
 
 // CreateDialogue mocks base method.
-func (m *MockMailRepository) CreateDialogue(arg0, arg1 string) (mail.Dialogue, error) {
+func (m *MockMailRepository) CreateDialogue(arg0, arg1, arg2 string) (mail.Dialogue, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateDialogue", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateDialogue", arg0, arg1, arg2)
 	ret0, _ := ret[0].(mail.Dialogue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1

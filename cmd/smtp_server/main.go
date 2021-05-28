@@ -100,7 +100,7 @@ func (s *Session) HandleMail() error {
 			}
 			_, err := dbConn.AddMail(newMail, s.Config.MailDomain)
 			if err != nil {
-				log.Println(err)
+				log.Printf("WARN: Mail wasn't added to database: %v\n", err)
 			}
 		} else {
 			log.Printf("WARN: Mail to %s was not saved!", recipient)
