@@ -90,6 +90,7 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	parser := parser.NewWithExtensions(extensions)
 
+	email.Body = strings.ReplaceAll(email.Body, "\n", "\n\n")
 	md := []byte(email.Body)
 	email.Body = string(markdown.ToHTML(md, parser, nil))
 
