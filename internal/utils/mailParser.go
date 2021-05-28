@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-const PREFERRED_CONTENT_TYPE = "text/html"
-
 func ParseSubject(subject string) string {
 	if strings.HasPrefix(strings.ToLower(subject), "=?utf-8?b?") {
 		subject = subject[10:]
@@ -29,10 +27,11 @@ func ParseSubject(subject string) string {
 func ParseBodyText(message *mail.Message) (string, error) {
 	contentType, params, err := mime.ParseMediaType(message.Header.Get("Content-Type"))
 	if err != nil {
-		contentType = PREFERRED_CONTENT_TYPE
+		contentType = "text/html"
 		params = nil
 	}
 
+    isHtml := false
 	var body string
 	if strings.HasPrefix(contentType, "multipart/") {
 		mr := multipart.NewReader(message.Body, params["boundary"])
@@ -58,7 +57,8 @@ func ParseBodyText(message *mail.Message) (string, error) {
 				content = string(contentByte)
 			}
 
-			if strings.HasPrefix(p.Header.Get("Content-Type"), PREFERRED_CONTENT_TYPE) {
+			if strings.HasPrefix(p.Header.Get("Content-Type"), "text/html") {
+				isHtml = true
 				body = content
 			} else if len(body) == 0 {
 				body = content
@@ -70,6 +70,10 @@ func ParseBodyText(message *mail.Message) (string, error) {
 			return "", err
 		}
 		body = string(bodyByte)
+	}
+
+	if !isHtml {
+		body = strings.Join(strings.Split(body, "\n"), "<br>")
 	}
 
 	return body, nil
