@@ -86,6 +86,8 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	email.Subject = pStrict.Sanitize(email.Subject)
 	// to strip all non-markdown tags
 	email.Body = pStrict.Sanitize(email.Body)
+	email.Body = strings.ReplaceAll(email.Body, "&lt;", "<")
+	email.Body = strings.ReplaceAll(email.Body, "&gt;", ">")
 
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	parser := parser.NewWithExtensions(extensions)
