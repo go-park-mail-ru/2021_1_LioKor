@@ -20,13 +20,12 @@ func (gmr *GormPostgresMailRepository) AddMail(email mail.Mail, domain string) (
 	sender := strings.Split(email.Sender, "@")
 	recipient := strings.Split(email.Recipient, "@")
 	if len(recipient) == 2 && recipient[1] == domain {
-		var id int
+		var amount int64
 		result := gmr.DBInstance.DB.
 			Table("users").
-			Select("id").
 			Where("username=?", recipient[0]).
-			Take(&id)
-		if result.Error != nil || result.RowsAffected == 0 {
+			Count(&amount)
+		if result.Error != nil || amount == 0 {
 			return 0, common.InvalidUserError{"recipient doesn't exist"}
 		}
 	}
