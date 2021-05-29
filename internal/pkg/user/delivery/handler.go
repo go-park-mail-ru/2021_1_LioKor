@@ -7,6 +7,7 @@ import (
 	"liokor_mail/internal/pkg/user"
 	"liokor_mail/internal/pkg/mail"
 	"net/http"
+	"log"
 	"time"
 )
 
@@ -163,7 +164,10 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 		  "> *С уважением, команда LioKor*\n"+
 		  "![image](https://mail.liokor.ru/images/liokor_logo.png)",
 	}
-	h.MailUsecase.SendEmail(mail)
+	_, err = h.MailUsecase.SendEmail(mail)
+	if err != nil {
+		log.Printf("WARN: Unable to send greetings email: %v", err)
+	}
 
 	return c.String(http.StatusOK, "вы успешно зарегестрированы")
 }
