@@ -72,6 +72,9 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 
 func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	email.Sender += "@" + uc.Config.MailDomain
+	if !strings.Contains(email.Recipient, "@") {
+		email.Recipient += "@" + uc.Config.MailDomain
+	}
 	isInternal := strings.HasSuffix(email.Recipient, uc.Config.MailDomain)
 
 	if !(uc.Config.Debug || isInternal) {

@@ -5,12 +5,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
+	"liokor_mail/internal/pkg/mail"
 	"net/http"
 	"time"
 )
 
 type UserHandler struct {
 	UserUsecase user.UseCase
+	MailUsecase mail.MailUseCase
 }
 
 func DeleteSessionCookie(c *echo.Context) {
@@ -145,6 +147,23 @@ func (h *UserHandler) SignUp(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "не удалось установить печеньки")
 	}
+
+	mail := mail.Mail{
+		Sender: "support",
+		Recipient: newUser.Username,
+		Subject: "Здравствуй, " + newUser.Username + "!",
+		Body: "## Добро пожаловать в LioKor Mail!\n"+
+		  "**LioKor Mail** - это *почтовый сервис* с ***интерфейсом мессенджера***:\n"+
+		  "* Пишите на любые почтовые ящики: mail.ru, yandex.ru и т.д.;\n"+
+		  "* Переписывайтесь с внутренними пользователями с мгновенной доставкой;\n"+
+		  "* Раскладывайте диалоги по папкам;\n"+
+		  "* Ваши письма передаются зашифроваными TLS, а также подписанными DKIM;\n"+
+		  "* Вы можете использовать **Markdown**, чтобы оформлять свои письма;\n"+
+		  "* Загружайте картинки на наш сервер и вставляйте в свои письма;\n"+
+		  "> *С уважением, команда LioKor*\n"+
+		  "![image](https://mail.liokor.ru/images/liokor_logo.png)",
+	}
+	h.MailUsecase.SendEmail(mail)
 
 	return c.String(http.StatusOK, "вы успешно зарегестрированы")
 }
