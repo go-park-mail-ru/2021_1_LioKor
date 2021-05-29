@@ -8,7 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"liokor_mail/internal/pkg/common"
 	"liokor_mail/internal/pkg/user"
-	"liokor_mail/internal/pkg/user/mocks"
+	mocks "liokor_mail/internal/pkg/user/mocks"
+	mailMocks "liokor_mail/internal/pkg/mail/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -217,8 +218,10 @@ func TestSignUp(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockUC := mocks.NewMockUseCase(mockCtrl)
+	mockMail := mailMocks.NewMockMailUseCase(mockCtrl)
 	userHandler := UserHandler{
 		UserUsecase: mockUC,
+		MailUsecase: mockMail,
 	}
 
 	e := echo.New()
@@ -244,6 +247,7 @@ func TestSignUp(t *testing.T) {
 	gomock.InOrder(
 		mockUC.EXPECT().SignUp(newUser).Return(nil).Times(1),
 		mockUC.EXPECT().CreateSession(newUser.Username).Return(retSession, nil).Times(1),
+		mockMail.EXPECT().SendEmail(gomock.Any()).Times(1),
 	)
 	err := userHandler.SignUp(echoContext)
 	if err != nil {

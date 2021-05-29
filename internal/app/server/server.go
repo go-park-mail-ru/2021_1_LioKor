@@ -68,10 +68,6 @@ func StartServer(config common.Config, quit chan os.Signal) {
 
 	sessManager := session.NewIsAuthClient(grpcConn)
 
-	userRep := &userRepository.GormPostgresUserRepository{dbInstance}
-	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
-	userHandler := userDelivery.UserHandler{userUc}
-
 	privateKey, err := GetPrivateKey(config.DkimPrivateKeyPath)
 	if err != nil {
 		log.Printf("WARN: Unable to load private key: %v", err)
@@ -80,8 +76,12 @@ func StartServer(config common.Config, quit chan os.Signal) {
 		log.Println("INFO: Private key for DKIM successfully loaded!")
 	}
 	mailRep := &mailRepository.GormPostgresMailRepository{dbInstance}
-	mailUC := &mailUsecase.MailUseCase{mailRep, config, privateKey}
-	mailHander := mailDelivery.MailHandler{mailUC}
+	mailUc := &mailUsecase.MailUseCase{mailRep, config, privateKey}
+	mailHandler := mailDelivery.MailHandler{mailUc}
+
+	userRep := &userRepository.GormPostgresUserRepository{dbInstance}
+	userUc := &userUsecase.UserUseCase{userRep, sessManager, config}
+	userHandler := userDelivery.UserHandler{userUc, mailUc}
 
 	e := echo.New()
 
@@ -121,17 +121,17 @@ func StartServer(config common.Config, quit chan os.Signal) {
 	// e.GET("/user/:username", userHandler.ProfileByUsername)
 	e.POST("/image", userHandler.UploadImage, isAuth.IsAuth)
 
-	e.GET("/email/dialogues", mailHander.GetDialogues, isAuth.IsAuth)
-	e.POST("/email/dialogue", mailHander.CreateDialogue, isAuth.IsAuth)
-	e.DELETE("/email/dialogue", mailHander.DeleteDialogue, isAuth.IsAuth)
-	e.GET("/email/emails", mailHander.GetEmails, isAuth.IsAuth)
-	e.POST("/email", mailHander.SendEmail, isAuth.IsAuth)
-	e.DELETE("/email/emails", mailHander.DeleteMail, isAuth.IsAuth)
+	e.GET("/email/dialogues", mailHandler.GetDialogues, isAuth.IsAuth)
+	e.POST("/email/dialogue", mailHandler.CreateDialogue, isAuth.IsAuth)
+	e.DELETE("/email/dialogue", mailHandler.DeleteDialogue, isAuth.IsAuth)
+	e.GET("/email/emails", mailHandler.GetEmails, isAuth.IsAuth)
+	e.POST("/email", mailHandler.SendEmail, isAuth.IsAuth)
+	e.DELETE("/email/emails", mailHandler.DeleteMail, isAuth.IsAuth)
 
-	e.GET("/email/folders", mailHander.GetFolders, isAuth.IsAuth)
-	e.POST("/email/folder", mailHander.CreateFolder, isAuth.IsAuth)
-	e.PUT("/email/folder", mailHander.UpdateFolder, isAuth.IsAuth)
-	e.DELETE("/email/folder", mailHander.DeleteFolder, isAuth.IsAuth)
+	e.GET("/email/folders", mailHandler.GetFolders, isAuth.IsAuth)
+	e.POST("/email/folder", mailHandler.CreateFolder, isAuth.IsAuth)
+	e.PUT("/email/folder", mailHandler.UpdateFolder, isAuth.IsAuth)
+	e.DELETE("/email/folder", mailHandler.DeleteFolder, isAuth.IsAuth)
 
 	go func() {
 		addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
