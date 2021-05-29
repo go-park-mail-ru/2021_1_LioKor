@@ -136,6 +136,27 @@ func (uc *UserUseCase) UpdateUser(username string, newData user.User) (user.User
 	return sessionUser, nil
 }
 
+func (uc *UserUseCase) UploadImage(username string, dataUrl string) (string, error) {
+	if !strings.HasPrefix(dataUrl, "data:") {
+		return "", common.InvalidImageError{"invalid image"}
+	}
+
+	imageFileName := common.GenerateRandomString()
+	pathToImage, err := common.DataURLToFile(uc.Config.FileStoragePath+imageFileName, dataUrl, 512)
+	if err != nil {
+		log.Println(err.Error())
+		return "", common.InvalidImageError{"invalid image"}
+	}
+
+	err = uc.Repository.AddUploadedFile(username, pathToImage)
+	if err != nil {
+		_ = os.Remove(pathToImage)
+		return "", err
+	}
+
+	return pathToImage, nil
+}
+
 func (uc *UserUseCase) UpdateAvatar(username string, newAvatar string) (user.User, error) {
 	sessionUser, err := uc.Repository.GetUserByUsername(username)
 	if err != nil {

@@ -34,7 +34,7 @@ jobs:
         run: ls build
       - name: Deploy (Conditional)
         uses: easingthemes/ssh-deploy@v2
-        if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ github.ref == 'refs/heads/korolion/dev' }}
         env:
             SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             SOURCE: build/

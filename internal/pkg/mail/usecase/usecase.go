@@ -14,6 +14,8 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/microcosm-cc/bluemonday"
+
+	"html"
 )
 
 type MailUseCase struct {
@@ -37,7 +39,7 @@ func (uc *MailUseCase) GetDialogues(username string, amount int, find string, fo
 }
 
 func (uc *MailUseCase) CreateDialogue(owner, with string) (mail.Dialogue, error) {
-	dialogue, err := uc.Repository.CreateDialogue(owner, with)
+	dialogue, err := uc.Repository.CreateDialogue(owner, with, uc.Config.MailDomain)
 	if err != nil {
 		return mail.Dialogue{}, err
 	}
@@ -70,6 +72,9 @@ func (uc *MailUseCase) GetEmails(username string, email string, last int, amount
 
 func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 	email.Sender += "@" + uc.Config.MailDomain
+	if !strings.Contains(email.Recipient, "@") {
+		email.Recipient += "@" + uc.Config.MailDomain
+	}
 	isInternal := strings.HasSuffix(email.Recipient, uc.Config.MailDomain)
 
 	if !(uc.Config.Debug || isInternal) {
@@ -84,16 +89,20 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 
 	pStrict := bluemonday.StrictPolicy()
 	email.Subject = pStrict.Sanitize(email.Subject)
-	// to strip all non-markdown tags
-	email.Body = pStrict.Sanitize(email.Body)
+	email.Body = html.EscapeString(email.Body)
 
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	parser := parser.NewWithExtensions(extensions)
 
+	email.Body = strings.ReplaceAll(email.Body, "&gt;", ">") // for quotes to work
+	email.Body = strings.ReplaceAll(email.Body, "\n", "\n\n") // for newlines
 	md := []byte(email.Body)
 	email.Body = string(markdown.ToHTML(md, parser, nil))
 
-	// to remove restricted tags and add nofollow to links
+	email.Body = strings.ReplaceAll(email.Body, "&amp;gt;", "&gt;") // for unescape to work
+	email.Body = html.UnescapeString(email.Body)
+
+	// 2-nd layer of sec - just in case smth above breaks
 	pUGC := bluemonday.UGCPolicy()
 	email.Body = pUGC.Sanitize(email.Body)
 
@@ -106,16 +115,18 @@ func (uc *MailUseCase) SendEmail(email mail.Mail) (mail.Mail, error) {
 		return email, err
 	}
 	email.Id = mailId
+	email.Status = 1
 
 	if !isInternal {
 		err = utils.SMTPSendMail(email.Sender, email.Recipient, email.Subject, email.Body, uc.PrivateKey)
 		if err != nil {
 			log.Printf("WARN: Unable to send email to %s\n", email.Recipient)
+			email.Status = 0
 			errDb := uc.Repository.UpdateMailStatus(mailId, 0)
 			if errDb != nil {
 				log.Printf("ERROR: Unable to change mail status!\n")
+				return email, err
 			}
-			return email, err
 		}
 	}
 

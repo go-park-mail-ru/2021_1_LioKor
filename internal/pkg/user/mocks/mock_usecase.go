@@ -36,6 +36,15 @@ func (m *MockUseCase) EXPECT() *MockUseCaseMockRecorder {
 }
 
 // ChangePassword mocks base method.
+func (m *MockUseCase) UploadImage(arg0 string, arg1 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadImage", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ChangePassword mocks base method.
 func (m *MockUseCase) ChangePassword(arg0 user.User, arg1 user.ChangePassword) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1)

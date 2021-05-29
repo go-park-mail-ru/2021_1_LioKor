@@ -24,7 +24,9 @@ func (sd *SessionsDelivery) Create(ctx context.Context, s *session.Session) (*se
 	if err != nil {
 		switch err.(type) {
 		case common.InvalidUserError:
-			return nil, status.Error(codes.NotFound, err.Error())
+			return nil, status.Error(codes.NotFound, ("пользователя не существует"))
+		case common.InvalidSessionError:
+			return nil, status.Error(codes.NotFound, "сессия уже существует")
 		default:
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -41,7 +43,7 @@ func (sd *SessionsDelivery) Get(ctx context.Context, token *session.SessionToken
 	if err != nil {
 		switch err.(type) {
 		case common.InvalidSessionError:
-			return nil, status.Error(codes.NotFound, err.Error())
+			return nil, status.Error(codes.NotFound, "такой сессии не существует")
 		default:
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -58,7 +60,7 @@ func (sd *SessionsDelivery) Delete(ctx context.Context, token *session.SessionTo
 	if err != nil {
 		switch err.(type) {
 		case common.InvalidSessionError:
-			return nil, status.Error(codes.NotFound, err.Error())
+			return nil, status.Error(codes.NotFound, "такой сессии не существует")
 		default:
 			return nil, status.Error(codes.Internal, err.Error())
 		}

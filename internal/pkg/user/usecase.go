@@ -3,6 +3,7 @@ package user
 import "liokor_mail/internal/pkg/common"
 
 type UseCase interface {
+	UploadImage(username string, dataUrl string) (string, error)
 	Login(credentials Credentials) error
 	CreateSession(username string) (common.Session, error)
 	GetUserByUsername(username string) (User, error)

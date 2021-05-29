@@ -3,6 +3,7 @@ package user
 import "liokor_mail/internal/pkg/common"
 
 type UserRepository interface {
+	AddUploadedFile(username string, filePath string) error
 	GetUserByUsername(username string) (User, error)
 	GetUserById(id int) (User, error)
 	CreateUser(user User) error
